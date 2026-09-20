@@ -1,0 +1,240 @@
+
+(()=>{
+'use strict';
+const $=q=>document.querySelector(q),canvas=$('#game'),loading=$('#loading');
+if(!window.BABYLON){loading.querySelector('.box div:nth-child(3)').textContent='Não consegui carregar o motor 3D. Verifique a internet.';return;}
+const ui={start:$('#start'),missionTitle:$('#missionTitle'),missionIcon:$('#missionIcon'),instruction:$('#instruction'),fill:$('#progressFill'),stepText:$('#stepText'),held:$('#held'),near:$('#near'),coins:$('#coinValue'),toast:$('#toastMsg'),celebrate:$('#celebrate'),celebrateTitle:$('#celebrateTitle'),celebrateText:$('#celebrateText'),celebrateEmoji:$('#celebrateEmoji'),reward:$('#rewardValue'),continueBtn:$('#continueBtn'),assetBadge:$('#assetBadge'),audioBtn:$('#audioBtn'),speechBubble:$('#speechBubble'),speechText:$('#speechText'),speechAvatar:$('#speechAvatar'),stars:$('#starValue'),time:$('#timeValue'),dogState:$('#dogState'),babyState:$('#babyState'),unlockToast:$('#unlockToast')};
+const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Mac/.test(navigator.platform)&&navigator.maxTouchPoints>1);
+const isMobile=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)||matchMedia('(pointer:coarse)').matches;
+const lowMemory=Number(navigator.deviceMemory||8)<=4;
+let qualityMode=localStorage.getItem('hanna_quality')||'auto';
+const engine=new BABYLON.Engine(canvas,true,{adaptToDeviceRatio:true,stencil:true,preserveDrawingBuffer:false});
+function applyHardwareScale(){
+ const autoScale=isMobile?(lowMemory?1.55:1.28):1;
+ engine.setHardwareScalingLevel(qualityMode==='hd'?1:qualityMode==='eco'?1.65:autoScale);
+}
+applyHardwareScale();
+const scene=new BABYLON.Scene(engine);
+scene.clearColor=BABYLON.Color4.FromHexString('#b9e4f3ff');
+scene.imageProcessingConfiguration.contrast=1.18;
+scene.imageProcessingConfiguration.exposure=1.08;
+scene.imageProcessingConfiguration.toneMappingEnabled=true;
+scene.imageProcessingConfiguration.toneMappingType=BABYLON.ImageProcessingConfiguration.TONEMAPPING_ACES;
+scene.imageProcessingConfiguration.vignetteEnabled=true;
+scene.imageProcessingConfiguration.vignetteWeight=1.15;
+scene.imageProcessingConfiguration.vignetteStretch=.18;
+scene.imageProcessingConfiguration.vignetteCameraFov=.5;
+try{
+  scene.environmentTexture=BABYLON.CubeTexture.CreateFromPrefilteredData(
+    'https://assets.babylonjs.com/environments/environmentSpecular.env',scene
+  );
+  scene.environmentIntensity=.62;
+}catch(e){console.warn('IBL fallback',e)}
+const hemi=new BABYLON.HemisphericLight('hemi',new BABYLON.Vector3(0,1,0),scene);hemi.intensity=.9;hemi.groundColor=BABYLON.Color3.FromHexString('#9a8a78');
+const sun=new BABYLON.DirectionalLight('sun',new BABYLON.Vector3(-.35,-1,.3),scene);sun.position.set(3,9,-6);sun.intensity=.62;
+const warmFill=new BABYLON.PointLight('warmFill',new BABYLON.Vector3(-1.2,2.3,1.0),scene);
+warmFill.diffuse=BABYLON.Color3.FromHexString('#ffd9ad');warmFill.intensity=.22;warmFill.range=8;
+const coolFill=new BABYLON.PointLight('coolFill',new BABYLON.Vector3(4.8,2.2,-1.8),scene);
+coolFill.diffuse=BABYLON.Color3.FromHexString('#b9eaff');coolFill.intensity=.18;coolFill.range=7;
+const camera=new BABYLON.ArcRotateCamera('camera',-Math.PI/2,1.03,13,new BABYLON.Vector3(0,.9,0),scene);camera.lowerBetaLimit=.80;camera.upperBetaLimit=1.12;camera.lowerRadiusLimit=9;camera.upperRadiusLimit=15;camera.panningSensibility=0;camera.wheelDeltaPercentage=.012;camera.attachControl(canvas,true);
+scene.collisionsEnabled=true;
+camera.checkCollisions=true;
+camera.collisionRadius=new BABYLON.Vector3(.34,.34,.34);
+
+const pipeline=new BABYLON.DefaultRenderingPipeline('pipe',true,scene,[camera]);
+pipeline.fxaaEnabled=true;pipeline.samples=1;pipeline.imageProcessingEnabled=true;scene.ambientColor=new BABYLON.Color3(.12,.12,.12);
+function applyQuality(){
+ const eco=qualityMode==='eco'||(qualityMode==='auto'&&isMobile&&lowMemory);
+ pipeline.bloomEnabled=!eco;pipeline.bloomThreshold=.82;pipeline.bloomWeight=eco?0:.30;pipeline.bloomKernel=isMobile?24:48;
+ applyHardwareScale();
+ const qb=document.getElementById('qualityBadge'),btn=document.getElementById('qualityBtn');
+ const label=qualityMode==='hd'?'HD':qualityMode==='eco'?'ECONÔMICO':'AUTO';
+ if(qb)qb.textContent=label;if(btn)btn.textContent='⚙️ Qualidade: '+label;
+}
+const mkMat=(n,c)=>{const m=new BABYLON.StandardMaterial(n,scene);m.diffuseColor=BABYLON.Color3.FromHexString(c);m.specularColor=new BABYLON.Color3(.04,.04,.04);return m};
+const M={floor:mkMat('floor','#ead9b5'),wall:mkMat('wall','#fff6e7'),mint:mkMat('mint','#bfe5cf'),mint2:mkMat('mint2','#88c8a5'),pink:mkMat('pink','#f2acc3'),pink2:mkMat('pink2','#d982a1'),blue:mkMat('blue','#80c8dc'),blue2:mkMat('blue2','#4e9fba'),wood:mkMat('wood','#c78955'),wood2:mkMat('wood2','#8e5937'),white:mkMat('white','#fbfaf6'),cream:mkMat('cream','#fff0cf'),yellow:mkMat('yellow','#f4cb5d'),orange:mkMat('orange','#e99855'),red:mkMat('red','#e46f68'),steel:mkMat('steel','#98a8ad'),dark:mkMat('dark','#504743'),skin:mkMat('skin','#efc3a0'),hair:mkMat('hair','#6b4936'),dog:mkMat('dog','#d5a069'),dogDark:mkMat('dogDark','#8b654b'),green:mkMat('green','#78bf78'),grass:mkMat('grass','#9ed293'),toast:mkMat('toast','#8a532f'),purple:mkMat('purple','#aa91d8'),glass:mkMat('glass','#c7edf7')};M.glass.alpha=.58;M.glass.emissiveColor=BABYLON.Color3.FromHexString('#eafcff');
+const box=(n,x,y,z,w,h,d,m,p=false)=>{const o=BABYLON.MeshBuilder.CreateBox(n,{width:w,height:h,depth:d},scene);o.position.set(x,y,z);o.material=m;o.isPickable=p;return o};
+const sph=(n,x,y,z,d,m,p=false)=>{const o=BABYLON.MeshBuilder.CreateSphere(n,{diameter:d,segments:9},scene);o.position.set(x,y,z);o.material=m;o.isPickable=p;return o};
+const cyl=(n,x,y,z,d,h,m,p=false)=>{const o=BABYLON.MeshBuilder.CreateCylinder(n,{diameter:d,height:h,tessellation:12},scene);o.position.set(x,y,z);o.material=m;o.isPickable=p;return o};
+const tag=(m,type,label,data={})=>{m.metadata={type,label,...data};m.isPickable=true;return m};
+function addLegs(x,z,w,d,h,mat){
+ return [[-1,-1],[1,-1],[-1,1],[1,1]].map(([sx,sz])=>box('leg',x+sx*(w/2-.11),h/2,z+sz*(d/2-.11),.12,h,.12,mat));
+}
+
+function setAssetBadge(text,mode='loading'){
+  if(!ui.assetBadge)return;
+  ui.assetBadge.className=mode;
+  ui.assetBadge.textContent=text;
+}
+async function fetchRepoTree(repo){
+  const branches=['main','master'];
+  let lastErr=null;
+  for(const branch of branches){
+    try{
+      const r=await fetch(`https://api.github.com/repos/${repo}/git/trees/${branch}?recursive=1`,{headers:{Accept:'application/vnd.github+json'}});
+      if(!r.ok)throw new Error(`GitHub ${r.status}`);
+      const j=await r.json();
+      if(j?.tree?.length)return {branch,tree:j.tree};
+    }catch(e){lastErr=e}
+  }
+  throw lastErr||new Error('Não consegui ler o repositório');
+}
+function splitRaw(repo,branch,path){
+  const i=path.lastIndexOf('/');
+  const dir=i>=0?path.slice(0,i+1):'';
+  const file=i>=0?path.slice(i+1):path;
+  return {root:`https://raw.githubusercontent.com/${repo}/${branch}/${dir}`,file};
+}
+function boundsOf(meshes){
+  let min=new BABYLON.Vector3(Infinity,Infinity,Infinity),max=new BABYLON.Vector3(-Infinity,-Infinity,-Infinity),ok=false;
+  for(const m of meshes){
+    if(!m || !m.getBoundingInfo)continue;
+    try{
+      m.computeWorldMatrix(true);
+      const b=m.getBoundingInfo().boundingBox;
+      min=BABYLON.Vector3.Minimize(min,b.minimumWorld);
+      max=BABYLON.Vector3.Maximize(max,b.maximumWorld);
+      ok=true;
+    }catch(e){}
+  }
+  return ok?{min,max,size:max.subtract(min),center:min.add(max).scale(.5)}:null;
+}
+function packImported(result,targetHeight=1,rotY=0){
+  const holder=new BABYLON.TransformNode('assetHolder',scene);
+  const roots=result.meshes.filter(m=>!m.parent || !result.meshes.includes(m.parent));
+  roots.forEach(m=>m.parent=holder);
+  const b=boundsOf(result.meshes);
+  if(b){
+    const h=Math.max(.001,b.size.y);
+    const s=targetHeight/h;
+    holder.scaling.setAll(s);
+    holder.position.set(-b.center.x*s,-b.min.y*s,-b.center.z*s);
+  }
+  const wrapper=new BABYLON.TransformNode('assetWrapper',scene);
+  holder.parent=wrapper;
+  wrapper.rotation.y=rotY;
+  result.meshes.forEach(m=>{
+    if(m && m.receiveShadows!==undefined)m.receiveShadows=true;
+    try{shadow.addShadowCaster(m)}catch(e){}
+  });
+  return wrapper;
+}
+async function importRepoModel(repo,branch,path,targetHeight,position,rotY=0,parent=null){
+  const {root,file}=splitRaw(repo,branch,path);
+  const result=await BABYLON.SceneLoader.ImportMeshAsync('',root,file,scene);
+  const wrapper=packImported(result,targetHeight,rotY);
+  if(parent){
+    wrapper.parent=parent;
+    wrapper.position.copyFrom(position||BABYLON.Vector3.Zero());
+  }else{
+    wrapper.position.copyFrom(position||BABYLON.Vector3.Zero());
+  }
+  return {wrapper,result,path};
+}
+let playerAsset={loaded:false,groups:[],current:''};
+let dogAsset={loaded:false,groups:[],current:''};
+function playAssetAnim(state,wanted){
+  if(!state.loaded||!state.groups?.length)return;
+  const key=wanted==='walk'?/(walk|run|jog|locomotion)/i:/(idle|stand|breath)/i;
+  const g=state.groups.find(x=>key.test(x.name)) || state.groups[0];
+  if(!g || state.current===g.name)return;
+  state.groups.forEach(x=>{try{x.stop()}catch(e){}});
+  try{g.start(true,wanted==='walk'?1.18:1.0,g.from,g.to,false);state.current=g.name}catch(e){}
+}
+async function loadRealAssets(){
+  let loaded=0, failed=0;
+  setAssetBadge('🎨 Visual HD: carregando personagem, pet e móveis...','loading');
+
+  const RAW='https://raw.githubusercontent.com/agentkaerf/FreeModels/refs/heads/main/';
+  const WOMEN=RAW+'Ultimate%20Modular%20Women%20-%20April%202022/Individual%20Characters/glTF/';
+  const ANIMALS=RAW+'Ultimate%20Animated%20Animals%20-%20July%202021/glTF/';
+  const ENV=RAW+'Sushi%20Restaurant%20Kit%20-%20May%202023/Environment/glTF/';
+  const DEC=RAW+'Sushi%20Restaurant%20Kit%20-%20May%202023/Decoration/glTF/';
+
+  async function importDirect(root,file,targetHeight,pos,rotY=0,parent=null){
+    const result=await BABYLON.SceneLoader.ImportMeshAsync('',root,file,scene);
+    const wrapper=packImported(result,targetHeight,rotY);
+    if(parent){wrapper.parent=parent;wrapper.position.copyFrom(pos||BABYLON.Vector3.Zero())}
+    else wrapper.position.copyFrom(pos||BABYLON.Vector3.Zero());
+    result.meshes.forEach(m=>{
+      if(m.material){
+        try{
+          if('roughness' in m.material)m.material.roughness=Math.max(.38,m.material.roughness||.5);
+          if('metallic' in m.material)m.material.metallic=Math.min(.12,m.material.metallic||0);
+        }catch(e){}
+      }
+    });
+    return {wrapper,result};
+  }
+  const ghost=(items,alpha=.015)=>{
+    for(const item of items.flat()){
+      if(!item)continue;
+      if(item.getChildMeshes){
+        try{item.getChildMeshes().forEach(m=>{m.visibility=alpha;m.isPickable=false})}catch(e){}
+      }
+      if(item.visibility!==undefined){item.visibility=alpha}
+    }
+  };
+
+  // PERSONAGEM ANIMADA REAL — Quaternius Casual, CC0.
+  try{
+    const fallback=player.getChildMeshes().slice();
+    const a=await importDirect(WOMEN,'Casual.gltf',1.88,new BABYLON.Vector3(0,0,0),0,player);
+    fallback.forEach(m=>m.isVisible=false);
+    playerAsset={loaded:true,groups:a.result.animationGroups||[],current:''};
+    playAssetAnim(playerAsset,'idle');
+    loaded++;
+  }catch(e){failed++;console.warn('Casual.gltf fallback',e)}
+
+  // CACHORRO ANIMADO REAL — Quaternius Husky, CC0.
+  try{
+    const fallbackDog=dog.getChildMeshes().slice();
+    const a=await importDirect(ANIMALS,'Husky.gltf',.78,new BABYLON.Vector3(0,0,0),Math.PI/2,dog);
+    fallbackDog.forEach(m=>m.visibility=.002);
+    dogHead.visibility=.002;dogHead.isPickable=true;
+    dogAsset={loaded:true,groups:a.result.animationGroups||[],current:''};
+    playAssetAnim(dogAsset,'idle');
+    loaded++;
+  }catch(e){failed++;console.warn('Husky.gltf fallback',e)}
+
+  // MOBILIÁRIO coerente do mesmo pack Quaternius Sushi Restaurant Kit.
+  const jobs=[
+    ['Environment_Table.gltf',1.03,new BABYLON.Vector3(2.0,0,.45),0,()=>ghost([table,tableLegs,tableRunner])],
+    ['Environment_Chair1.gltf',1.12,new BABYLON.Vector3(1.0,0,.45),Math.PI/2,()=>ghost([chairA])],
+    ['Environment_Chair2.gltf',1.12,new BABYLON.Vector3(3.0,0,.45),-Math.PI/2,()=>ghost([chairB])],
+    ['Environment_Sofa.gltf',1.15,new BABYLON.Vector3(-.8,0,2.15),Math.PI,()=>ghost([sofaBase,sofaBack,cush1,cush2])],
+    ['Environment_Table.gltf',.58,new BABYLON.Vector3(-.65,0,.1),0,()=>ghost([coffee,coffeeLegs])],
+    ['Environment_Counter_Sink.gltf',1.02,new BABYLON.Vector3(2.68,0,3.55),Math.PI,()=>ghost([sink])],
+    ['Environment_Oven.gltf',1.05,new BABYLON.Vector3(4.15,0,3.55),Math.PI,()=>ghost([stoveBase,stoveBurners])],
+    ['Environment_Counter_Doors.gltf',1.0,new BABYLON.Vector3(5.05,0,3.55),Math.PI,()=>{}],
+    ['Environment_Counter_Drawers.gltf',1.0,new BABYLON.Vector3(5.95,0,3.55),Math.PI,()=>{}],
+    ['Environment_KitchenKnives.gltf',.55,new BABYLON.Vector3(4.72,1.0,3.56),Math.PI,()=>{}],
+    ['Environment_Pan.gltf',.28,new BABYLON.Vector3(4.15,1.16,3.55),0,()=>{}],
+    ['Environment_Plate.gltf',.14,new BABYLON.Vector3(2.0,1.10,.45),0,()=>{}],
+    ['Environment_Bowl.gltf',.20,new BABYLON.Vector3(2.35,1.11,.45),0,()=>{}],
+  ];
+
+  for(const [file,h,pos,rot,after] of jobs){
+    try{
+      await importDirect(ENV,file,h,pos,rot);
+      after?.();
+      loaded++;
+    }catch(e){failed++;console.warn('asset env falhou',file,e)}
+  }
+
+  // Decoração 3D que quebra a sensação de "caixas".
+  const decor=[
+    ['Decoration_Plant1.gltf',1.12,new BABYLON.Vector3(-2.7,0,3.75),0,()=>ghost([plant])],
+    ['Decoration_Light.gltf',.70,new BABYLON.Vector3(-2.05,1.35,.55),0,()=>{}],
+    ['Decoration_Painting.gltf',1.0,new BABYLON.Vector3(-1.4,1.55,4.67),Math.PI,()=>{}],
+    ['Decoration_Bamboo.gltf',1.30,new BABYLON.Vector3(-3.05,0,-2.8),0,()=>{}],
+  ];
+  for(const [file,h,pos,rot,after] of decor){
+    try{
+      await importDirect(DEC,file,h,pos,rot);
+      after?.();
+      loaded++;
+    }catch(e){failed++;console.warn('asset decor falhou',file,e)}
+  }
+
+  // Procedural counter shell fica quase invisível depois que os 
