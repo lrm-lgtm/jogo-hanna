@@ -74,7 +74,7 @@ button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 #game{height:100dvh;min-height:100dvh}
 #topHud{padding-top:max(10px,env(safe-area-inset-top));padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
 #rightHud{right:max(10px,env(safe-area-inset-right));top:max(10px,env(safe-area-inset-top))}
-#joystickWrap{left:max(14px,calc(env(safe-area-inset-left) + 10px));bottom:max(18px,calc(env(safe-area-inset-bottom) + 12px))}
+#joystick{left:max(14px,calc(env(safe-area-inset-left) + 10px));bottom:max(18px,calc(env(safe-area-inset-bottom) + 12px))}
 #useBtn{right:max(14px,calc(env(safe-area-inset-right) + 10px));bottom:max(18px,calc(env(safe-area-inset-bottom) + 12px))}
 #speechBubble{bottom:max(132px,calc(env(safe-area-inset-bottom) + 118px))}
 #orientationOverlay{position:fixed;inset:0;z-index:150;background:linear-gradient(150deg,#fff1b8,#ffd4df);display:none;align-items:center;justify-content:center;text-align:center;padding:28px}
@@ -99,12 +99,15 @@ button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
  #coinCard,#timeCard,#starCard{height:40px!important;padding:0 7px!important;font-size:10px!important;border-radius:14px!important}
  #rightHud .roundBtn{width:40px!important;height:40px!important;border-radius:14px!important}
  #useBtn{width:84px;height:84px;font-size:15px;border-radius:50%}
- #joystickWrap{width:110px;height:110px}#joystickKnob{width:48px;height:48px}
+ #joystick{width:110px;height:110px}#stick{width:48px;height:48px}
  #npcStatus{top:max(57px,calc(env(safe-area-inset-top) + 50px));right:max(8px,env(safe-area-inset-right))}
 }
 @media(max-height:520px) and (orientation:landscape){
  #mission{max-width:38vw}#npcStatus{display:none}
  #speechBubble{bottom:max(94px,calc(env(safe-area-inset-bottom) + 86px));padding:8px 12px}#speechText{font-size:12px}
- #useBtn{width:76px;height:76px}#joystickWrap{width:100px;height:100px}
+ #useBtn{width:76px;height:76px}#joystick{width:100px;height:100px}
  #qualityBadge{bottom:max(105px,calc(env(safe-area-inset-bottom) + 100px))}
 }
+/* iPhone touch fix v1.2.1 */
+#game,#joystick,#stick,#useBtn{touch-action:none!important;-ms-touch-action:none!important}
+#joystick,#useBtn{overscroll-behavior:contain}
