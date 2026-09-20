@@ -6,19 +6,22 @@ Jogo infantil 3D em português, feito para navegador/celular.
 
 **https://lrm-lgtm.github.io/jogo-hanna/**
 
-## Versão atual — v1.5 Visual Remaster
+## Versão atual — v1.6 Cinematic Pass
 
-- câmera mais próxima e centrada na personagem;
-- giro com um dedo mantido, sem zoom por pinça;
-- paredes podem ficar translúcidas quando bloqueiam a visão;
-- HUD redesenhado e muito mais compacto;
-- botão contextual: PEGAR / ABRIR / COLOCAR / REGAR / LAVAR / CARINHO;
-- elementos técnicos e badges de debug removidos do gameplay;
-- materiais e iluminação harmonizados;
-- correção de escala de alguns props exagerados;
-- contact shadows leves sob personagem e cachorro;
+- câmera significativamente mais próxima da personagem;
+- enquadramento menos “maquete” e mais jogo em terceira pessoa;
+- giro com um dedo preservado e zoom por pinça bloqueado;
+- exposição e contraste refeitos para reduzir o branco estourado;
+- piso e paredes em tons mais quentes;
+- HUD ainda menor e mais limpo;
+- fala da personagem virou legenda compacta;
+- joystick e botão de ação reduzidos;
+- botão vira AGUARDE em etapas de espera;
+- setas e anéis de objetivo menores;
+- correções específicas de escala para frigideira, facas, prato e tigela;
+- sofá harmonizado para um tom menos saturado;
+- sombras de contato mais discretas;
 - 10 missões principais + 6 extras;
-- áudio/falas em PT-BR;
 - PWA e GitHub Pages.
 
 ### Missões extras

@@ -1,6 +1,6 @@
-const CACHE='jogo-hanna-v1.5.0-remaster';
+const CACHE='jogo-hanna-v1.6.0-cinematic';
 const APP=[
- './index.html','./game.css','./mobile-fix.js','./loader.js','./v13-motion.js','./v14-world.js','./v15-remaster.js',
+ './index.html','./game.css','./mobile-fix.js','./loader.js','./v13-motion.js','./v14-world.js','./v15-remaster.js','./v16-cinematic.js',
  './manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./404.html',
  './payload/game-gz-1.txt','./payload/game-gz-2.txt','./payload/game-gz-3.txt','./payload/game-gz-4.txt'
 ];
