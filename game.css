@@ -111,3 +111,91 @@ button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 /* iPhone touch fix v1.2.1 */
 #game,#joystick,#stick,#useBtn{touch-action:none!important;-ms-touch-action:none!important}
 #joystick,#useBtn{overscroll-behavior:contain}
+
+/* iPhone landscape start-screen fix v1.2.2 */
+@media (orientation:landscape) and (max-height:520px){
+  #start{
+    align-items:flex-start!important;
+    justify-content:center!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch;
+    padding:
+      max(6px,env(safe-area-inset-top))
+      max(8px,env(safe-area-inset-right))
+      max(8px,env(safe-area-inset-bottom))
+      max(8px,env(safe-area-inset-left))!important;
+    touch-action:pan-y!important;
+  }
+  #start .panel{
+    width:min(720px,98vw)!important;
+    min-height:0!important;
+    padding:8px 12px 12px!important;
+    border-radius:18px!important;
+    border-width:2px!important;
+    overflow:visible!important;
+    margin:auto 0!important;
+  }
+  #start .mascot{display:none!important}
+  #start h1{
+    font-size:24px!important;
+    line-height:1!important;
+    margin:1px 0 3px!important;
+  }
+  #start p{
+    font-size:11px!important;
+    line-height:1.15!important;
+    margin:3px 0!important;
+  }
+  #start .pills{
+    gap:4px!important;
+    margin:6px 0!important;
+  }
+  #start .pill{
+    padding:4px 7px!important;
+    font-size:10px!important;
+    border-width:1px!important;
+  }
+  #mobileTools{
+    gap:5px!important;
+    margin-top:5px!important;
+  }
+  #mobileTools button{
+    padding:5px 8px!important;
+    border-radius:10px!important;
+    font-size:10px!important;
+    line-height:1!important;
+  }
+  #assetBadge{
+    margin:5px auto 6px!important;
+    padding:4px 8px!important;
+    font-size:9px!important;
+    border-width:1px!important;
+  }
+  #start .primary{
+    display:block!important;
+    width:min(360px,82vw)!important;
+    margin:3px auto 0!important;
+    padding:9px 16px!important;
+    border-radius:13px!important;
+    font-size:15px!important;
+    line-height:1!important;
+    box-shadow:0 4px 0 #dca541,0 7px 14px rgba(0,0,0,.12)!important;
+  }
+  #start .tiny{
+    display:none!important;
+  }
+  #start .blob{
+    display:none!important;
+  }
+}
+@media (orientation:landscape) and (max-height:360px){
+  #start .panel{padding:5px 9px 8px!important}
+  #start h1{font-size:21px!important}
+  #start p{font-size:9px!important}
+  #start .pills{margin:4px 0!important}
+  #start .pill{padding:3px 6px!important;font-size:9px!important}
+  #mobileTools{margin-top:3px!important}
+  #mobileTools button{padding:4px 7px!important;font-size:9px!important}
+  #assetBadge{margin:3px auto 4px!important;padding:3px 7px!important;font-size:8px!important}
+  #start .primary{padding:8px 14px!important;font-size:14px!important}
+}
