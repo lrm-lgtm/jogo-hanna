@@ -1,4 +1,4 @@
-const CACHE='jogo-hanna-v1.4.1-hotfix3';
+const CACHE='jogo-hanna-v1.4.2-camera';
 const APP=[
  './index.html','./game.css','./mobile-fix.js','./loader.js','./v13-motion.js','./v14-world.js',
  './manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./404.html',

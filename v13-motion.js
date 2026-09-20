@@ -129,10 +129,10 @@ function boot(scene,player){
 
   // Pequeno marcador de versão em jogo.
   const badge=document.createElement('div');
-  badge.id='motionBadge';badge.textContent='✨ v1.3 movimento';
+  badge.id='motionBadge';badge.textContent='✨ v1.4.2 • câmera livre';
   Object.assign(badge.style,{position:'fixed',left:'50%',bottom:'6px',transform:'translateX(-50%)',zIndex:'17',fontSize:'9px',fontWeight:'900',padding:'3px 7px',borderRadius:'999px',background:'#ffffffaa',pointerEvents:'none'});
   document.body.appendChild(badge);
-  console.info('Casa da Hanna v1.3: movimento contextual e objetos na mão ativos');
+  console.info('Casa da Hanna v1.4.2: movimento contextual ativo');
 }
 waitForScene();
 })();
