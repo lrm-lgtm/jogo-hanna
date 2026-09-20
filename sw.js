@@ -1,5 +1,5 @@
-const CACHE='jogo-hanna-v1.2.3-landscape';
-const APP=['./','./index.html','./game.css','./mobile-fix.js','./loader.js','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./404.html','./payload/game-gz-1.txt','./payload/game-gz-2.txt','./payload/game-gz-3.txt','./payload/game-gz-4.txt'];
+const CACHE='jogo-hanna-v1.3.0-motion';
+const APP=['./','./index.html','./game.css','./mobile-fix.js','./loader.js','./v13-motion.js','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./404.html','./payload/game-gz-1.txt','./payload/game-gz-2.txt','./payload/game-gz-3.txt','./payload/game-gz-4.txt'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(APP)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{
