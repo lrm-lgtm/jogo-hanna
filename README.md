@@ -6,22 +6,20 @@ Jogo infantil 3D em português, feito para navegador/celular.
 
 **https://lrm-lgtm.github.io/jogo-hanna/**
 
-## Versão atual — v1.4 Casa Viva Expandida
+## Versão atual — v1.5 Visual Remaster
 
-- 10 missões principais da casa;
-- 6 missões extras;
-- objetos visíveis na mão;
-- ações com movimento contextual;
-- cachorro e bebê;
-- banheiro interativo;
-- quintal com flores e área do cachorro;
-- progressão extra com coroas;
-- desbloqueios visuais;
+- câmera mais próxima e centrada na personagem;
+- giro com um dedo mantido, sem zoom por pinça;
+- paredes podem ficar translúcidas quando bloqueiam a visão;
+- HUD redesenhado e muito mais compacto;
+- botão contextual: PEGAR / ABRIR / COLOCAR / REGAR / LAVAR / CARINHO;
+- elementos técnicos e badges de debug removidos do gameplay;
+- materiais e iluminação harmonizados;
+- correção de escala de alguns props exagerados;
+- contact shadows leves sob personagem e cachorro;
+- 10 missões principais + 6 extras;
 - áudio/falas em PT-BR;
-- dia/noite;
-- PWA;
-- otimização e controles para iPhone;
-- GitHub Pages com deploy automático.
+- PWA e GitHub Pages.
 
 ### Missões extras
 1. Escovar os dentes
