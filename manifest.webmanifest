@@ -7,13 +7,30 @@
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "display_override": ["standalone","fullscreen"],
-  "background_color": "#fff0b7",
-  "theme_color": "#f7cb69",
+  "display_override": [
+    "standalone",
+    "fullscreen"
+  ],
+  "background_color": "#fff0bd",
+  "theme_color": "#f5c55c",
   "orientation": "landscape",
-  "categories": ["games","kids","entertainment"],
+  "categories": [
+    "games",
+    "kids",
+    "entertainment"
+  ],
   "icons": [
-    {"src":"./icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
-    {"src":"./icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"}
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
   ]
 }
