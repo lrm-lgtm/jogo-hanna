@@ -39,8 +39,8 @@ function installMobileOrbit(){
  if(!scene||!camera||!canvas)return false;
  if(camera.__hannaOrbitInstalled)return true;
  try{camera.detachControl?.()}catch(e){} try{camera.inputs?.clear?.()}catch(e){}
- const fixedRadius=Number.isFinite(camera.radius)?camera.radius:7.35;
- camera.lowerRadiusLimit=camera.upperRadiusLimit=fixedRadius;
+ const initialRadius=Number.isFinite(camera.radius)?camera.radius:7.35;
+ camera.lowerRadiusLimit=camera.upperRadiusLimit=initialRadius;
  camera.wheelDeltaPercentage=0;camera.pinchDeltaPercentage=0;camera.panningSensibility=0;
  camera.inertialRadiusOffset=camera.inertialAlphaOffset=camera.inertialBetaOffset=0;
  const BETA_MIN=.88,BETA_MAX=1.20;
@@ -56,12 +56,12 @@ function installMobileOrbit(){
   const dx=e.clientX-lastX,dy=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;
   if(Math.abs(dx)+Math.abs(dy)<.5)return;
   camera.alpha-=dx*.0085;camera.beta=Math.max(BETA_MIN,Math.min(BETA_MAX,camera.beta+dy*.0065));
-  camera.radius=fixedRadius;camera.inertialRadiusOffset=camera.inertialAlphaOffset=camera.inertialBetaOffset=0;cancel(e);
+  camera.radius=camera.lowerRadiusLimit;camera.inertialRadiusOffset=camera.inertialAlphaOffset=camera.inertialBetaOffset=0;cancel(e);
  },{passive:false,capture:true});
  const end=e=>{if(e.pointerType!=='touch')return;touches.delete(e.pointerId);if(e.pointerId===rotateId)rotateId=null;if(touches.size===1)rotateId=null};
  canvas.addEventListener('pointerup',end,{passive:true,capture:true});canvas.addEventListener('pointercancel',end,{passive:true,capture:true});
  scene.onBeforeRenderObservable.add(()=>{
-  camera.radius=fixedRadius;camera.inertialRadiusOffset=camera.inertialAlphaOffset=camera.inertialBetaOffset=0;
+  camera.radius=camera.lowerRadiusLimit;camera.inertialRadiusOffset=camera.inertialAlphaOffset=camera.inertialBetaOffset=0;
   camera.beta=Math.max(BETA_MIN,Math.min(BETA_MAX,camera.beta));
  });
  camera.__hannaOrbitInstalled=true;return true;

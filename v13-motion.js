@@ -7,7 +7,7 @@ const wait=()=>{
 function boot(scene,player){
  if(window.__HANNA_V13__)return;window.__HANNA_V13__=true;
  const B=window.BABYLON,heldEl=document.getElementById('held'),useBtn=document.getElementById('useBtn'),nearEl=document.getElementById('near');
- const anchor=new B.TransformNode('v13HandAnchor',scene);anchor.parent=player;anchor.position.set(.48,1.03,.30);anchor.rotation.set(.05,0,.12);
+ const anchor=new B.TransformNode('v13HandAnchor',scene);anchor.parent=player;anchor.position.set(.30,1.02,.14);
  let carried=null,lastHeld='';const mats={};
  const mat=(n,c)=>mats[n]||(mats[n]=(()=>{const m=new B.StandardMaterial('v13_'+n,scene);m.diffuseColor=B.Color3.FromHexString(c);m.specularColor=new B.Color3(.05,.05,.05);return m})());
  const box=(n,w,h,d,c)=>{const m=B.MeshBuilder.CreateBox(n,{width:w,height:h,depth:d},scene);m.material=mat(n+'M',c);m.isPickable=false;return m};
@@ -39,14 +39,28 @@ function boot(scene,player){
   else {m=sph('carryGeneric',.25,'#f7cb69');m.parent=root}
   carried=root;
  }
- function read(){const text=heldEl&&getComputedStyle(heldEl).display!=='none'?(heldEl.textContent||''):'';if(text===lastHeld)return;lastHeld=text;text?build(text):clear()}
+ function read(){
+  const text=heldEl&&getComputedStyle(heldEl).display!=='none'?(heldEl.textContent||''):'';
+  if(text===lastHeld)return;
+  const oldTeddy=/Ursinho/i.test(lastHeld),newTeddy=/Ursinho/i.test(text);
+  const worldTeddy=scene.getTransformNodeByName('teddy');
+  if(oldTeddy&&!newTeddy&&worldTeddy)worldTeddy.setEnabled(true);
+  lastHeld=text;text?build(text):clear();
+  if(newTeddy&&worldTeddy)worldTeddy.setEnabled(false);
+ }
  new MutationObserver(read).observe(heldEl,{subtree:true,childList:true,attributes:true,characterData:true});read();
  const armR=scene.getMeshByName('armR'),armL=scene.getMeshByName('armL');let until=0,kind='use',baseR=armR?.rotation.x||0,baseL=armL?.rotation.x||0;
  function action(){until=performance.now()+520;const n=(nearEl?.textContent||'').toLowerCase();kind=/cachorro|bebê/.test(n)?'pet':lastHeld?'carry':'use'}
  useBtn?.addEventListener('pointerdown',action);document.addEventListener('keydown',e=>{if(e.code==='KeyE'||e.code==='Space')action()});
- let t=0;scene.onBeforeRenderObservable.add(()=>{const dt=Math.min(.04,(scene.getEngine().getDeltaTime()||16)/1000);t+=dt;if(carried){carried.position.y=Math.sin(t*6)*.018;carried.rotation.y=Math.sin(t*2.3)*.06}
-  const active=performance.now()<until;if(active){const k=Math.sin((1-(until-performance.now())/520)*Math.PI);anchor.rotation.x=.05-.42*k;anchor.position.z=.30+.14*k;if(armR&&armR.isVisible!==false)armR.rotation.x=baseR-.9*k;if(armL&&armL.isVisible!==false&&kind==='pet')armL.rotation.x=baseL-.5*k}
-  else{anchor.rotation.x+=(.05-anchor.rotation.x)*.18;anchor.position.z+=(.30-anchor.position.z)*.18;if(armR&&armR.isVisible!==false)armR.rotation.x+=(baseR-armR.rotation.x)*.18;if(armL&&armL.isVisible!==false)armL.rotation.x+=(baseL-armL.rotation.x)*.18}
+ scene.onBeforeRenderObservable.add(()=>{
+  const wrist=scene.transformNodes.find(n=>/^(?:Wrist\.R|RightHand|mixamorig:RightHand)$/.test(n.name));
+  if(wrist&&wrist.isEnabled()){
+   const hand=B.Vector3.TransformCoordinates(wrist.getAbsolutePosition(),player.getWorldMatrix().clone().invert());
+   anchor.position.set(hand.x,hand.y-.07,hand.z+.06);
+  }else anchor.position.set(.30,1.02,.14);
+  const active=performance.now()<until;
+  if(active){const k=Math.sin((1-(until-performance.now())/520)*Math.PI);anchor.rotation.x=-.25*k;if(armR&&armR.isVisible!==false)armR.rotation.x=baseR-.9*k;if(armL&&armL.isVisible!==false&&kind==='pet')armL.rotation.x=baseL-.5*k}
+  else{anchor.rotation.x*=.72;if(armR&&armR.isVisible!==false)armR.rotation.x+=(baseR-armR.rotation.x)*.18;if(armL&&armL.isVisible!==false)armL.rotation.x+=(baseL-armL.rotation.x)*.18}
  });
 }
 wait();
