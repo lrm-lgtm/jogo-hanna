@@ -45,7 +45,7 @@ const pipeline=new BABYLON.DefaultRenderingPipeline('pipe',true,scene,[camera]);
 pipeline.fxaaEnabled=true;pipeline.samples=1;pipeline.imageProcessingEnabled=true;scene.ambientColor=new BABYLON.Color3(.12,.12,.12);
 function applyQuality(){
  const eco=qualityMode==='eco'||(qualityMode==='auto'&&isMobile&&lowMemory);
- pipeline.bloomEnabled=!eco;pipeline.bloomThreshold=.82;pipeline.bloomWeight=eco?0:.30;pipeline.bloomKernel=isMobile?24:48;
+ pipeline.bloomEnabled=!eco;pipeline.bloomThreshold=.95;pipeline.bloomWeight=eco?0:.12;pipeline.bloomKernel=isMobile?20:32;
  applyHardwareScale();
  const qb=document.getElementById('qualityBadge'),btn=document.getElementById('qualityBtn');
  const label=qualityMode==='hd'?'HD':qualityMode==='eco'?'ECONÔMICO':'AUTO';
@@ -179,7 +179,7 @@ async function loadRealAssets(){
   // PERSONAGEM ANIMADA REAL — Quaternius Casual, CC0.
   try{
     const fallback=player.getChildMeshes().slice();
-    const a=await importDirect(WOMEN,'Casual.gltf',1.88,new BABYLON.Vector3(0,0,0),0,player);
+    const a=await importDirect('./assets/character/','Casual.gltf',1.88,new BABYLON.Vector3(0,0,0),0,player);
     fallback.forEach(m=>m.isVisible=false);
     playerAsset={loaded:true,groups:a.result.animationGroups||[],current:''};
     playAssetAnim(playerAsset,'idle');
@@ -270,13 +270,26 @@ const canSpout=box('canSpout',.30,.05,0,.38,.10,.12,M.blue);canSpout.parent=wate
 const canHandle=BABYLON.MeshBuilder.CreateTorus('canHandle',{diameter:.42,thickness:.06,tessellation:16},scene);canHandle.parent=wateringCan;canHandle.position.set(-.04,.24,0);canHandle.rotation.x=Math.PI/2;canHandle.material=M.blue;
 const stoveBase=box('stove',4.15,1.1,3.55,.95,.18,.62,M.dark);const stoveBurners=[];[-.23,.23].forEach(dx=>[-.15,.15].forEach(dz=>stoveBurners.push(cyl('burn',4.15+dx,1.21,3.55+dz,.25,.025,M.steel))));
 // geladeira estilizada
-const fridgeBody=box('fridge',6.05,1.25,1.55,1.45,2.5,1.35,M.white);box('fridgeBand',6.05,1.55,2.24,1.32,.05,.03,M.steel);
+const fridgeBody=box('fridge',6.05,1.25,1.55,1.45,2.5,1.35,M.white);
+box('fridgeInset',6.05,1.25,.795,1.30,2.33,.035,M.dark);
+box('fridgeTopShelf',6.05,1.92,.735,1.18,.055,.13,M.white);
+box('fridgeMiddleShelf',6.05,1.30,.735,1.18,.055,.13,M.white);
+box('fridgeDrawer',6.05,.49,.73,1.16,.46,.11,M.blue);
+box('fridgeCarton',5.72,2.12,.75,.25,.38,.08,M.cream);
+box('fridgeJar',6.18,2.10,.75,.22,.32,.08,M.pink);
+box('fridgeVegetables',6.38,1.52,.75,.38,.23,.08,M.green);
+box('fridgeEdgeLeft',5.37,1.25,.77,.045,2.42,.10,M.steel);
+box('fridgeEdgeRight',6.73,1.25,.77,.045,2.42,.10,M.steel);
+box('fridgeEdgeTop',6.05,2.46,.77,1.40,.045,.10,M.steel);
 const fridgeHinge=new BABYLON.TransformNode('fridgeHinge',scene);
-fridgeHinge.position.set(5.35,1.25,.83);
-const fridgeDoor=tag(box('fridgeDoor',.70,0,0,1.40,2.38,.08,M.white,true),'fridge','Geladeira');
+fridgeHinge.position.set(5.35,1.25,.68);
+const fridgeDoor=tag(box('fridgeDoor',.70,0,0,1.40,2.38,.10,M.white,true),'fridge','Geladeira');
 fridgeDoor.parent=fridgeHinge;
-const fridgeHandle=box('fridgeHandle',1.24,-.05,-.07,.05,.70,.05,M.steel);
+const fridgeHandle=box('fridgeHandle',1.24,-.05,-.085,.065,.64,.085,M.steel);
 fridgeHandle.parent=fridgeHinge;
+const fridgeSeal=box('fridgeSeal',.70,0,.058,1.28,2.26,.018,M.dark);fridgeSeal.parent=fridgeHinge;
+const fridgeDoorLiner=box('fridgeDoorLiner',.70,0,.073,1.19,2.16,.018,M.white);fridgeDoorLiner.parent=fridgeHinge;
+for(const y of [-.55,.23,.83]){const shelf=box('fridgeDoorShelf',.70,y,.12,1.04,.10,.14,M.blue);shelf.parent=fridgeHinge}
 // mesa
 const table=tag(box('table',2.0,1.0,.45,2.4,.16,1.4,M.wood,true),'table','Mesa');
 const tableLegs=addLegs(2.0,.45,2.2,1.2,.94,M.wood2);
@@ -284,7 +297,7 @@ const tableRunner=box('runner',2.0,1.105,.45,1.65,.035,1.16,M.yellow);
 // cadeiras
 function chair(x,z,r=0){const root=new BABYLON.TransformNode('chair',scene);root.position.set(x,0,z);root.rotation.y=r;const s=box('seat',0,.58,0,.65,.12,.65,M.white);s.parent=root;const b=box('back',0,1.05,.28,.65,.78,.10,M.white);b.parent=root;[[-.23,-.23],[.23,-.23],[-.23,.23],[.23,.23]].forEach(([dx,dz])=>{const l=box('cl',dx,.29,dz,.09,.58,.09,M.wood2);l.parent=root});return root}const chairA=chair(1.0,.45,Math.PI/2);const chairB=chair(3.0,.45,-Math.PI/2);
 // comida café
-const milk=tag(box('milk',5.85,.92,1.55,.34,.62,.34,M.blue,true),'item','Leite',{item:'milk'});milk.isVisible=false;
+const milk=tag(box('milk',5.83,1.57,.73,.34,.55,.10,M.blue,true),'item','Leite',{item:'milk'});milk.isVisible=false;
 const bread=tag(box('bread',3.3,1.21,3.35,.58,.24,.4,M.wood2,true),'item','Pão',{item:'bread'});
 const toaster=tag(box('toaster',5.05,1.2,3.35,.78,.38,.52,M.red,true),'toaster','Torradeira');box('slot',5.05,1.39,3.35,.30,.04,.34,M.dark);
 box('fruitBowl',3.9,1.15,3.88,.5,.12,.5,M.white);sph('apple1',3.8,1.28,3.85,.16,M.red);sph('apple2',4.0,1.28,3.78,.14,M.yellow);box('jar1',6.05,1.23,3.86,.26,.36,.26,M.glass);box('jar2',5.72,1.18,3.88,.22,.26,.22,M.cream);
@@ -311,7 +324,13 @@ const teddyBody=tag(sph('teddyBody',0,.34,0,.38,M.wood,true),'teddy','Ursinho');
 const teddyHead=sph('teddyHead',0,.68,0,.32,M.wood);teddyHead.parent=teddy;
 const teddyEarL=sph('teddyEarL',-.16,.82,0,.13,M.wood2);teddyEarL.parent=teddy;
 const teddyEarR=sph('teddyEarR',.16,.82,0,.13,M.wood2);teddyEarR.parent=teddy;
-const teddyMuzzle=sph('teddyMuzzle',0,.63,.13,.14,M.cream);teddyMuzzle.parent=teddy;
+const teddyMuzzle=sph('teddyMuzzle',0,.63,-.145,.14,M.cream);teddyMuzzle.parent=teddy;
+for(const x of [-.095,.095]){
+ const arm=sph('teddyArm',x*2,.35,0,.17,M.wood);arm.parent=teddy;arm.scaling.y=1.4;
+ const foot=sph('teddyFoot',x*1.25,.13,-.05,.17,M.wood2);foot.parent=teddy;foot.scaling.z=1.3;
+ const eye=sph('teddyEye',x,.71,-.153,.035,M.dark);eye.parent=teddy;
+}
+const teddyNose=sph('teddyNose',0,.65,-.225,.045,M.dark);teddyNose.parent=teddy;
 const toyBlock1=tag(box('block0',-5.95,.22,-.45,.34,.34,.34,M.blue,true),'toy','Bloco azul',{toy:'block1'});
 const toyBlock2=tag(box('block1',-5.55,.22,-.45,.34,.34,.34,M.yellow,true),'toy','Bloco amarelo',{toy:'block2'});
 const toyBlock3=tag(box('block2',-5.15,.22,-.45,.34,.34,.34,M.mint,true),'toy','Bloco verde',{toy:'block3'}); box('starPic',-5.2,2.1,.0,1.45,.95,.05,M.white); ['#f4cb5d','#f2acc3','#80c8dc'].forEach((c,i)=>{const st=sph('star'+i,-5.55+i*.35,2.1,-.04,.16,mkMat('st'+i,c)); st.scaling.z=.35;}); box('mobileBar',-5.2,1.95,1.55,.95,.05,.05,M.white); [-5.52,-5.2,-4.88].forEach((x,i)=>{box('mobStr'+i,x,1.76,1.55,.03,.34,.03,M.white); const s=sph('mobBall'+i,x,1.55,1.55,.12,[M.pink,M.yellow,M.blue][i]);});
@@ -833,7 +852,7 @@ function performPlayerAction(kind='use'){
  if(playerAsset?.loaded){
    const words=kind==='pickup'?['pick','grab','interact']:kind==='pet'?['pet','interact','wave']:['interact','wave'];
    const g=(playerAsset.groups||[]).find(a=>words.some(w=>a.name.toLowerCase().includes(w)));
-   if(g){try{(playerAsset.groups||[]).forEach(a=>a.stop());g.start(false,1.08,g.from,g.to,false);setTimeout(()=>playAssetAnim(playerAsset,'idle'),540);return}catch(e){}}
+   if(g){try{(playerAsset.groups||[]).forEach(a=>a.stop());g.start(false,1.08,g.from,g.to,false);playerAsset.current=g.name;return}catch(e){}}
  }
  // Universal fallback: a small physical gesture, visible even with generic models.
  const base=player.scaling.clone();
@@ -1112,6 +1131,7 @@ function movePlayer(sx,sy,dt){
 }
 function animatePlayer(moving,dt){
  if(playerAsset.loaded){
+   if(performance.now()<playerActionUntil)return;
    playAssetAnim(playerAsset,moving?'walk':'idle');
    return;
  }

@@ -28,7 +28,7 @@ else window.addEventListener('hanna:assets-registry',e=>bindAssetRegistry(e.deta
 const load=src=>new Promise((resolve,reject)=>{
  const script=document.createElement('script');script.src=src;script.onload=resolve;script.onerror=reject;document.body.appendChild(script);
 });
-load('./v17-sala-a.js?v=1.7.4').then(()=>load('./v17-sala-b.js?v=1.7.4')).catch(e=>console.error('v1.7 sala',e));
+load('./v17-sala-a.js?v=1.8.0').then(()=>load('./v17-sala-b.js?v=1.8.0')).catch(e=>console.error('v1.7 sala',e));
 
 function install(){
  const B=window.BABYLON,scene=B?.EngineStore?.LastCreatedScene;

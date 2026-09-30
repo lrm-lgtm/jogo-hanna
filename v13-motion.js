@@ -21,14 +21,20 @@ function boot(scene,player){
   else if(/Ração/i.test(label)){m=box('carryFood',.34,.48,.20,'#e99855');m.parent=root;m.rotation.z=.08}
   else if(/Mamadeira/i.test(label)){m=cyl('carryBottle',.18,.43,'#fbfaf6');m.parent=root;const c=cyl('carryBottleTip',.08,.12,'#f2acc3');c.parent=root;c.position.y=.28}
   else if(/Ursinho/i.test(label)){
+   root.position.set(0,-.17,-.06);root.rotation.z=-.18;
    const bearMat=mat('carryTeddyFur','#a96f45'),muzzleMat=mat('carryTeddyMuzzle','#e7c29b');
    const b=B.MeshBuilder.CreateCapsule('carryTeddyBody',{height:.34,radius:.16,tessellation:12,subdivisions:2},scene);b.material=bearMat;b.parent=root;b.position.y=.08;
    const h=sph('carryTeddyHead',.27,'#a96f45');h.parent=root;h.position.y=.34;
    const e1=sph('carryTeddyEarL',.10,'#805034');e1.parent=root;e1.position.set(-.10,.45,0);
    const e2=sph('carryTeddyEarR',.10,'#805034');e2.parent=root;e2.position.set(.10,.45,0);
-   const mu=sph('carryTeddyMuzzle',.105,'#e7c29b');mu.parent=root;mu.position.set(0,.31,.12);
+   const mu=sph('carryTeddyMuzzle',.105,'#e7c29b');mu.parent=root;mu.position.set(0,.31,-.13);
    const a1=sph('carryTeddyArmL',.11,'#a96f45');a1.parent=root;a1.position.set(-.18,.10,0);a1.rotation.z=-.35;
    const a2=sph('carryTeddyArmR',.11,'#a96f45');a2.parent=root;a2.position.set(.18,.10,0);a2.rotation.z=.35;
+   for(const x of [-.095,.095]){
+    const foot=sph('carryTeddyFoot',.12,'#805034');foot.parent=root;foot.position.set(x,-.13,-.035);foot.scaling.z=1.25;
+    const eye=sph('carryTeddyEye',.029,'#2e241d');eye.parent=root;eye.position.set(x,.36,-.13);
+   }
+   const nose=sph('carryTeddyNose',.035,'#2e241d');nose.parent=root;nose.position.set(0,.31,-.19);
   }
   else if(/Bola/i.test(label)){m=sph('carryBall',.34,'#e46f68');m.parent=root}
   else if(/Bloco/i.test(label)){m=box('carryBlock',.32,.32,.32,'#80c8dc');m.parent=root}
@@ -42,11 +48,7 @@ function boot(scene,player){
  function read(){
   const text=heldEl&&getComputedStyle(heldEl).display!=='none'?(heldEl.textContent||''):'';
   if(text===lastHeld)return;
-  const oldTeddy=/Ursinho/i.test(lastHeld),newTeddy=/Ursinho/i.test(text);
-  const worldTeddy=scene.getTransformNodeByName('teddy');
-  if(oldTeddy&&!newTeddy&&worldTeddy)worldTeddy.setEnabled(true);
   lastHeld=text;text?build(text):clear();
-  if(newTeddy&&worldTeddy)worldTeddy.setEnabled(false);
  }
  new MutationObserver(read).observe(heldEl,{subtree:true,childList:true,attributes:true,characterData:true});read();
  const armR=scene.getMeshByName('armR'),armL=scene.getMeshByName('armL');let until=0,kind='use',baseR=armR?.rotation.x||0,baseL=armL?.rotation.x||0;
