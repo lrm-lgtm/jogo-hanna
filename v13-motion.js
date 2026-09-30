@@ -20,7 +20,16 @@ function boot(scene,player){
   else if(/Pão|Torrada/i.test(label)){m=box('carryBread',.34,.25,.15,/Torrada/i.test(label)?'#8a532f':'#c98a51');m.parent=root}
   else if(/Ração/i.test(label)){m=box('carryFood',.34,.48,.20,'#e99855');m.parent=root;m.rotation.z=.08}
   else if(/Mamadeira/i.test(label)){m=cyl('carryBottle',.18,.43,'#fbfaf6');m.parent=root;const c=cyl('carryBottleTip',.08,.12,'#f2acc3');c.parent=root;c.position.y=.28}
-  else if(/Ursinho/i.test(label)){const b=sph('carryTeddyBody',.35,'#c78955');b.parent=root;const h=sph('carryTeddyHead',.28,'#8e5937');h.parent=root;h.position.y=.28}
+  else if(/Ursinho/i.test(label)){
+   const bearMat=mat('carryTeddyFur','#a96f45'),muzzleMat=mat('carryTeddyMuzzle','#e7c29b');
+   const b=B.MeshBuilder.CreateCapsule('carryTeddyBody',{height:.34,radius:.16,tessellation:12,subdivisions:2},scene);b.material=bearMat;b.parent=root;b.position.y=.08;
+   const h=sph('carryTeddyHead',.27,'#a96f45');h.parent=root;h.position.y=.34;
+   const e1=sph('carryTeddyEarL',.10,'#805034');e1.parent=root;e1.position.set(-.10,.45,0);
+   const e2=sph('carryTeddyEarR',.10,'#805034');e2.parent=root;e2.position.set(.10,.45,0);
+   const mu=sph('carryTeddyMuzzle',.105,'#e7c29b');mu.parent=root;mu.position.set(0,.31,.12);
+   const a1=sph('carryTeddyArmL',.11,'#a96f45');a1.parent=root;a1.position.set(-.18,.10,0);a1.rotation.z=-.35;
+   const a2=sph('carryTeddyArmR',.11,'#a96f45');a2.parent=root;a2.position.set(.18,.10,0);a2.rotation.z=.35;
+  }
   else if(/Bola/i.test(label)){m=sph('carryBall',.34,'#e46f68');m.parent=root}
   else if(/Bloco/i.test(label)){m=box('carryBlock',.32,.32,.32,'#80c8dc');m.parent=root}
   else if(/Regador/i.test(label)){m=cyl('carryCan',.30,.36,'#80c8dc');m.parent=root;m.rotation.z=Math.PI/2}
