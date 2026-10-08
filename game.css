@@ -20,7 +20,7 @@ button{font:inherit;color:inherit;touch-action:manipulation}
 .secondaryPlay{display:block;width:min(350px,90%);margin:10px auto 0;background:linear-gradient(180deg,#d9f1df,#92cda7);box-shadow:0 6px 0 #69a77d,0 10px 20px #0002}
 #mobileTools{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:9px}#mobileTools button{border:0;border-radius:12px;padding:7px 10px;font-weight:800;font-size:11px;background:#fff4d3}
 #assetBadge{margin:8px auto 11px;display:inline-flex;padding:6px 9px;border-radius:999px;background:#f0f8f1;border:1px solid #cfe8d4;font-size:10px;font-weight:800}
-#assetBadge.loading{background:#fff5db;border-color:#f6dda0}.assetBadge.warn{background:#fff0e8}.assetBadge.ok{background:#edf9f0}
+#assetBadge.loading{background:#fff5db;border-color:#f6dda0}#assetBadge.warn{background:#fff0e8}#assetBadge.ok{background:#edf9f0}
 
 #top{position:fixed;z-index:30;left:max(9px,env(safe-area-inset-left));right:max(9px,env(safe-area-inset-right));top:max(8px,env(safe-area-inset-top));display:flex;gap:6px;align-items:flex-start;pointer-events:none}
 .card{background:rgba(255,253,248,.91);border:1.5px solid rgba(255,255,255,.95);border-radius:17px;box-shadow:var(--shadow);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
@@ -73,3 +73,43 @@ body.v16-waiting #useBtn{opacity:.46;filter:saturate(.5)}body.v16-waiting #near{
 }
 
 @media (orientation:portrait) and (pointer:coarse){body:not(.allowPortrait) #orientationOverlay{display:flex}}
+
+/* ===== v1.9: ergonomia infantil e interface que não cobre a cena ===== */
+#mission{width:min(335px,40vw);max-width:40vw;padding:10px 12px}
+#missionHeader{font-size:11px}
+#instruction{font-size:15px;line-height:1.22;margin:5px 0 7px}
+.stepText{font-size:11px}
+#useBtn{width:88px;height:88px;min-width:88px;min-height:88px;gap:3px}
+#useBtn .actionIcon{font-size:24px}
+#useBtn .actionText{font-size:12px}
+#joystick{width:104px;height:104px}
+#stick{width:46px;height:46px;left:27px;top:27px}
+#near{bottom:max(112px,calc(env(safe-area-inset-bottom) + 102px));font-size:12px;max-width:220px}
+#speechBubble{bottom:max(110px,calc(env(safe-area-inset-bottom) + 98px));max-width:min(390px,72vw)}
+#speechText{font-size:13px;line-height:1.25}
+#toastMsg{font-size:14px}
+#held{top:101px;font-size:12px;max-width:185px}
+@media (orientation:portrait) and (max-width:520px){
+ #mission{width:50vw;max-width:50vw;padding:9px 10px}
+ #instruction{font-size:13px;line-height:1.22}
+ #missionHeader{font-size:10px}
+ #held{top:54px}
+ #joystick{width:98px;height:98px}
+ #stick{width:44px;height:44px;left:25px;top:25px}
+ #useBtn{width:84px;height:84px;min-width:84px;min-height:84px}
+}
+@media (orientation:landscape) and (max-height:520px){
+ #mission{width:min(285px,39vw);max-width:39vw;padding:7px 10px}
+ #instruction{font-size:12px;line-height:1.2;margin:3px 0 4px}
+ #missionHeader{font-size:9px}
+ #joystick{width:92px;height:92px;bottom:max(9px,env(safe-area-inset-bottom))}
+ #stick{width:42px;height:42px;left:23px;top:23px}
+ #useBtn{width:82px;height:82px;min-width:82px;min-height:82px;bottom:max(9px,env(safe-area-inset-bottom))}
+ #near{bottom:max(93px,calc(env(safe-area-inset-bottom) + 87px));font-size:11px}
+ #held{top:44px;font-size:10px}
+ #speechBubble{bottom:max(96px,calc(env(safe-area-inset-bottom) + 90px));max-width:min(340px,54vw)}
+ #speechText{font-size:11px}
+}
+@media (orientation:landscape) and (min-width:700px){
+ #coinCard{display:flex}
+}
