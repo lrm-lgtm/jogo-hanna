@@ -38,8 +38,8 @@ function boot(scene,player){
   }
   else if(/Bola/i.test(label)){m=sph('carryBall',.34,'#e46f68');m.parent=root}
   else if(/Bloco/i.test(label)){m=box('carryBlock',.32,.32,.32,'#80c8dc');m.parent=root}
-  else if(/Regador/i.test(label)){m=cyl('carryCan',.30,.36,'#80c8dc');m.parent=root;m.rotation.z=Math.PI/2}
-  else if(/Prato/i.test(label)){m=cyl('carryDish',.42,.06,'#fbfaf6');m.parent=root;m.rotation.x=Math.PI/2}
+  else if(/Regador/i.test(label)){m=cyl('carryCan',.30,.36,'#80c8dc');m.parent=root}
+  else if(/Prato/i.test(label)){m=cyl('carryDish',.42,.06,'#fbfaf6');m.parent=root}
   else if(/Almofada/i.test(label)){m=box('carryCushion',.48,.18,.42,/rosa/i.test(label)?'#d9899e':'#d8aa54');m.parent=root;m.rotation.z=.12}
   else if(/Pano/i.test(label)){m=box('carryCloth',.42,.04,.32,'#bfe5cf');m.parent=root;m.rotation.z=.18}
   else {m=sph('carryGeneric',.25,'#f7cb69');m.parent=root}
@@ -54,12 +54,24 @@ function boot(scene,player){
  const armR=scene.getMeshByName('armR'),armL=scene.getMeshByName('armL');let until=0,kind='use',baseR=armR?.rotation.x||0,baseL=armL?.rotation.x||0;
  function action(){until=performance.now()+520;const n=(nearEl?.textContent||'').toLowerCase();kind=/cachorro|bebê/.test(n)?'pet':lastHeld?'carry':'use'}
  useBtn?.addEventListener('pointerdown',action);document.addEventListener('keydown',e=>{if(e.code==='KeyE'||e.code==='Space')action()});
+ // O glTF pode carregar depois deste script e nomear o osso como Hand.R,
+ // mixamorigRightHand ou CC_Base_R_Hand. Procuramos sem custo a cada frame.
+ let wrist=null,lastWristLookup=0;
+ function findRightHand(){
+  return scene.transformNodes.find(node=>{
+   const name=(node.name||'').replace(/[^a-z0-9]/gi,'').toLowerCase();
+   return /^(?:wristr|handr|righthand|rightwrist|mixamorigrighthand|mixamorigrightwrist|ccbaserhand|bip001rhand)$/.test(name);
+  })||null;
+ }
  scene.onBeforeRenderObservable.add(()=>{
-  const wrist=scene.transformNodes.find(n=>/^(?:Wrist\.R|RightHand|mixamorig:RightHand)$/.test(n.name));
+  const now=performance.now();
+  if((!wrist||!wrist.isEnabled())&&now-lastWristLookup>450){
+   wrist=findRightHand();lastWristLookup=now;
+  }
   if(wrist&&wrist.isEnabled()){
    const hand=B.Vector3.TransformCoordinates(wrist.getAbsolutePosition(),player.getWorldMatrix().clone().invert());
-   anchor.position.set(hand.x,hand.y-.07,hand.z+.06);
-  }else anchor.position.set(.30,1.02,.14);
+   anchor.position.set(hand.x,hand.y-.06,hand.z+.04);
+  }else anchor.position.set(.29,1.06,.04);
   const active=performance.now()<until;
   if(active){const k=Math.sin((1-(until-performance.now())/520)*Math.PI);anchor.rotation.x=-.25*k;if(armR&&armR.isVisible!==false)armR.rotation.x=baseR-.9*k;if(armL&&armL.isVisible!==false&&kind==='pet')armL.rotation.x=baseL-.5*k}
   else{anchor.rotation.x*=.72;if(armR&&armR.isVisible!==false)armR.rotation.x+=(baseR-armR.rotation.x)*.18;if(armL&&armL.isVisible!==false)armL.rotation.x+=(baseL-armL.rotation.x)*.18}

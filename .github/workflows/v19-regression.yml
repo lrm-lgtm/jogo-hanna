@@ -1,0 +1,22 @@
+name: Casa Hanna - Regressao v1.9
+on:
+  pull_request:
+    paths:
+      - '**.js'
+      - '**.cjs'
+      - '**.css'
+      - '**.html'
+      - 'payload/**'
+      - 'tests/**'
+      - '.github/workflows/v19-regression.yml'
+  push:
+    branches: [main]
+jobs:
+  static-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node tests/v19-regression.test.cjs

@@ -6,23 +6,32 @@ Jogo infantil 3D em português, feito para navegador/celular.
 
 **https://lrm-lgtm.github.io/jogo-hanna/**
 
-## Versão atual — v1.6 Cinematic Pass
+## Versão atual — v1.9.0 Estabilização
 
-- câmera significativamente mais próxima da personagem;
-- enquadramento menos “maquete” e mais jogo em terceira pessoa;
-- giro com um dedo preservado e zoom por pinça bloqueado;
-- exposição e contraste refeitos para reduzir o branco estourado;
-- piso e paredes em tons mais quentes;
-- HUD ainda menor e mais limpo;
-- fala da personagem virou legenda compacta;
-- joystick e botão de ação reduzidos;
-- botão vira AGUARDE em etapas de espera;
-- setas e anéis de objetivo menores;
-- correções específicas de escala para frigideira, facas, prato e tigela;
-- sofá harmonizado para um tom menos saturado;
-- sombras de contato mais discretas;
-- 10 missões principais + 6 extras;
-- PWA e GitHub Pages.
+Esta versão corrige regressões da v1.8 **sem apagar ou refazer as 16 missões**.
+Para o diagnóstico detalhado, motivos técnicos e limitações, veja
+[docs/REVISAO-V1.9.md](docs/REVISAO-V1.9.md).
+
+- distância de câmera adaptada a retrato/paisagem (evita enquadramento excessivamente fechado);
+- restauração da transparência pontual de paredes que bloqueiam a personagem;
+- correção do centro e da orientação espacial do sofá glTF;
+- desativação da mesa de centro redundante importada pelo código antigo;
+- colisões simples alinhadas a sofá, mesa de centro, rack e cadeiras novas;
+- manutenção das áreas invisíveis usadas pela jogabilidade sem obstáculos fantasmas;
+- interface com textos mais legíveis e joystick/botão de ação maiores;
+- objetos carregados alinhados à mão direita em mais convenções de esqueleto;
+- correção da orientação dos objetos prato e regador;
+- preservação de PWA, salvamento local e missões (10 principais + 6 extras).
+
+**Referência recuperável:** `edca592c` (v1.8.0), também disponível em
+`backup/v1.8-before-v1.9-2026-10-08`.
+
+### O que ainda exige validação em aparelho real
+
+A qualidade final do visual, a animação importada e o carregamento de assets
+externos só podem ser julgados em partida real no Android/iPhone e no desktop.
+Os testes automatizados verificam estrutura, sintaxe e consistência do código,
+não substituem um teste visual.
 
 ### Missões extras
 1. Escovar os dentes
