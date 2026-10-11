@@ -1,0 +1,50 @@
+{
+  "license": "CC0-1.0",
+  "attribution": "Kay Lousberg / KayKit",
+  "upstreams": {
+    "restaurant": {
+      "repository": "KayKit-Game-Assets/KayKit-Restaurant-Bits-1.0",
+      "commit": "153c8a7535b48237854cb54ff6890679f8c574d1",
+      "sourceRoot": "addons/kaykit_restaurant_bits/Assets/gltf",
+      "models": [
+        "fridge_A",
+        "kitchencounter_straight_A_backsplash",
+        "kitchencounter_straight_B_backsplash",
+        "kitchencounter_sink_backsplash",
+        "kitchencabinet",
+        "oven",
+        "stove_multi_countertop",
+        "pan_A",
+        "plate",
+        "cuttingboard",
+        "jar_A_small",
+        "jar_B_small",
+        "kitchentable_A_large",
+        "chair_A",
+        "food_ingredient_bun",
+        "food_ingredient_bun_top",
+        "plate_small",
+        "extractorhood",
+        "shelf_papertowel",
+        "bowl",
+        "table_round_A_small"
+      ]
+    },
+    "furniture": {
+      "repository": "KayKit-Game-Assets/KayKit-Furniture-Bits-1.0",
+      "commit": "96d5930a8dbdb363409bbc2d3341718b00e17c9c",
+      "sourceRoot": "addons/kaykit_furniture_bits/Assets/gltf",
+      "models": [
+        "cactus_small_A",
+        "cabinet_small_decorated",
+        "lamp_table",
+        "rug_rectangle_stripes_A",
+        "shelf_A_small"
+      ]
+    }
+  },
+  "sources": [
+    "https://github.com/KayKit-Game-Assets/KayKit-Restaurant-Bits-1.0",
+    "https://github.com/KayKit-Game-Assets/KayKit-Furniture-Bits-1.0"
+  ]
+}
