@@ -999,7 +999,7 @@ function dogFetchSequence(){
 }
 
 function dogEatSequence(){dogAte=true;dogBrain.event('feed');playAssetAnim(dogAsset,'walk');const start=dog.position.clone(),end=new BABYLON.Vector3(3.3,0,-2.55),begin=performance.now();const obs=scene.onBeforeRenderObservable.add(()=>{const t=Math.min(1,(performance.now()-begin)/950);dog.position=BABYLON.Vector3.Lerp(start,end,t);if(t>=1){scene.onBeforeRenderObservable.remove(obs);showToast('🐶 Nhac nhac!');sfx('bark');speak('Au au! Que gostoso!',{avatar:'🐶',pitch:.88,rate:1.02});playAssetAnim(dogAsset,'idle');setTimeout(()=>{dogBowl.material=M.blue;advance('dogAte',dogHead)},900)}})}
-function interact(){const m=nearestInteractive();if(!m)return;const type=m.metadata?.type;performPlayerAction(['item','foodBag','babyBottle','teddy','toy','wateringCan','dish','cushion','cloth'].includes(type)?'pickup':(['dog','baby'].includes(type)?'pet':'use'));
+function interact(){const m=nearestInteractive();if(!m){showToast('Chegue mais perto do objeto da missão 😊');return}const type=m.metadata?.type;performPlayerAction(['item','foodBag','babyBottle','teddy','toy','wateringCan','dish','cushion','cloth'].includes(type)?'pickup':(['dog','baby'].includes(type)?'pet':'use'));
  if(type==='fridge'){if(missionIndex!==0)return;
    if(!fridgeOpen){
      fridgeOpen=true;sfx('door');
@@ -1027,12 +1027,14 @@ function interact(){const m=nearestInteractive();if(!m)return;const type=m.metad
    }
  }
  else if(type==='babyBottle'){if(missionIndex!==2||step!==0||held)return;sfx('pickup');held='bottle';babyBottle.isVisible=false;hud();bounceY(player,.08,12);advance('bottleHeld',player)}
- else if(type==='baby'){if(missionIndex!==2)return;
-   if(step===1&&held==='bottle'){held=null;babyFed=true;babyBrain.event('feed');updateNpcHud();babyMood.material=M.mint;hud();showToast('🍼 Glup glup!');sfx('baby');speak('Oba!',{avatar:'👶',pitch:1.28,rate:1.08});bounceY(baby,.08,20);advance('babyFed',babyHead)}
-   else if(step===5&&lampOn){babyPetted=true;babyBrain.event('pet');updateNpcHud();babyMood.material=M.pink;showToast('💗 Bebê feliz!');burstAt(babyHead.getAbsolutePosition(),'#f5a6bd');advance('babyPetted',babyHead)}
+ else if(type==='baby'){
+   if(missionIndex===2){
+     if(step===1&&held==='bottle'){held=null;babyFed=true;babyBrain.event('feed');updateNpcHud();babyMood.material=M.mint;hud();showToast('🍼 Glup glup!');sfx('baby');speak('Oba!',{avatar:'👶',pitch:1.28,rate:1.08});bounceY(baby,.08,20);advance('babyFed',babyHead)}
+     else if(step===5&&lampOn){babyPetted=true;babyBrain.event('pet');updateNpcHud();babyMood.material=M.pink;showToast('💗 Bebê feliz!');burstAt(babyHead.getAbsolutePosition(),'#f5a6bd');advance('babyPetted',babyHead)}
    }else if(missionIndex===9){
      if(step===3&&blanketTucked){babyBrain.event('pet');updateNpcHud();showToast('💗 Shhh...');advance('goodnightPet',babyHead)}
      else if(step===4){goodnightDone=true;babyBrain.event('sleep');updateNpcHud();speak('Boa noite, bebê. Dorme bem!',{avatar:'👶',pitch:1.12});advance('goodnightDone',babyHead)}
+   }
  }
  else if(type==='teddy'){if(missionIndex!==2||step!==2||held)return;sfx('pickup');held='teddy';teddy.setEnabled(false);hud();advance('teddyHeld',player)}
  else if(type==='crib'){if(missionIndex===2&&step===3&&held==='teddy'){held=null;teddyInCrib=true;teddy.setEnabled(true);teddy.position.set(-5.2,.48,1.55);teddy.rotation.y=.3;hud();bounceY(teddy,.10,18);advance('teddyInCrib',cribMattress)}}
@@ -1119,9 +1121,19 @@ let downX=0,downY=0,downButton=0;canvas.addEventListener('pointerdown',e=>{downX
 const joy=$('#joystick'),stick=$('#stick');let joyId=null,jx=0,jy=0;function setJoy(x,y){const R=35,d=Math.hypot(x,y),k=d>R?R/d:1;jx=x*k/R;jy=y*k/R;stick.style.transform=`translate(${x*k}px,${y*k}px)`}joy.addEventListener('pointerdown',e=>{joyId=e.pointerId;joy.setPointerCapture(e.pointerId);const r=joy.getBoundingClientRect();setJoy(e.clientX-r.left-r.width/2,e.clientY-r.top-r.height/2)});joy.addEventListener('pointermove',e=>{if(e.pointerId!==joyId)return;const r=joy.getBoundingClientRect();setJoy(e.clientX-r.left-r.width/2,e.clientY-r.top-r.height/2)});function endJoy(e){if(e.pointerId!==joyId)return;joyId=null;jx=jy=0;stick.style.transform='translate(0,0)'}joy.addEventListener('pointerup',endJoy);joy.addEventListener('pointercancel',endJoy);
 function movePlayer(sx,sy,dt){
  const len=Math.hypot(sx,sy);if(len<.001)return false;sx/=len;sy/=len;
- const forward=camera.target.subtract(camera.position);forward.y=0;forward.normalize();
- const right=BABYLON.Vector3.Cross(BABYLON.Axis.Y,forward).normalize();
- const world=forward.scale(sy).add(right.scale(sx));
+ const forward=camera.target.subtract(camera.position);
+ // View-space calibration: arrows/WASD and joystick must follow what is shown
+ // on screen even if the orbit camera has rotated or its handedness changes.
+ const view=camera.getViewMatrix();
+ const eyeOrigin=BABYLON.Vector3.TransformCoordinates(player.position,view);
+ const screenProjection=axis=>{
+   const projected=BABYLON.Vector3.TransformCoordinates(
+     player.position.add(new BABYLON.Vector3(axis.x,0,axis.z)),view);
+   return {x:projected.x-eyeOrigin.x,up:projected.y-eyeOrigin.y};
+ };
+ const motion=window.HannaMovement.direction(
+   {x:forward.x,z:forward.z},sx,sy,screenProjection);
+ const world=new BABYLON.Vector3(motion.x,0,motion.z);
  const speed=3.25*dt,delta=new BABYLON.Vector3(world.x*speed,0,world.z*speed);
  playerCollider.moveWithCollisions(delta);
  playerCollider.position.x=Math.max(-6.45,Math.min(6.45,playerCollider.position.x));
