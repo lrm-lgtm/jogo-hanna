@@ -1,0 +1,16 @@
+name: Casa Hanna - P2 Asset Catalog
+on:
+  push:
+    branches: [feature/hanna-p2-art-pipeline-prep-20261011]
+jobs:
+  asset-preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify documented models and artwork gates
+        run: node --test tests/p2-assets.test.cjs
+      - name: Verify P1 mission audit
+        run: node --test tests/p1-mission-inventory.test.cjs

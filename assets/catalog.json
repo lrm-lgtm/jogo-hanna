@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "scope": "assets atualmente versionados; não equivale a aprovação visual",
+  "artDirection": "cozy-cartoon-3d",
+  "assets": [
+    {
+      "id": "character-casual",
+      "file": "assets/character/Casual.gltf",
+      "source": "Quaternius Ultimate Modular Women, via agentkaerf/FreeModels",
+      "sourceUrl": "https://quaternius.com/packs/ultimatemodularwomen.html",
+      "license": "CC0",
+      "status": "already-in-repo",
+      "role": "player",
+      "fit": "review-style"
+    },
+    {
+      "id": "sofa-01",
+      "file": "assets/sofa/Sofa_01_1k.gltf",
+      "source": "Poly Haven",
+      "sourceUrl": "https://polyhaven.com/a/Sofa_01",
+      "license": "CC0",
+      "status": "already-in-repo",
+      "role": "living-room-sofa",
+      "fit": "review-style"
+    },
+    {
+      "id": "wooden-table-02",
+      "file": "assets/wooden_table_02/wooden_table_02_1k.gltf",
+      "source": "Poly Haven",
+      "sourceUrl": "https://polyhaven.com/a/wooden_table_02",
+      "license": "CC0",
+      "status": "already-in-repo",
+      "role": "dining-table",
+      "fit": "review-style"
+    },
+    {
+      "id": "painted-wooden-chair-01",
+      "file": "assets/painted_wooden_chair_01/painted_wooden_chair_01_1k.gltf",
+      "source": "Poly Haven",
+      "sourceUrl": "https://polyhaven.com/a/painted_wooden_chair_01",
+      "license": "CC0",
+      "status": "already-in-repo",
+      "role": "dining-chair",
+      "fit": "review-style"
+    }
+  ],
+  "candidateSources": [
+    {
+      "name": "KayKit Furniture Bits",
+      "url": "https://kaylousberg.itch.io/furniture-bits",
+      "licenseReview": "required-per-download",
+      "status": "not-downloaded"
+    },
+    {
+      "name": "Quaternius Ultimate Home Interior",
+      "url": "https://quaternius.com/packs/ultimatehomeinterior.html",
+      "licenseReview": "required-per-download",
+      "status": "not-downloaded"
+    },
+    {
+      "name": "Kenney Furniture Kit",
+      "url": "https://kenney.nl/assets/furniture-kit",
+      "licenseReview": "required-per-download",
+      "status": "not-downloaded"
+    }
+  ]
+}
