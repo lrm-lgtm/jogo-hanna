@@ -2,6 +2,8 @@ name: Casa da Hanna 3 - Cozinha Piloto
 on:
   push:
     branches: [feature/hanna-3-premium-kitchen-pilot-20261011]
+    paths-ignore:
+      - 'pilot/previews/**'
 permissions:
   contents: write
 concurrency:
@@ -60,8 +62,8 @@ jobs:
         if: always() && github.actor != 'github-actions[bot]'
         run: |
           mkdir -p pilot/previews
-          test ! -f pilot/previews/desktop.png && test -f artifacts/kitchen-v3/01-desktop-landscape.png && cp artifacts/kitchen-v3/01-desktop-landscape.png pilot/previews/desktop.png || true
-          test ! -f pilot/previews/portrait.png && test -f artifacts/kitchen-v3/05-android-portrait.png && cp artifacts/kitchen-v3/05-android-portrait.png pilot/previews/portrait.png || true
+          test -f artifacts/kitchen-v3/01-desktop-landscape.png && cp artifacts/kitchen-v3/01-desktop-landscape.png pilot/previews/desktop.png || true
+          test -f artifacts/kitchen-v3/05-android-portrait.png && cp artifacts/kitchen-v3/05-android-portrait.png pilot/previews/portrait.png || true
           git add pilot/previews
           if ! git diff --cached --quiet; then
             git config user.name "github-actions[bot]"
