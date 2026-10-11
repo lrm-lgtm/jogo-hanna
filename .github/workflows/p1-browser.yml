@@ -1,0 +1,37 @@
+name: Casa Hanna - P1 Live Mission Smoke
+on:
+  push:
+    branches: [feature/hanna-p1-mission-audit-20261011]
+concurrency:
+  group: hanna-p1-browser
+  cancel-in-progress: true
+jobs:
+  mission-first-actions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve the game
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/hanna-p1-http.log 2>&1 &
+          for n in {1..30}; do
+            curl -fsS http://127.0.0.1:8765/index.html >/dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Exercise first action of each main and extra mission
+        run: node --test tests/p1-browser-smoke.test.cjs
+      - name: Upload failure screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: casa-hanna-p1-live-mission-evidence
+          path: artifacts/p1-browser/
+          if-no-files-found: warn
+          retention-days: 14

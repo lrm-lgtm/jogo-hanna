@@ -1,0 +1,26 @@
+name: Casa Hanna - P1 Mission Inventory
+on:
+  push:
+    branches: [feature/hanna-p1-mission-audit-20261011]
+  pull_request:
+    paths:
+      - 'tests/p1-mission-inventory.test.cjs'
+      - 'src/core-game.js'
+      - 'v14-world.js'
+jobs:
+  mission-inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify 16 mission definitions and progression references
+        run: node --test tests/p1-mission-inventory.test.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: casa-hanna-p1-mission-catalog
+          path: artifacts/p1-audit/mission-catalog.json
+          if-no-files-found: warn
+          retention-days: 14
