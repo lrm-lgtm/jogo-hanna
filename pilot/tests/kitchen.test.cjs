@@ -27,7 +27,7 @@ test('desktop: full eight-step kitchen mission completed by real pathfinding (no
  try{
   session=await open(browser,1280,720,false);
   const {page,errors}=session,initial=await qa(page);
-  assert.equal(initial.step,0);assert.equal(initial.orientation,'landscape');assert.equal(initial.modelCount,20);
+  assert.equal(initial.step,0);assert.equal(initial.orientation,'landscape');assert.equal(initial.modelCount,23);
   assert.deepEqual(initial.loadErrors,[]);
   await page.screenshot({path:path.join(evidence,'01-desktop-landscape.png')});
   for(let i=0;i<8;i++){
