@@ -86,3 +86,10 @@ test('persist complete mission catalog as CI audit artifact',()=>{
  fs.writeFileSync(path.join(output,'mission-catalog.json'),JSON.stringify(report,null,2)+'\n');
  console.log('MISSION AUDIT: '+report.totalMissions+' missions, '+report.totalSteps+' steps');
 });
+
+test('extra proximity prioritizes the active mission target before nearest irrelevant props',()=>{
+ const segment=extra.slice(extra.indexOf('function extraNear(max=1.75){'),extra.indexOf('function pop(mesh){'));
+ assert.match(segment,/const expected=targetFor\(stepDef\(\)\?\.\[1\]\)/);
+ assert.match(segment,/return expected;/);
+ assert.ok(segment.indexOf('return expected;')<segment.indexOf('for(const o of Object.values(objects))'));
+});
