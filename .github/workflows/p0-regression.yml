@@ -1,0 +1,43 @@
+name: Casa Hanna - P0 build and regression
+on:
+  push:
+    branches: [feature/hanna-p0-interactions-controls-20261011]
+permissions:
+  contents: write
+jobs:
+  gameplay-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Rebuild actual browser payload from core source
+        run: node src/build-payload.cjs
+      - name: Run existing v1.9 regression
+        run: node tests/v19-regression.test.cjs
+      - name: Run P0 functional regression
+        run: node --test tests/p0-gameplay.test.cjs
+      - name: Commit rebuilt payload for branch preview
+        run: |
+          if ! git diff --quiet -- payload/; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add payload/
+            git commit -m "build(p0): regenerate browser payload for gameplay fixes"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+      - name: HTTP smoke-check of immutable preview
+        run: |
+          set -euo pipefail
+          sha="$(git rev-parse HEAD)"
+          base="https://rawcdn.githack.com/lrm-lgtm/jogo-hanna/${sha}"
+          curl --retry 4 --retry-delay 3 --fail --location --silent --show-error "${base}/index.html" -o /tmp/hanna-preview.html
+          grep -Fq "P0 Preview" /tmp/hanna-preview.html
+          curl --retry 4 --retry-delay 3 --fail --location --silent --show-error "${base}/src/movement.js" -o /tmp/hanna-movement.js
+          grep -Fq "HannaMovement" /tmp/hanna-movement.js
+          curl --retry 4 --retry-delay 3 --fail --location --silent --show-error "${base}/payload/game-gz-1.txt" -o /tmp/hanna-payload.txt
+          test -s /tmp/hanna-payload.txt
+          echo "Public preview assets available: ${base}/index.html"
