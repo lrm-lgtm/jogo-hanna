@@ -7,7 +7,7 @@ const {mkdirSync}=require('node:fs');
 const {join}=require('node:path');
 const artifacts=join(__dirname,'../artifacts/p1-browser');
 mkdirSync(artifacts,{recursive:true});
-const mainTargets=['fridgeDoor','foodBag','babyBottle','toyBall','canBody','dirtyPlate','looseCush1','toyBall','cleaningCloth','curtainTarget'];
+const mainTargets=['fridgeDoor','foodBag','babyBottle','ball','canBody','dirtyPlate','looseCush1','ball','cleaningCloth','curtainTarget'];
 const extraTargets=['v14_toothbrush','v14_soap','v14_shirt','v14_yardCan','v14_yardBall','v14_shampoo'];
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 test('all 16 missions: real page, real target, real USAR, first step progresses', {timeout:540000},async()=>{
