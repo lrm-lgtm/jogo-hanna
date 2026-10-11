@@ -3,15 +3,15 @@
 ## Isolamento
 - Base imutável de referência: main@53e3646204699b30af0d3f5685ee70c5a6ba2b4d (v1.9).
 - Branch: feature/hanna-p0-interactions-controls-20261011.
-- Preview de desenvolvimento (terceirizado, não oficial): https://raw.githack.com/lrm-lgtm/jogo-hanna/feature/hanna-p0-interactions-controls-20261011/index.html
-- A prévia pode exibir uma confirmação intermediária e tem cache de alguns minutos. Não é o GitHub Pages de produção.
+- Preview imutável verificada por HTTP no GitHub Actions: https://rawcdn.githack.com/lrm-lgtm/jogo-hanna/a0c16d4030916a3fc1fd518423af394d147e9f0e/index.html
+- A prévia pode exibir uma confirmação intermediária; o link por commit é imutável. Não é o GitHub Pages de produção.
 - Evitar instalar a prévia como PWA até a validação em aparelhos reais.
 
 ## Evidências automatizadas
 1. `node src/build-payload.cjs` atualiza os quatro arquivos compactados usados pelo navegador.
 2. `node tests/v19-regression.test.cjs` verifica sintaxe, recursos e integridade core/payload.
 3. `node --test tests/p0-gameplay.test.cjs` exercita todos os cinco passos de Hora de Dormir e a direção relativa à câmera em quatro orientações.
-4. Workflow de branch reconstrói, testa e comita o payload; resultado deve ser consultado em GitHub Actions.
+4. Workflow de branch reconstrói, testa, publica o payload e consulta por HTTP o HTML, o módulo de movimento e o primeiro pedaço do pacote no CDN. GitHub Actions: https://github.com/lrm-lgtm/jogo-hanna/actions/workflows/p0-regression.yml.
 
 ## Matriz manual obrigatória — antes de mesclar
 - [ ] No navegador PC, testar W/A/S/D e setas em quatro orientações da câmera, inclusive diagonais, perto de paredes.
