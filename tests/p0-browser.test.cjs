@@ -68,8 +68,8 @@ async function sceneState(page) {
  return page.evaluate(()=>{
   const sc=BABYLON.EngineStore.LastCreatedScene;
   return {
-    curtainL:sc.getMeshByName('curtainL')?.position.x,
-    curtainR:sc.getMeshByName('curtainR')?.position.x,
+    curtainL:sc.getMeshesByName('curtainL').at(-1)?.position.x,
+    curtainR:sc.getMeshesByName('curtainR').at(-1)?.position.x,
     lampMaterial:sc.getMeshByName('nightLamp')?.material?.name,
     lampIntensity:sc.getLightByName('nightLight')?.intensity,
     blanketY:sc.getMeshByName('sleepBlanket')?.position.y
