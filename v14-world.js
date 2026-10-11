@@ -217,6 +217,15 @@ function resetMissionObjects(){
  if(extraMission===5){show(objects.shampoo,true);show(objects.towel,true)}
 }
 function extraNear(max=1.75){
+ // P1: a missão tem prioridade sobre decorações e NPCs próximos.
+ // Antes, o "mais próximo" podia ser uma pia, canteiro ou cachorro no lugar
+ // do sabonete, shampoo ou brinquedo exigido pelo passo ativo.
+ const expected=targetFor(stepDef()?.[1]);
+ if(expected && expected.isVisible!==false &&
+    (typeof expected.isEnabled!=='function'||expected.isEnabled())){
+   const p=expected.getAbsolutePosition();
+   if(Math.hypot(p.x-player.position.x,p.z-player.position.z)<=max)return expected;
+ }
  let best=null,bd=999;
  for(const o of Object.values(objects)){
   if(!o||o.isVisible===false||!o.metadata?.v14Type)continue;
