@@ -112,7 +112,7 @@ targetHalo.rotation.x=Math.PI/2;targetHalo.material=M.gold;targetHalo.position.y
 targetHalo.isPickable=false;
 const haloGem=sphere('targetSparkle',[0,1.9,0],.19,M.gold);haloGem.isPickable=false;
 const cameraTarget=new B.Vector3(0,.65,0);
-let currentStep=0,moving=false,waypoints=[],dest=null,joystick={x:0,y:0},pressed=new Set(),toastTimeout=null,frameCount=0,avgFps=0,held='',ready=false,loadErrors=[];
+let modelsLoaded=0,currentStep=0,moving=false,waypoints=[],dest=null,joystick={x:0,y:0},pressed=new Set(),toastTimeout=null,frameCount=0,avgFps=0,held='',ready=false,loadErrors=[];
 const SAVE='hanna_kitchen_pilot_v1';
 const steps=[
  {id:'fridge',label:'Abra a geladeira',action:'ABRIR',nav:[-2.95,.38],event:'Geladeira aberta! O leite está lá dentro.'},
@@ -373,6 +373,7 @@ async function assets(){
  for(const [name,pack,pos,scale,rotation,label] of tasks){
   el('loadDetail').textContent='Montando a cozinha... '+(++i)+'/'+tasks.length+' · '+name;
   try{const out=await addModel(name,pack,pos,scale,rotation);
+   modelsLoaded++;
    if(label)visuals.set(label,out.root);
    if(name==='fridge_A'){
     out.meshes.filter(m=>/door/i.test(m.name)).forEach(m=>m.setEnabled(false));
@@ -411,7 +412,7 @@ async function boot(){
   Object.defineProperty(window,'__hannaKitchenQA',{get:()=>Object.freeze({
    ready,step:currentStep,missionLength:steps.length,avatar:{x:character.position.x,z:character.position.z},
    currentTarget:target().key,distance:distanceTo(target().nav),walking:moving,pathLength:waypoints.length,
-   fps:avgFps,orientation:innerHeight>innerWidth?'portrait':'landscape',modelCount:20,
+   fps:avgFps,orientation:innerHeight>innerWidth?'portrait':'landscape',modelCount:modelsLoaded,
    loadErrors:loadErrors.slice(),saved:!!localStorage.getItem(SAVE)
   })});
   setInfo('Toque na geladeira brilhando ou use «IR ATÉ».',2800);
