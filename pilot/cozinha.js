@@ -5,10 +5,12 @@ const el=id=>document.getElementById(id);
 if(!B){el('loadDetail').textContent='Não foi possível carregar Babylon.js. Verifique a internet.';return}
 const scene=new B.Scene(new B.Engine(canvas,true,{adaptToDeviceRatio:true,stencil:true}));
 const engine=scene.getEngine();
-scene.clearColor=B.Color4.FromHexString('#d8e9e7ff');
+// Mobile GPU: cap internal rendering at about 1.5 physical pixels per CSS pixel.
+engine.setHardwareScalingLevel(Math.max(1,(window.devicePixelRatio||1)/1.5));
+scene.clearColor=B.Color4.FromHexString('#dcebe5ff');
 scene.imageProcessingConfiguration.toneMappingEnabled=true;
 scene.imageProcessingConfiguration.toneMappingType=B.ImageProcessingConfiguration.TONEMAPPING_ACES;
-scene.imageProcessingConfiguration.exposure=1.22;
+scene.imageProcessingConfiguration.exposure=1.07;
 scene.imageProcessingConfiguration.contrast=1.13;
 const camera=new B.ArcRotateCamera('camera',-Math.PI/2.90,.84,11,new B.Vector3(-.15,.8,0),scene);
 camera.mode=B.Camera.ORTHOGRAPHIC_CAMERA;
@@ -18,9 +20,9 @@ camera.panningSensibility=0;
 camera.inputs.clear();
 scene.activeCamera=camera;
 const hemi=new B.HemisphericLight('softSky',new B.Vector3(-.2,1,-.25),scene);
-hemi.intensity=.89;hemi.groundColor=B.Color3.FromHexString('#aa8883');
+hemi.intensity=.73;hemi.groundColor=B.Color3.FromHexString('#aa8883');
 const sun=new B.DirectionalLight('warmWindowLight',new B.Vector3(-.42,-1,.35),scene);
-sun.position.set(-3.2,8,-5.8);sun.intensity=1.45;
+sun.position.set(-3.2,8,-5.8);sun.intensity=1.55;
 sun.diffuse=B.Color3.FromHexString('#fff3df');
 const warm=new B.PointLight('warmFill',new B.Vector3(3,3,-2),scene);warm.intensity=.20;warm.diffuse=B.Color3.FromHexString('#ffd5a9');
 const pipeline=new B.DefaultRenderingPipeline('premiumCartoon',true,scene,[camera]);
@@ -35,7 +37,7 @@ function mat(name,hex,roughness=0.85){
 }
 const M={
  floor:mat('warmIvory','#f5e6d1'),wall:mat('peachWall','#f6d8cb'),mint:mat('mintCabinet','#93c7b3'),
- wood:mat('honeyWood','#b97d55'),trim:mat('whiteTrim','#fff5e8'),coral:mat('softCoral','#ed9b87'),
+ wood:mat('honeyWood','#cf9f79'),trim:mat('whiteTrim','#fff5e8'),coral:mat('softCoral','#e8a7a0'),
  hair:mat('honeyHair','#946647'),skin:mat('skin','#f5c9a6'),cloth:mat('lavenderApron','#9b91cb'),
  eyes:mat('eyes','#352e38'),white:mat('milkWhite','#fffdfa'),leaf:mat('leaf','#7caf80'),
  berry:mat('berry','#ed8199'),blue:mat('blue','#9bd6df'),gold:mat('gold','#f2bf5d'),plate:mat('plate','#fdf5e4')
@@ -163,6 +165,7 @@ function updateAction(){
 function updateVisuals(){
  const fridgeOpen=currentStep>=1;
  if(visuals.get('door'))visuals.get('door').rotation.y=fridgeOpen?-1.28:0;
+ if(visuals.get('fridgeShelves'))visuals.get('fridgeShelves').setEnabled(fridgeOpen);
  objects.get('milk').proxy.isPickable=currentStep===1;
  objects.get('bread').proxy.isPickable=currentStep===3;
  objects.get('toast').proxy.isPickable=currentStep===6;
@@ -175,8 +178,9 @@ function updateVisuals(){
  heldCharm.setEnabled(!!held);
  heldCharm.material=held==='milk'?M.white:held==='bread'?M.gold:M.coral;
  const goal=target();
- targetHalo.position.x=goal.nav.x;targetHalo.position.z=goal.nav.z;
- haloGem.position.x=goal.proxy.position.x;haloGem.position.z=goal.proxy.position.z;haloGem.position.y=goal.proxy.position.y+goal.proxy.scaling.y+.58;
+ // Highlight the actual object, not the walk destination.
+ targetHalo.position.x=goal.proxy.position.x;targetHalo.position.z=goal.proxy.position.z;
+ haloGem.position.x=goal.proxy.position.x;haloGem.position.z=goal.proxy.position.z;haloGem.position.y=goal.proxy.position.y+goal.proxy.getBoundingInfo().boundingBox.extendSizeWorld.y+.35;
  if(currentStep===8){targetHalo.setEnabled(false);haloGem.setEnabled(false);el('finish').hidden=false}
 }
 function stepAction(){
@@ -357,6 +361,7 @@ async function assets(){
  ['extractorhood','restaurant',[2.15,1.83,2.62],[.93,.8,.58],0],
  ['pan_A','restaurant',[2.04,1.33,1.63],[.46,.17,.46],0],
  ['kitchentable_A_large','restaurant',[-.10,0,-.66],[2.1,.92,1.18],0],
+ ['rug_rectangle_stripes_A','furniture',[-.08,.035,-.86],[2.70,.052,1.64],0],
  ['chair_A','restaurant',[-1.51,0,-.64],[.56,.83,.64],-1.40],
  ['chair_A','restaurant',[1.42,0,-.64],[.56,.83,.64],1.40],
  ['plate','restaurant',[-.04,.99,-.68],[.56,.12,.56],0],
@@ -367,13 +372,17 @@ async function assets(){
  ['food_ingredient_bun','restaurant',[1.63,1.14,1.47],[.36,.25,.33],0,'bread'],
  ['cactus_small_A','furniture',[-3.56,.86,2.50],[.35,.59,.34],0],
  ['cabinet_small_decorated','furniture',[3.48,0,1.94],[.68,1.16,.68],0],
- ['lamp_table','furniture',[-2.25,.89,2.58],[.30,.54,.32],0]
+ ['lamp_table','furniture',[-2.25,.89,2.58],[.30,.54,.32],0],
+ ['shelf_A_small','furniture',[.65,1.95,2.64],[1.05,.46,.32],0],
+ ['shelf_papertowel','restaurant',[-1.82,1.10,1.81],[.30,.39,.30],0]
  ];
  let i=0;
  for(const [name,pack,pos,scale,rotation,label] of tasks){
   el('loadDetail').textContent='Montando a cozinha... '+(++i)+'/'+tasks.length+' · '+name;
   try{const out=await addModel(name,pack,pos,scale,rotation);
    modelsLoaded++;
+   if(name==='kitchentable_A_large')out.meshes.forEach(mesh=>{if(mesh.getTotalVertices?.()>0)mesh.material=M.wood});
+   if(name==='oven')out.meshes.forEach(mesh=>{if(mesh.getTotalVertices?.()>0)mesh.material=M.mint});
    if(label)visuals.set(label,out.root);
    if(name==='fridge_A'){
     out.meshes.filter(m=>/door/i.test(m.name)).forEach(m=>m.setEnabled(false));
@@ -381,12 +390,17 @@ async function assets(){
   }catch(e){loadErrors.push(name+': '+e.message)}
  }
  if(loadErrors.length)throw new Error('Falha em '+loadErrors.join('; '));
+ scene.getMeshByName('rugBase').setEnabled(false);scene.getMeshByName('rugInset').setEnabled(false);
  // Independent pivot provides physically visible swing on the imported refrigerator.
  const pivot=new B.TransformNode('fridgeDoorHinge',scene);pivot.position.set(-3.55,1.10,1.52);
  const door=box('fridgeSwingDoor', [.53,0,-.02],[1.08,2.06,.095],M.trim);door.parent=pivot;
  const panel=box('fridgeDoorInset',[.53,.07,-.082],[.91,1.67,.025],M.blue);panel.parent=pivot;
  const handle=box('fridgeDoorHandle',[1.00,.1,-.135],[.065,.44,.075],M.gold);handle.parent=pivot;
  shadow.addShadowCaster(door);visuals.set('door',pivot);
+ const fridgeShelfGroup=new B.TransformNode('fridgeInnerShelves',scene);
+ box('fridgeInnerShelf1',[-2.92,1.10,1.45],[.75,.045,.34],M.trim).parent=fridgeShelfGroup;
+ box('fridgeInnerShelf2',[-2.92,1.54,1.45],[.75,.045,.34],M.trim).parent=fridgeShelfGroup;
+ visuals.set('fridgeShelves',fridgeShelfGroup);
  const milk=new B.TransformNode('milkInFridge',scene);milkCarton(milk,[-3.00,1.25,1.30]);visuals.set('milk',milk);
  const tableMilk=new B.TransformNode('milkOnTable',scene);milkCarton(tableMilk,[-.65,1.22,-.68]);visuals.set('milkTable',tableMilk);
  const breadModel=visuals.get('bread');
