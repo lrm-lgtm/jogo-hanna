@@ -24,8 +24,12 @@ test('all 16 missions: real page, real target, real USAR, first step progresses'
   },null,{timeout:80000});
  }
  async function openMission(index,extra){
-  await page.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded',timeout:60000});
-  await ready();
+  // Keep the same Chromium tab: only the very first mission needs navigation.
+  // Each later mission changes the save, then reloads once into that mission.
+  if(!page.url().startsWith('http://127.0.0.1:8765/')){
+    await page.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded',timeout:60000});
+    await ready();
+  }
   await page.evaluate(({i,e})=>{
    localStorage.setItem('jogo_hanna_v11_save',JSON.stringify({
      schema:2,missionIndex:e?0:i,step:0,coins:0,stars:0,completed:[],achievements:[],gameHour:8
