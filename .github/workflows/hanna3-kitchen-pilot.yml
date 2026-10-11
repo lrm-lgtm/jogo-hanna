@@ -56,6 +56,19 @@ jobs:
           path: artifacts/kitchen-v3/
           if-no-files-found: warn
           retention-days: 21
+      - name: Preserve visual review screenshots on branch
+        if: always()
+        run: |
+          mkdir -p pilot/previews
+          test -f artifacts/kitchen-v3/01-desktop-landscape.png && cp artifacts/kitchen-v3/01-desktop-landscape.png pilot/previews/desktop.png || true
+          test -f artifacts/kitchen-v3/05-android-portrait.png && cp artifacts/kitchen-v3/05-android-portrait.png pilot/previews/portrait.png || true
+          git add pilot/previews
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "evidence(kitchen): capture actual desktop and portrait rendering"
+            git push origin "HEAD:$GITHUB_REF_NAME"
+          fi
       - name: Smoke check immutable public preview
         if: success()
         run: |
