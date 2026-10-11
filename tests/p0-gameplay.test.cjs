@@ -17,7 +17,7 @@ function interactionSource(){
 function missionHarness(){
   const successes=[],animations=[],events=[];
   const ctx={
-    missionIndex:9,step:0,curtainsClosed:false,blanketTucked:false,goodnightDone:false,
+    missionIndex:9,step:0,lampOn:false,curtainsClosed:false,blanketTucked:false,goodnightDone:false,
     item:null,curtainL:{position:{x:-6.05}},curtainR:{position:{x:-4.35}},
     curtainTarget:{},sleepBlanket:{position:{y:.73}},nightLamp:{material:'cream'},
     nightLight:{intensity:0},babyHead:{},babyBrain:{event:name=>events.push(name)},
