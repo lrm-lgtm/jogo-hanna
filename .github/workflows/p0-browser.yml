@@ -2,13 +2,9 @@ name: Casa Hanna - Browser E2E
 on:
   push:
     branches: [feature/hanna-p0-interactions-controls-20261011]
-  pull_request:
-    paths:
-      - 'tests/p0-browser.test.cjs'
-      - '.github/workflows/p0-browser.yml'
-      - 'src/**'
-      - 'payload/**'
-      - 'index.html'
+concurrency:
+  group: hanna-p0-browser
+  cancel-in-progress: true
 jobs:
   real-browser:
     runs-on: ubuntu-latest
