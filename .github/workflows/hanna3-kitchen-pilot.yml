@@ -57,11 +57,11 @@ jobs:
           if-no-files-found: warn
           retention-days: 21
       - name: Preserve visual review screenshots on branch
-        if: always()
+        if: always() && github.actor != 'github-actions[bot]'
         run: |
           mkdir -p pilot/previews
-          test -f artifacts/kitchen-v3/01-desktop-landscape.png && cp artifacts/kitchen-v3/01-desktop-landscape.png pilot/previews/desktop.png || true
-          test -f artifacts/kitchen-v3/05-android-portrait.png && cp artifacts/kitchen-v3/05-android-portrait.png pilot/previews/portrait.png || true
+          test ! -f pilot/previews/desktop.png && test -f artifacts/kitchen-v3/01-desktop-landscape.png && cp artifacts/kitchen-v3/01-desktop-landscape.png pilot/previews/desktop.png || true
+          test ! -f pilot/previews/portrait.png && test -f artifacts/kitchen-v3/05-android-portrait.png && cp artifacts/kitchen-v3/05-android-portrait.png pilot/previews/portrait.png || true
           git add pilot/previews
           if ! git diff --cached --quiet; then
             git config user.name "github-actions[bot]"
