@@ -410,6 +410,12 @@ function milkCarton(parent,pos){
 
 async function loadRoundedKitchenArt(){
  const result=await B.SceneLoader.ImportMeshAsync('','./assets/','kitchen-architecture-r2.glb',scene);
+ // Blender glTF is right-handed. Babylon left-handed import mirrors X by default;
+ // cancel ONLY that import-space reflection so fridge/sink/stove match gameplay targets.
+ const correction=new B.TransformNode('BlenderR2HandednessCorrection',scene);
+ correction.scaling.x=-1;
+ for(const root of [...result.meshes,...result.transformNodes].filter(n=>!n.parent))root.parent=correction;
+ correction.computeWorldMatrix(true);
  const meshes=result.meshes.filter(m=>m.getTotalVertices?.()>0);
  if(meshes.length<45)throw new Error('Blender R2 exportação incompleta ('+meshes.length+' meshes)');
  const min=new B.Vector3(Infinity,Infinity,Infinity),max=new B.Vector3(-Infinity,-Infinity,-Infinity);
@@ -421,6 +427,13 @@ async function loadRoundedKitchenArt(){
   if(/B2_(table|chair|fridge)/.test(m.name))shadow.addShadowCaster(m);
  }
  // Detect a Blender coordinate conversion mistake instead of delivering mirrored/scaled furniture.
+ const fridgeNode=result.transformNodes.find(n=>n.name?.includes('B2_fridge_enclosure'))||
+   result.meshes.find(n=>n.name?.includes('B2_fridge_enclosure'));
+ if(fridgeNode){
+  fridgeNode.computeWorldMatrix(true);
+  if(Math.abs(fridgeNode.getAbsolutePosition().x+2.95)>.5)
+   throw new Error('Geladeira Blender fora da posição da geladeira jogável: '+fridgeNode.getAbsolutePosition().x.toFixed(2));
+ }
  if(min.x< -5||max.x>5||min.z< -4||max.z>4||min.y< -.5||max.y>4)
   throw new Error('Coordenadas Blender GLB incorretas: '+min.toString()+'/'+max.toString());
  const r2Decor=new Set(['fridgeBody','fridgeSide','fridgeTop','fridgeToeKick',
