@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Hanna 3.0: free Blender character workshop. Generates 3D GLB and real Blender renders.
 No Codex, subscription, bought models or downloaded proprietary assets.
-Art direction: warm chocolate hair, pink bow/hoodie, large hazel eyes, lavender flower leggings.
+Character contract: actual playable avatar, teal floral tank, pink tiered skirt, pink hi-tops, high ponytail, pastel plush octopus backpack.
 The model is a new, stylized *original game character*, not a likeness of a real child.
 """
 import bpy, math, os, json, random
@@ -98,49 +98,115 @@ def line(name,pts,thickness,mat,parent=root,radii=None):
     obj=bpy.data.objects.new(name,data);bpy.context.collection.objects.link(obj)
     return register(obj,name,mat,parent)
 
-# Stylized child proportions: character model intended for a playful mobile game.
-# Artistic v2: sculpted face, recessed eyes, tapered hair ribbons, softer fabric silhouettes.
-uv("hoodie-body",(0,-.004,1.04),(.289,.204,.315),PINK)
-uv("hoodie-waist-rib",(0,-.001,.77),(.285,.209,.062),PINKDARK)
-uv("hoodie-hood",(0,.171,1.34),(.252,.098,.20),PINKDARK)
-uv("hood-inner",(0,.239,1.375),(.185,.032,.149),PINKLIGHT)
-uv("neck",(0,-.015,1.383),(.103,.085,.10),SKIN)
-# Pouch pocket and kitty stitched detail.
-uv("front-hoodie-pocket",(0,-.21,.94),(.168,.025,.088),PINKLIGHT)
-line("pocket-top-stitch",[(-.145,-.233,.983),(0,-.244,1.003),(.145,-.233,.983)],.006,WHITE)
-cube("hoodie-kitty-face",(0,-.214,1.130),(.172,.014,.135),WHITE,bevel=.052)
-uv("kitty-ear-L",(-.057,-.218,1.209),(.036,.018,.041),WHITE)
-uv("kitty-ear-R",(.057,-.218,1.209),(.036,.018,.041),WHITE)
-for x in [-.055,.055]:
-    uv("kitty-embroidery-eye", (x,-.232,1.151),(.010,.005,.011),DARK)
-uv("kitty-pink-nose",(0,-.236,1.124),(.014,.008,.011),BLUSH)
-line("hoodie-drawstring-left",[(-.082,-.231,1.320),(-.084,-.258,1.230)],.008,WHITE)
-line("hoodie-drawstring-right",[(.082,-.231,1.320),(.085,-.258,1.236)],.008,WHITE)
-
-# Lilac leggings and flexible hips.
-uv("shorts-under-hoodie",(0,.001,.72),(.26,.20,.135),LAVDARK)
+# R4: the user's cartoon reference is the actual playable player specification.
+# High-ponytail girl in teal floral tank, multi-layer ruffled pink skirt, high-top sneakers,
+# pastel plush octopus backpack. The torso and backpack follow the same HannaRig as animations.
+TEAL=material("teal floral tank",(.15,.58,.56),.83)
+TEAL_RIB=material("neck binding teal",(.10,.43,.43),.87)
+SKIRT=material("rose layered skirt",(.96,.30,.48),.82)
+SKIRT_HEM=material("soft rose hem",(.98,.49,.62),.84)
+OCTO_LILAC=material("plush octopus lavender",(.66,.53,.83),.97)
+OCTO_CREAM=material("plush octopus ivory",(.98,.82,.71),.96)
+OCTO_PINK=material("plush octopus pink",(.99,.63,.73),.97)
+OCTO_BLUE=material("plush octopus sky",(.60,.78,.86),.97)
+OCTO_DARK=material("octopus embroidered eyes",(.19,.095,.13),.89)
+LACE=material("pink shoelaces",(.98,.80,.84),.81)
+uv("teal-cotton-tank",(0,-.006,1.095),(.267,.172,.268),TEAL)
+uv("collar-binding",(0,-.103,1.332),(.139,.070,.043),TEAL_RIB)
+uv("neck",(0,-.014,1.390),(.094,.080,.092),SKIN)
+for side in [-1,1]:
+    # Bare upper shoulders are visible: this is a SLEEVELESS top, not the prior hoodie.
+    uv("tank-shoulder-strap-%s"%side,(side*.193,-.044,1.297),(.067,.139,.072),TEAL)
+    line("armhole-binding-%s"%side,[(side*.240,-.080,1.306),(side*.272,-.085,1.24),(side*.269,-.02,1.167)],.007,TEAL_RIB)
+# 3 separate embroidered flowers, curved on the front of the actual turquoise fabric.
+for idx,(xx,zz,scale) in enumerate([(-.085,1.12,.043),(.105,1.17,.052),(.009,1.035,.041)]):
+    for petal in range(5):
+        theta=2*pi*petal/5
+        uv("shirt-daisy-%s-%s"%(idx,petal),
+           (xx+scale*.76*cos(theta),-.179-.010*(1-abs(xx)),zz+scale*.76*sin(theta)),
+           (scale*.51,.009,scale*.39),WHITE if idx!=1 else OCTO_PINK,root,24,16)
+    uv("shirt-daisy-gold-%s"%idx,(xx,-.198,zz),(scale*.32,.010,scale*.32),GOLD,root,24,16)
+# Real ruffled skirt geometry: connected rings with tapered fabric folds, not spheres.
+def ruffled_layer(name,z1,z2,top_r,bottom_r,material,phase):
+    segments=96;levels=8;verts=[];faces=[]
+    for j in range(levels):
+        tt=j/(levels-1);z=z1+(z2-z1)*tt
+        for i in range(segments):
+            a=i*2*pi/segments
+            wave=sin(a*12+phase)*(.008+.028*tt**1.7)
+            radius=(top_r+(bottom_r-top_r)*tt)+wave
+            elliptic_y=.78
+            height_bounce=sin(a*12+phase)*(.024*tt**2)
+            verts.append((radius*cos(a),radius*elliptic_y*sin(a),z+height_bounce))
+    for j in range(levels-1):
+        for i in range(segments):
+            p=j*segments+i;q=j*segments+(i+1)%segments
+            faces.append((p,q,q+segments,p+segments))
+    mesh=bpy.data.meshes.new(name+"-surface");mesh.from_pydata(verts,[],faces);mesh.update()
+    ob=bpy.data.objects.new(name,mesh);bpy.context.collection.objects.link(ob)
+    register(ob,name,material)
+    modifier=ob.modifiers.new("fabric thickness","SOLIDIFY");modifier.thickness=.010
+    modifier.offset=0
+    return ob
+uv("skirt-waistband",(0,-.006,.852),(.254,.175,.060),SKIRT)
+ruffled_layer("skirt-layer-under",.88,.62,.245,.42,SKIRT_HEM,0.6)
+ruffled_layer("skirt-layer-middle",.88,.69,.251,.387,SKIRT,1.4)
+ruffled_layer("skirt-layer-top",.88,.76,.254,.330,SKIRT_HEM,2.0)
+line("pink-ribbon-waist",[(-.16,-.198,.856),(0,-.215,.853),(.16,-.198,.856)],.012,SKIRT_HEM)
+# Waist bow
+waist_bow=empty("WaistBow",(0,-.219,.852),root)
+for side in [-1,1]:
+    loop=uv("skirt-waist-bow-%s"%side,(side*.066,0,.015),(.077,.025,.045),SKIRT_HEM,waist_bow)
+    loop.rotation_euler[1]=side*.40
+    uv("skirt-ribbon-tail-%s"%side,(side*.03,-.005,-.058),(.024,.020,.065),SKIRT,waist_bow)
+uv("skirt-bow-center",(0,-.030,.013),(.030,.030,.028),PINK,waist_bow)
+# Bare legs, anatomically tapered from skirt to ankle. Shoes are pink HIGH TOPS with laces/hearts.
 for side,pivot in [(-1,leftleg),(1,rightleg)]:
-    uv("legging-thigh-"+str(side),(0,0,-.17),(.129,.129,.24),LAV,pivot)
-    uv("legging-knee-"+str(side),(0,-.006,-.355),(.124,.130,.18),LAV,pivot)
-    uv("sock-"+str(side),(0,0,-.515),(.106,.116,.067),WHITE,pivot)
-    uv("shoe-main-"+str(side),(0,-.063,-.590),(.147,.206,.101),PINKLIGHT,pivot)
-    uv("shoe-sole-"+str(side),(0,-.063,-.669),(.155,.216,.031),SOLE,pivot)
-    line("shoelace-"+str(side),[(-.07,-.252,-.575),(0,-.273,-.586),(.07,-.252,-.575)],.009,WHITE,pivot)
-    # A pair of five-petal embroidered daisies on each leg.
-    for k,center in enumerate([(-.06,-.155,-.16),(.055,-.146,-.385)]):
-        for n in range(5):
-            t=2*pi*n/5
-            uv("stitched-petal-%s-%s-%s"%(side,k,n),
-               (center[0]+.024*cos(t),center[1],center[2]+.024*sin(t)),(.020,.009,.019),FLOWER,pivot,24,16)
-        uv("daisy-center-%s-%s"%(side,k),(center[0],center[1]-.008,center[2]),(.016,.011,.016),GOLD,pivot,24,16)
-
-# Sleeves have relaxed seams; hands are visible at the correct height.
+    uv("natural-thigh-"+str(side),(0,0,-.195),(.115,.114,.250),SKIN,pivot)
+    uv("natural-calf-"+str(side),(0,0,-.378),(.098,.102,.189),SKIN,pivot)
+    uv("white-ribbed-sock-"+str(side),(0,-.006,-.528),(.105,.105,.073),WHITE,pivot)
+    uv("high-top-sneaker-upper-"+str(side),(0,-.025,-.596),(.129,.169,.123),PINKLIGHT,pivot)
+    uv("high-top-sneaker-sole-"+str(side),(0,-.076,-.672),(.145,.195,.032),SOLE,pivot)
+    uv("pink-shoe-toecap-"+str(side),(0,-.188,-.641),(.126,.065,.057),WHITE,pivot)
+    line("high-top-laces-"+str(side),[(0,-.198,-.543),(0,-.207,-.565),(0,-.218,-.588),
+         (0,-.219,-.616)],.007,LACE,pivot)
+    for k in range(3):
+        z=-.558-k*.021
+        line("cross-lace-%s-%s"%(side,k),[(-.068,-.184,z),(0,-.214,z-.012),(.068,-.184,z)],.006,LACE,pivot)
+    uv("high-top-heart-%s"%side,(side*.130,-.023,-.588),(.019,.019,.028),PINKDARK,pivot,24,16)
+# Arms: real skin, wrists, tiny fingers and thumbs; pivot animation preserved for runtime.
 for side,pivot in [(-1,leftarm),(1,rightarm)]:
-    sleeve=uv("sleeve-"+str(side),(side*.02,.004,-.178),(.110,.121,.245),PINK,pivot)
-    sleeve.rotation_euler[1]=side*.16
-    uv("cuff-"+str(side),(side*.045,-.006,-.405),(.106,.103,.044),PINKDARK,pivot)
-    uv("hand-"+str(side),(side*.057,-.03,-.510),(.092,.079,.121),SKIN,pivot)
-    uv("thumb-"+str(side),(side*.139,-.10,-.520),(.041,.046,.067),SKIN,pivot,24,16)
+    upper=uv("bare-shoulder-arm-"+str(side),(side*.019,0,-.145),(.097,.100,.208),SKIN,pivot)
+    upper.rotation_euler[1]=side*.11
+    uv("bare-forearm-"+str(side),(side*.045,-.002,-.342),(.085,.088,.158),SKIN,pivot)
+    uv("hand-"+str(side),(side*.055,-.028,-.492),(.081,.073,.114),SKIN,pivot)
+    uv("thumb-"+str(side),(side*.113,-.082,-.496),(.033,.041,.067),SKIN,pivot,24,16)
+    for finger in range(3):
+        uv("finger-%s-%s"%(side,finger),(side*.059+(finger-1)*.034,-.051,-.583),
+            (.025,.031,.043),SKIN,pivot,20,12)
+# Plush octopus BACKPACK, visible from back and 3/4; hangs directly on HannaRig, not static world.
+# Front of backpack faces +Y; girl's face looks -Y.
+octo=empty("PolvoBackpackAnchor",(0,.223,1.06),root)
+uv("plush-octopus-head",(0,.105,.070),(.209,.151,.177),OCTO_LILAC,octo)
+uv("plush-ivory-face",(0,.228,.048),(.159,.042,.101),OCTO_CREAM,octo)
+for side in [-1,1]:
+    uv("plush-small-ear-%s"%side,(side*.172,.122,.172),(.057,.060,.066),OCTO_LILAC,octo,28,18)
+    uv("plush-eye-white-%s"%side,(side*.075,.264,.075),(.041,.014,.049),WHITE,octo,24,16)
+    uv("plush-eye-pupil-%s"%side,(side*.075,.279,.072),(.026,.009,.033),OCTO_DARK,octo,24,16)
+    uv("plush-eye-shine-%s"%side,(side*.068,.285,.091),(.009,.006,.012),SPARKLE,octo,20,12)
+    uv("plush-cheek-%s"%side,(side*.117,.258,.004),(.032,.009,.020),OCTO_PINK,octo,20,12)
+line("plush-smiling-mouth",[(-.050,.272,-.012),(0,.286,-.039),(.050,.272,-.012)],.008,OCTO_DARK,octo)
+for i in range(8):
+    a=2*pi*i/8
+    x=.116*cos(a);y=.105+.070*sin(a)
+    line("plush-octopus-tentacle-%02d"%i,
+         [(x,y,-.036),(x*1.28,y+.025,-.165),(x*1.24,y+.034,-.302)],.052,
+         [OCTO_PINK,OCTO_CREAM,OCTO_LILAC,OCTO_BLUE][i%4],octo,[.8,1,.35])
+# Real backpack straps wrap shoulders, not 2D illustration.
+for side in [-1,1]:
+    line("lavender-backpack-strap-%s"%side,
+         [(side*.129,.255,1.203),(side*.232,.139,1.278),(side*.235,-.066,1.215),(side*.191,-.191,1.058)],
+         .019,OCTO_LILAC,root,[1,1,1,.6])
 
 # Head: cheeks taper subtly, huge expressive eyes, gradient of playful features.
 face_mesh=uv("face-sculpt",(0,-.012,.122),(.342,.310,.352),SKIN,head)
@@ -195,26 +261,26 @@ for side in [-1,1]:
         line("soft-tapered-side-lock-%s-%s"%(side,i),
              [(x,-.012,.31-i*.023),(side*(.331+i*.005),-.019,.083-i*.030),(side*(.291+i*.009),.034,-.171-i*.027)],
              .021,HAIRHL if i==1 else HAIR,head,[1,.73,.028])
-# Single side ponytail, sculpted taper and strands that follow the silhouette.
-uv("ponytail-tie",(.23,.280,.20),(.069,.051,.068),PINKDARK,head)
-for i in range(12):
-    t=2*pi*i/12
-    x=.23+.09*cos(t)
-    y=.278+.047*sin(t)
-    line("flowing-ponytail-%02d"%i,
-         [(x,y,.20),(x+.013,.327,-.050),(x+.062,.276,-.30),(x+.037,.247,-.48)],.030,
-         HAIRHL if i in (1,3,7) else HAIR,head,[.43,1,.75,.018])
-# Long hair ribbon tails and heart bow on the right.
-bow=empty("BowAnchor",(.195,-.21,.534),head)
+# R4 high ponytail: distinct tapered locks draping behind head, pink bow at tie.
+uv("high-ponytail-tie",(0,.285,.456),(.087,.073,.077),PINKDARK,head)
+for i in range(20):
+    a=2*pi*i/20
+    x=.138*cos(a);y=.30+.073*sin(a)
+    line("high-wavy-ponytail-%02d"%i,
+         [(x*.60,y,.465),(x*.93,y+.056,.261),(x+.021*sin(i),y+.074,-.075),
+          (x+.035*sin(i*1.3),y+.020,-.355),(x+.032,y,-.504)],
+         .035,HAIRHL if i in (2,6,11,16) else HAIR,head,[.50,1.15,1,.80,.02])
+# Oversized, fabric-like hair ribbon anchored on the high ponytail, visible front and rear.
+bow=empty("BowAnchor",(0,.252,.504),head)
 for side in [-1,1]:
-    ear=uv("pink-bow-loop-"+str(side),(side*.074,0,0),(.097,.025,.067),PINKLIGHT,bow)
-    ear.rotation_euler[1]=side*.44
-    uv("bow-inner-loop-"+str(side),(side*.085,-.021,.012),(.034,.009,.027),PINK,bow,24,18)
-    ribbon=uv("bow-ribbon-tail-"+str(side),(side*.036,.013,-.087),(.027,.017,.073),PINKLIGHT,bow)
-    ribbon.rotation_euler[1]=side*.25
-uv("bow-knot",(0,-.027,.004),(.044,.031,.043),PINK,bow)
+    loop=uv("signature-pink-hair-bow-%s"%side,(side*.097,-.016,.012),(.130,.042,.086),PINKLIGHT,bow)
+    loop.rotation_euler[1]=side*.31
+    uv("bow-loop-inside-%s"%side,(side*.125,-.056,.012),(.065,.010,.047),PINK,bow,24,18)
+    ribbon=uv("bow-tail-%s"%side,(side*.038,.016,-.113),(.034,.020,.120),PINKLIGHT,bow)
+    ribbon.rotation_euler[1]=side*.14
+uv("bow-satin-knot",(0,-.063,.002),(.060,.045,.055),PINK,bow)
 # Little pastel bracelets and embroidered heart accents.
-uv("hoodie-heart",(.190,-.195,1.049),(.036,.018,.034),WHITE)
+uv("teal-outfit-flower-button",(.190,-.153,1.049),(.022,.009,.024),WHITE)
 uv("bow-specular",(0,-.107,.012),(.021,.011,.019),WHITE,bow,24,16)
 
 # Small studio under the avatar, not exported.
@@ -273,11 +339,13 @@ bpy.ops.export_scene.gltf(filepath=model_path,export_format='GLB',use_selection=
     export_yup=True,export_apply=False,export_animations=False,export_materials='EXPORT')
 print('MODEL_OK',model_path,os.path.getsize(model_path))
 info={
- 'name':'Hanna 3.0 — artistic prototype',
+ 'name':'Hanna v4 — reference-matched playable prototype',
+ 'art_contract':'character-v3/ART_DIRECTION_HANNA.md',
+ 'round':'R4-outfit-backpack',
  'format':'GLB (glTF 2.0)',
  'origin':'Blender-generated original geometry; no purchased/downloaded models',
  'license':'Original project asset for Casa da Hanna',
- 'limitations':'Unrigged segmented mesh with animation pivots for runtime JS; face and clothing require human visual approval',
+ 'limitations':'Unrigged segmented meshes with animation pivots; aesthetic visual approval and physical-device performance remain pending',
  'nodes':len(all_assets),
  'meshes':sum(o.type=='MESH' for o in all_assets),
  'files':['hanna-v3.glb','hanna-front.png','hanna-threequarter.png','hanna-profile.png']
