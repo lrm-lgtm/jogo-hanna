@@ -29,8 +29,12 @@ jobs:
           blender --version | head -n 2
       - name: Export original 3D character and 3 true Blender renders
         run: |
-          blender --background --factory-startup --python character-v3/build_hanna.py > /tmp/hanna-blender.log 2>&1 || { tail -160 /tmp/hanna-blender.log; exit 1; }
-          grep -E 'RENDER_OK|MODEL_OK|CHARACTER_BUILD_COMPLETE' /tmp/hanna-blender.log
+          mkdir -p character-v3/evidence
+          blender --background --factory-startup --python-exit-code 1 --python character-v3/build_hanna.py > /tmp/hanna-blender.log 2>&1 || { tail -120 /tmp/hanna-blender.log; cp /tmp/hanna-blender.log character-v3/evidence/blender.log; exit 1; }
+          cp /tmp/hanna-blender.log character-v3/evidence/blender.log
+          tail -65 /tmp/hanna-blender.log
+          test -s character-v3/build/hanna-v3.glb
+          test -s character-v3/build/manifest.json
           ls -lh character-v3/build/
       - name: Verify actual GLB 2.0, view renders and mesh data
         run: |
