@@ -68,12 +68,25 @@ function rebuild({B,scene,M,box,sphere,cylinder,visuals,shadow,graphics}){
  scene.getMeshByName('backWainscot')?.setEnabled(false);
  scene.getMeshByName('leftWainscot')?.setEnabled(false);
  // Narrow floorboard seams retain physical scale with low visual noise.
+ // Wood pattern is a single local texture, not 95 mobile draw-calls for planks.
+ const plankTex=new B.DynamicTexture('handpaintedOakPlanks',{width:512,height:1024},scene,false);
+ const g=plankTex.getContext();g.fillStyle='#d8b38a';g.fillRect(0,0,512,1024);
  for(let i=0;i<48;i++){
-   const z=-10.42+i*.30;
-   const board=tile('oakFloorBoard'+i,0,.016,z,13.85,.018,.284,i%5===0?P.oakLight:i%3===0?P.oatOak:P.oakLight);
-   board.receiveShadows=true;
-   if(i<47)tile('plankSeam'+i,0,.026,z+.142,13.85,.004,.004,P.oak);
+   const y=i*1024/48,h=1024/48;
+   g.fillStyle=['#dbb991','#e2c39b','#d9b58d','#e5c6a4','#dab790'][i%5];
+   g.fillRect(0,y,512,h-1);
+   g.fillStyle='#b89779';g.fillRect(0,y+h-1,512,1);
+   for(let j=0;j<9;j++){
+    const yy=y+4+(j*11+i*7)%(h-7);
+    g.fillStyle=(j+i)%2?'#b8937755':'#f8e5c455';
+    g.fillRect((i*19+j*83)%460,yy,40+(i*j)%49,.45);
+   }
  }
+ plankTex.update();
+ const woodMat=new B.PBRMaterial('oneDrawCallOakFloor',scene);
+ woodMat.albedoColor=new B.Color3(1,1,1);
+ woodMat.albedoTexture=plankTex;woodMat.roughness=.88;woodMat.metallic=0;
+ if(floor)floor.material=woodMat;
  // Thin woven oval carpet anchors the breakfast table without obscuring movement.
  const carpet=B.MeshBuilder.CreateDisc('pastelDiningCarpet',{radius:1,tessellation:52,sideOrientation:B.Mesh.DOUBLESIDE},scene);
  carpet.rotation.x=Math.PI/2;carpet.position.set(-.07,.033,-.72);carpet.scaling.set(1.66,.99,1);carpet.material=P.sageLight;carpet.isPickable=false;
