@@ -38,7 +38,7 @@ hair.data.materials.append(hair_highlight)
 top_mat_index=next(i for i,m in enumerate(body.data.materials) if 'Tops_' in m.name)
 hair_mats=[i for i,m in enumerate(hair.data.materials) if 'Hair_' in m.name]
 assert len(hair_mats)>=1
-body.matrix_world.update();hair.matrix_world.update();face.matrix_world.update()
+bpy.context.view_layer.update() # world matrices are evaluated by dependency graph, not updated directly
 zmin=min((body.matrix_world @ v.co).z for v in body.data.vertices)
 zmax=max((body.matrix_world @ v.co).z for v in body.data.vertices)
 height=zmax-zmin
