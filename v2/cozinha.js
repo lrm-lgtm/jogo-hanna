@@ -16,13 +16,13 @@ scene.imageProcessingConfiguration.toneMappingEnabled=true;
 scene.imageProcessingConfiguration.toneMappingType=B.ImageProcessingConfiguration.TONEMAPPING_ACES;
 scene.imageProcessingConfiguration.exposure=1.07;
 scene.imageProcessingConfiguration.contrast=1.13;
-const camera=new B.ArcRotateCamera('camera',-Math.PI/2.65,1.18,7.7,new B.Vector3(-.75,1.1,-.75),scene);
+const camera=new B.ArcRotateCamera('camera',-Math.PI/2.47,1.18,7.7,new B.Vector3(-.75,1.1,-.75),scene);
 camera.mode=B.Camera.PERSPECTIVE_CAMERA;
 camera.fov=.72;
 camera.minZ=.12;
 camera.maxZ=120;
 camera.lowerBetaLimit=1.10;camera.upperBetaLimit=1.28;
-camera.lowerAlphaLimit=-Math.PI/2.65-.16;camera.upperAlphaLimit=-Math.PI/2.65+.16;
+camera.lowerAlphaLimit=-Math.PI/2.47-.16;camera.upperAlphaLimit=-Math.PI/2.47+.16;
 camera.panningSensibility=0;
 camera.inputs.clear();
 scene.activeCamera=camera;
@@ -363,11 +363,11 @@ function loop(){
  }else if(moving){moving=false;dest=null}
  updateAvatarAnimation(performance.now()/1000,manual||moving,dt);
  // Keep the character prominent but include a little mission lookahead so the target stays visible.
- const following=new B.Vector3(character.position.x,1.23,character.position.z+.46);
+ const following=new B.Vector3(character.position.x*.59+.39,1.28,character.position.z+.50);
  if(currentStep<8){
   const g=target().proxy.position;
-  following.x=following.x*.76+g.x*.24;
-  following.z=following.z*.77+g.z*.23;
+  following.x=following.x*.90+g.x*.10;
+  following.z=following.z*.78+g.z*.22;
  }
  if(moving&&dest){following.x=following.x*.82+dest.x*.18;following.z=following.z*.82+dest.z*.18}
  cameraTarget.copyFrom(B.Vector3.Lerp(cameraTarget,following,.055));
