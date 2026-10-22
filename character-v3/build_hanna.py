@@ -218,9 +218,9 @@ bpy.context.scene.render.image_settings.file_format='PNG'
 bpy.context.scene.render.engine='CYCLES'
 bpy.context.scene.cycles.device='CPU'
 bpy.context.scene.cycles.samples=12
-if hasattr(bpy.context.scene.cycles,'use_denoising'): bpy.context.scene.cycles.use_denoising=True
+if hasattr(bpy.context.scene.cycles,'use_denoising'): bpy.context.scene.cycles.use_denoising=False
 if hasattr(bpy.context.view_layer,'cycles') and hasattr(bpy.context.view_layer.cycles,'use_denoising'):
-    bpy.context.view_layer.cycles.use_denoising=True
+    bpy.context.view_layer.cycles.use_denoising=False
 bpy.context.scene.camera.data.lens=46
 bpy.context.view_layer.update()
 for label,pos in [('front',(0,-5.7,2.58)),('threequarter',(3.2,-5.5,2.45)),('profile',(5.8,-.7,2.2))]:
