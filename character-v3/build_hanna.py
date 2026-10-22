@@ -214,12 +214,11 @@ bpy.context.scene.render.resolution_x=850
 bpy.context.scene.render.resolution_y=1040
 bpy.context.scene.render.resolution_percentage=100
 bpy.context.scene.render.image_settings.file_format='PNG'
-try:
-    bpy.context.scene.render.engine='BLENDER_EEVEE_NEXT'
-except TypeError:
-    bpy.context.scene.render.engine='BLENDER_EEVEE'
-if hasattr(bpy.context.scene,'eevee') and hasattr(bpy.context.scene.eevee,'taa_render_samples'):
-    bpy.context.scene.eevee.taa_render_samples=96
+# Deterministic headless rendering: use Cycles CPU (does not require a GPU/display server).
+bpy.context.scene.render.engine='CYCLES'
+bpy.context.scene.cycles.device='CPU'
+bpy.context.scene.cycles.samples=20
+bpy.context.scene.cycles.use_denoising=True
 bpy.context.scene.camera.data.lens=46
 bpy.context.view_layer.update()
 for label,pos in [('front',(0,-5.7,2.58)),('threequarter',(3.2,-5.5,2.45)),('profile',(5.8,-.7,2.2))]:
