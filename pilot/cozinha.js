@@ -95,9 +95,9 @@ character.position.set(-1.65,0,-2.03);
 // Character-v4 is a real Blender GLB; no fallback sphere-based avatar is allowed.
 let avatarMeshCount=0,avatarPivots=null,avatarRig=null,avatarWalkedFrames=0;
 async function loadPlayableAvatar(){
- const r=await B.SceneLoader.ImportMeshAsync('', './assets/hanna/', 'hanna-v4.glb',scene);
+ const r=await B.SceneLoader.ImportMeshAsync('', './assets/hanna/', 'hanna-v5.glb',scene);
  const meshes=r.meshes.filter(m=>m.getTotalVertices?.()>0);
- if(meshes.length<80)throw new Error('Modelo Hanna R4 incompleto: '+meshes.length+' malhas');
+ if(meshes.length<80)throw new Error('Modelo Hanna R5 incompleto: '+meshes.length+' malhas');
  for(const root of r.meshes.filter(x=>!x.parent))root.parent=character;
  for(const root of r.transformNodes.filter(x=>!x.parent))root.parent=character;
  const find=n=>r.transformNodes.find(x=>x.name===n||x.name.endsWith('__'+n));
@@ -450,7 +450,7 @@ async function boot(){
    ready,step:currentStep,missionLength:steps.length,avatar:{x:character.position.x,z:character.position.z},
    currentTarget:target().key,distance:distanceTo(target().nav),walking:moving,pathLength:waypoints.length,
    fps:avgFps,orientation:innerHeight>innerWidth?'portrait':'landscape',modelCount:modelsLoaded,
-   avatarMeshCount,avatarWalkedFrames,avatarKind:'hanna-v4-glb',hasGameplayRig:!!avatarPivots,
+   avatarMeshCount,avatarWalkedFrames,avatarKind:'hanna-v5-glb',hasGameplayRig:!!avatarPivots,
    loadErrors:loadErrors.slice(),saved:!!localStorage.getItem(SAVE)
   })});
   setInfo('Hanna 3D real pronta! Toque na geladeira ou use «IR ATÉ».',2800);
