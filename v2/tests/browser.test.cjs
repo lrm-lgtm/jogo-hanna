@@ -1,6 +1,8 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
 const {chromium}=require('playwright');
+const fs=require('node:fs'),path=require('node:path');
+const screenshots=path.resolve(__dirname,'../../artifacts/kitchen-v2');fs.mkdirSync(screenshots,{recursive:true});
 const URL='http://127.0.0.1:8765/v2/index.html';
 const launch=()=>chromium.launch({headless:true,args:['--no-sandbox','--enable-webgl','--ignore-gpu-blocklist','--use-gl=angle','--use-angle=swiftshader-webgl']});
 async function start(browser,viewport,mobile=false){
@@ -22,6 +24,7 @@ test('v2 desktop: real Hanna model and complete eight-step mission with saved pr
   assert.equal(current.step,0);assert.equal(current.saveSchema,2);
   assert.equal(current.avatarKind,'hanna-v5-glb');
   assert.ok(current.avatarMeshCount>=80);
+  await page.screenshot({path:path.join(screenshots,'desktop-inicial.png')});
   assert.equal(current.modelCount,23);
   for(let step=0;step<8;step++){
    await page.locator('#goBtn').click();
@@ -30,6 +33,7 @@ test('v2 desktop: real Hanna model and complete eight-step mission with saved pr
    await page.waitForFunction(n=>window.__hannaKitchenQA?.step===n,step+1,{timeout:7000});
   }
   assert.equal(await page.locator('#finish').isVisible(),true);
+  await page.screenshot({path:path.join(screenshots,'cafe-completo.png')});
   await page.reload({waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>window.__hannaKitchenQA?.ready,null,{timeout:90000});
   assert.equal((await qa(page)).step,8);
@@ -42,13 +46,37 @@ test('v2 Android emulated: landscape HUD, pause and portrait rotation prompt',{t
   s=await start(browser,{width:852,height:393},true);
   const {page,errors}=s;
   assert.equal((await qa(page)).orientation,'landscape');
+  await page.screenshot({path:path.join(screenshots,'android-paisagem.png')});
   await page.locator('#pauseBtn').tap();
   assert.equal(await page.locator('#settings').isVisible(),true);
   await page.locator('#resumeBtn').tap();
   assert.equal(await page.locator('#settings').isVisible(),false);
   await page.setViewportSize({width:393,height:852});
   assert.equal(await page.locator('#rotatePrompt').isVisible(),true);
+  await page.screenshot({path:path.join(screenshots,'android-girar-tela.png')});
   assert.equal((await qa(page)).orientation,'portrait');
+  assert.deepEqual(errors,[]);
+ }finally{await s?.context.close();await browser.close()}
+});
+test('v2 offline: second opening loads local Babylon, avatar and kitchen after SW cache',{timeout:300000},async()=>{
+ const browser=await launch();let s;
+ try{
+  s=await start(browser,{width:960,height:540});
+  const {context,page,errors}=s;
+  await page.waitForFunction(()=>navigator.serviceWorker?.controller!==null,null,{timeout:120000});
+  await page.waitForFunction(async()=>{
+   const names=await caches.keys(),key=names.find(k=>k.startsWith('hanna-kitchen-v2-'));
+   if(!key)return false;
+   const cache=await caches.open(key);
+   const refs=['./index.html','./vendor/babylon.js','./vendor/babylonjs.loaders.min.js','../pilot/assets/hanna/hanna-v5.glb'];
+   return (await Promise.all(refs.map(r=>cache.match(new URL(r,document.baseURI))))).every(Boolean);
+  },null,{timeout:120000});
+  await context.setOffline(true);
+  await page.reload({waitUntil:'domcontentloaded',timeout:60000});
+  await page.waitForFunction(()=>window.__hannaKitchenQA?.ready,null,{timeout:100000});
+  assert.equal((await qa(page)).avatarKind,'hanna-v5-glb');
+  assert.deepEqual((await qa(page)).loadErrors,[]);
+  await page.screenshot({path:path.join(screenshots,'retorno-offline.png')});
   assert.deepEqual(errors,[]);
  }finally{await s?.context.close();await browser.close()}
 });
