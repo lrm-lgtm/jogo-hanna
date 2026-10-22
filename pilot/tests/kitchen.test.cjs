@@ -28,7 +28,7 @@ test('desktop: full eight-step kitchen mission completed by real pathfinding (no
   session=await open(browser,1280,720,false);
   const {page,errors}=session,initial=await qa(page);
   assert.equal(initial.step,0);assert.equal(initial.orientation,'landscape');assert.equal(initial.modelCount,23);
-  assert.equal(initial.avatarKind,'hanna-v4-glb');
+  assert.equal(initial.avatarKind,'hanna-v5-glb');
   assert.ok(initial.avatarMeshCount>=80,'Must use REAL exported Hanna player model, not primitive placeholder');
   assert.equal(initial.hasGameplayRig,true);
   assert.deepEqual(initial.loadErrors,[]);
