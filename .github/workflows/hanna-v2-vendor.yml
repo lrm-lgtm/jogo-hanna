@@ -1,0 +1,72 @@
+name: Hanna v2 - vendor Babylon UMD locally (one-time)
+on:
+  push:
+    branches: [feature/cozinha-3d-v2-20261022]
+    paths: ['.github/workflows/hanna-v2-vendor.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  vendor:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Vendor exact matching Babylon v9.29.0 from official npm packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p v2/vendor /tmp/hanna-vendor
+          npm pack babylonjs@9.29.0 --pack-destination /tmp/hanna-vendor --silent >/dev/null
+          npm pack babylonjs-loaders@9.29.0 --pack-destination /tmp/hanna-vendor --silent >/dev/null
+          tar -xOf /tmp/hanna-vendor/babylonjs-9.29.0.tgz package/babylon.js > v2/vendor/babylon.js
+          tar -xOf /tmp/hanna-vendor/babylonjs-loaders-9.29.0.tgz package/babylonjs.loaders.min.js > v2/vendor/babylonjs.loaders.min.js
+          tar -xOf /tmp/hanna-vendor/babylonjs-9.29.0.tgz package/license.md > v2/vendor/LICENSE-babylonjs.md
+          tar -xOf /tmp/hanna-vendor/babylonjs-loaders-9.29.0.tgz package/license.md > v2/vendor/LICENSE-loaders.md
+          sha256sum v2/vendor/babylon.js v2/vendor/babylonjs.loaders.min.js > v2/vendor/SHA256SUMS
+          cat > v2/vendor/SOURCES.md <<'EOF'
+          Babylon.js UMD 9.29.0 (babylonjs), Apache-2.0.
+          Babylon.js Loaders UMD 9.29.0 (babylonjs-loaders), Apache-2.0.
+          Original archives: official npm registry, exact package versions above.
+          Alterations: none to runtime library files; copied UMD dist into project.
+          See corresponding LICENSE files and SHA256SUMS.
+          EOF
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('v2/index.html')
+          text=p.read_text()
+          assert 'https://cdn.babylonjs.com/babylon.js' in text
+          assert 'https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js' in text
+          text=text.replace('https://cdn.babylonjs.com/babylon.js','./vendor/babylon.js')
+          text=text.replace('https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js','./vendor/babylonjs.loaders.min.js')
+          p.write_text(text)
+          p=Path('v2/sw.js')
+          text=p.read_text().replace("const CACHE='hanna-kitchen-v2-20261022-2'","const CACHE='hanna-kitchen-v2-20261022-3'")
+          text=text.replace("const CDN=['https://cdn.babylonjs.com/babylon.js','https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js'];","const CDN=[];")
+          text=text.replace("const SHELL=['./','./index.html'","const SHELL=['./index.html','./vendor/babylon.js','./vendor/babylonjs.loaders.min.js'")
+          p.write_text(text)
+          p=Path('v2/README.md')
+          text=p.read_text()
+          text=text.replace('PENDÊNCIAS: a primeira carga ainda usa Babylon CDN; SW tenta guardar scripts para uso posterior offline.','Babylon e loaders UMD 9.29.0 versionados em v2/vendor, sem dependência de CDN de runtime; o service worker faz cache de ambos.')
+          p.write_text(text)
+          PY
+          node --check v2/vendor/babylon.js
+          node --check v2/vendor/babylonjs.loaders.min.js
+          test "$(wc -c <v2/vendor/babylon.js)" -gt 2000000
+          test "$(wc -c <v2/vendor/babylonjs.loaders.min.js)" -gt 200000
+          grep -q './vendor/babylon.js' v2/index.html
+          ! grep -q 'https://cdn.babylonjs.com' v2/index.html
+      - name: Commit only to isolated v2 branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add v2/vendor v2/index.html v2/sw.js v2/README.md
+          if ! git diff --cached --quiet; then
+            git commit -m "feat(v2): vendor pinned Apache-2.0 Babylon runtime for true standalone offline"
+            git push origin "HEAD:$GITHUB_REF_NAME"
+          fi
