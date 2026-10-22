@@ -1,11 +1,13 @@
 {
-  "name": "Hanna 3.0 — artistic prototype",
+  "name": "Hanna v4 — reference-matched playable prototype",
+  "art_contract": "character-v3/ART_DIRECTION_HANNA.md",
+  "round": "R4-outfit-backpack",
   "format": "GLB (glTF 2.0)",
   "origin": "Blender-generated original geometry; no purchased/downloaded models",
   "license": "Original project asset for Casa da Hanna",
-  "limitations": "Unrigged segmented mesh with animation pivots for runtime JS; face and clothing require human visual approval",
-  "nodes": 142,
-  "meshes": 94,
+  "limitations": "Unrigged segmented meshes with animation pivots; aesthetic visual approval and physical-device performance remain pending",
+  "nodes": 186,
+  "meshes": 111,
   "files": [
     "hanna-v3.glb",
     "hanna-front.png",
