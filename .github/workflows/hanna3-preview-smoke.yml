@@ -1,0 +1,31 @@
+name: Hanna 3 - Verify public character preview
+on:
+  push:
+    branches: [feature/hanna3-art-character-free-20261022]
+    paths:
+      - '.github/workflows/hanna3-preview-smoke.yml'
+      - 'character-v3/preview.html'
+      - 'character-v3/preview.js'
+      - 'character-v3/build/*.glb'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Confirm files served through GitHack
+        run: |
+          sha=$(git rev-parse HEAD)
+          base="https://rawcdn.githack.com/lrm-lgtm/jogo-hanna/$sha"
+          curl -fSLsS --retry 5 --retry-delay 2 "$base/character-v3/preview.html" -o /tmp/hanna-preview.html
+          grep -q 'Estúdio 3D da personagem' /tmp/hanna-preview.html
+          curl -fSLsS --retry 5 --retry-delay 2 "$base/character-v3/build/hanna-v3.glb" -o /tmp/hanna-character.glb
+          test "$(stat -c%s /tmp/hanna-character.glb)" -gt 35000
+          python3 - <<'PY'
+          data=open('/tmp/hanna-character.glb','rb').read(12)
+          assert data[:4]==b'glTF'
+          PY
+          echo "PUBLIC_PREVIEW_OK=$base/character-v3/preview.html"
