@@ -25,7 +25,7 @@ jobs:
       - name: Install free Blender from Ubuntu repositories
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq blender
+          sudo apt-get install -y -qq blender python3-numpy
           blender --version | head -n 2
       - name: Export original 3D character and 3 true Blender renders
         run: |
