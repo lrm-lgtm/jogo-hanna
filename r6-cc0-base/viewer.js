@@ -10,7 +10,8 @@ const hemi=new B.HemisphericLight('ambient',new B.Vector3(0,1,0),scene);hemi.int
 const key=new B.DirectionalLight('key',new B.Vector3(-.5,-1,.6),scene);key.intensity=1.10;
 const platform=B.MeshBuilder.CreateCylinder('base',{diameter:2.5,height:.13,tessellation:48},scene);platform.position.y=-.08;
 const mat=new B.StandardMaterial('cream',scene);mat.diffuseColor=B.Color3.FromHexString('#ecbbc1');platform.material=mat;
-const candidate=new URLSearchParams(location.search).get('candidate')==='r7'?'hanna-r7.glb':'HairSample_Female.glb';
+const kind=new URLSearchParams(location.search).get('candidate');
+const candidate=kind==='r8'?'hanna-r8.glb':kind==='r7'?'hanna-r7.glb':'HairSample_Female.glb';
 const asset=new B.TransformNode('candidateCC0',scene);asset.rotation.y=Math.PI; // VRM sample uses opposite forward basis in Babylon's orbit view.
 let ready=false,spinning=false,meshes=0,bones=0,error='';
 window.__hannaR6QA=()=>({ready,spinning,meshes,bones,error,candidate});
