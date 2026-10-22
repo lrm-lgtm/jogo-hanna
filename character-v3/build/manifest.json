@@ -4,8 +4,8 @@
   "origin": "Blender-generated original geometry; no purchased/downloaded models",
   "license": "Original project asset for Casa da Hanna",
   "limitations": "Unrigged segmented mesh with animation pivots for runtime JS; face and clothing require human visual approval",
-  "nodes": 120,
-  "meshes": 94,
+  "nodes": 143,
+  "meshes": 95,
   "files": [
     "hanna-v3.glb",
     "hanna-front.png",
