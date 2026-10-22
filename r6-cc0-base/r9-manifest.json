@@ -1,0 +1,10 @@
+{
+  "base": "HairSample_Female CC0 pinned upstream from VRoid",
+  "license": "CC0 sample per VRoid official docs",
+  "model": "Hanna R9 candidate based on high-poly rigged sample",
+  "hair_materials": 2,
+  "bones": 119,
+  "meshes": 39,
+  "output_bytes": 8080092,
+  "limitations": "Imported full-sleeve silhouette, generic anime face; not a match to the approved Hanna sheet. Visual must be checked before adoption."
+}
