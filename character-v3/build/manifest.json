@@ -1,0 +1,17 @@
+{
+  "name": "Hanna v4 — reference-matched playable prototype",
+  "art_contract": "character-v3/ART_DIRECTION_HANNA.md",
+  "round": "R5-refined-model-playable",
+  "format": "GLB (glTF 2.0)",
+  "origin": "Blender-generated original geometry; no purchased/downloaded models",
+  "license": "Original project asset for Casa da Hanna",
+  "limitations": "Unrigged segmented meshes with animation pivots; aesthetic visual approval and physical-device performance remain pending",
+  "nodes": 193,
+  "meshes": 111,
+  "files": [
+    "hanna-v3.glb",
+    "hanna-front.png",
+    "hanna-threequarter.png",
+    "hanna-profile.png"
+  ]
+}

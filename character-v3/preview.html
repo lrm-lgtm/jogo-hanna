@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f8e6df">
+<title>Casa da Hanna — Estúdio 3D da personagem</title>
+<link rel="stylesheet" href="./preview.css">
+</head><body>
+<canvas id="render" aria-label="Modelo 3D interativo da Hanna"></canvas>
+<div class="top"><div class="brand"><span class="heart">♥</span> CASA DA HANNA <span class="label">Laboratório de arte</span></div>
+<div class="version">Personagem 3D · Protótipo</div></div>
+<div class="title"><span class="eyebrow">Nosso primeiro modelo 3D original</span><h1>Conheça a Hanna<span>!</span></h1>
+<p>Gire a personagem, veja o rosto e teste o movimento.</p></div>
+<div class="hud">
+ <div class="controls">
+  <button id="front" title="Visão frontal">Frente</button>
+  <button id="turn" title="Girar automaticamente">↻ Girar</button>
+  <button id="walk" title="Alternar animação">🚶 Caminhar</button>
+ </div>
+ <div class="note" id="note" role="status">Carregando arquivo 3D real…</div>
+</div>
+<div class="disclaimer">Blender + Babylon.js · Gratuito · Câmera livre · Ainda sujeito à aprovação visual</div>
+<script src="https://cdn.babylonjs.com/babylon.js"></script><script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+<script src="./preview.js"></script></body></html>

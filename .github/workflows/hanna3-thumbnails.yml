@@ -1,0 +1,49 @@
+name: Hanna 3 - Visual review renders R5
+on:
+  push:
+    branches: [feature/hanna3-art-character-free-20261022]
+    paths:
+      - 'character-v3/build/*.png'
+      - '.github/workflows/hanna3-thumbnails.yml'
+permissions:
+  contents: write
+concurrency:
+  group: hanna3-review-thumbnails
+  cancel-in-progress: false
+jobs:
+  visual-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install free image converter
+        run: python -m pip install pillow==11.3.0
+      - name: Make review-size versions from actual Blender renders
+        run: |
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          src=Path('character-v3/build')
+          out=Path('character-v3/review')
+          out.mkdir(parents=True,exist_ok=True)
+          for name in ['front','threequarter','profile']:
+            im=Image.open(src/f'hanna-{name}.png').convert('RGB')
+            im.thumbnail((460,580),Image.Resampling.LANCZOS)
+            target=out/f'hanna-{name}.jpg'
+            im.save(target,format='JPEG',quality=80,optimize=True)
+            assert target.stat().st_size<160000
+            print(target,target.stat().st_size)
+          PY
+      - name: Commit only real Blender render thumbnails
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add character-v3/review/
+          if ! git diff --cached --quiet; then
+            git commit -m "evidence(hanna): small real 3D character render previews [skip ci]"
+            git push origin "HEAD:$GITHUB_REF_NAME"
+          fi
