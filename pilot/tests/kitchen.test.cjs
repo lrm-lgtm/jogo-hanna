@@ -28,6 +28,9 @@ test('desktop: full eight-step kitchen mission completed by real pathfinding (no
   session=await open(browser,1280,720,false);
   const {page,errors}=session,initial=await qa(page);
   assert.equal(initial.step,0);assert.equal(initial.orientation,'landscape');assert.equal(initial.modelCount,23);
+  assert.equal(initial.avatarKind,'hanna-v4-glb');
+  assert.ok(initial.avatarMeshCount>=80,'Must use REAL exported Hanna player model, not primitive placeholder');
+  assert.equal(initial.hasGameplayRig,true);
   assert.deepEqual(initial.loadErrors,[]);
   await page.screenshot({path:path.join(evidence,'01-desktop-landscape.png')});
   for(let i=0;i<8;i++){
@@ -36,6 +39,7 @@ test('desktop: full eight-step kitchen mission completed by real pathfinding (no
    const reached=await qa(page);
    if(begin.distance>.8)assert.ok(Math.hypot(reached.avatar.x-begin.avatar.x,reached.avatar.z-begin.avatar.z)>.1,'Avatar failed to walk at step '+i);
    assert.equal(reached.step,i);
+   if(i===0)assert.ok(reached.avatarWalkedFrames>5,'Hanna animation pivots must receive walking frames');
    await page.locator('#actionBtn').click();
    await page.waitForFunction(n=>window.__hannaKitchenQA?.step===n,i+1,{timeout:7500});
    if(i===1)await page.screenshot({path:path.join(evidence,'02-milk-in-hand.png')});
@@ -58,6 +62,7 @@ test('Android portrait: controls visible and first action reached by walking',{t
   session=await open(browser,393,852,true);
   const {page,errors}=session;
   assert.equal((await qa(page)).orientation,'portrait');
+  assert.ok((await qa(page)).avatarMeshCount>=80,'portrait real 3D player loaded');
   for(const sel of ['#goBtn','#actionBtn','#joystick','.missionBox']){
    const b=await page.locator(sel).boundingBox();
    assert.ok(b&&b.x>=-2&&b.x+b.width<=395&&b.y>=-2&&b.y+b.height<=854,sel+' out of mobile screen '+JSON.stringify(b));
@@ -77,6 +82,7 @@ test('Android landscape: camera responsive when viewport rotates',{timeout:15000
   session=await open(browser,852,393,true);
   const {page,errors}=session;
   assert.equal((await qa(page)).orientation,'landscape');
+  assert.ok((await qa(page)).avatarMeshCount>=80,'landscape real 3D player loaded');
   await page.screenshot({path:path.join(evidence,'07-android-landscape.png')});
   await page.setViewportSize({width:393,height:852});
   await page.waitForTimeout(600);

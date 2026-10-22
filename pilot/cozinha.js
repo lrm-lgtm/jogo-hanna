@@ -92,21 +92,35 @@ const roomRoot=new B.TransformNode('kitchenModelImports',scene);
 const objects=new Map(),visuals=new Map();
 const character=new B.TransformNode('HannaCharacter',scene);
 character.position.set(-1.65,0,-2.03);
-function child(mesh){mesh.parent=character;shadow.addShadowCaster(mesh);return mesh}
-child(sphere('head',[0,1.39,0],.56,M.skin));
-child(sphere('hairCap',[0,1.61,.04],.59,M.hair));
-child(sphere('bun',[0,1.67,.23],.30,M.hair));
-for(const side of [-1,1]){
- child(sphere('eye'+side,[side*.115,1.40,-.262],.065,M.eyes));
- child(sphere('blush'+side,[side*.195,1.30,-.235],.085,M.coral));
- child(cylinder('leg'+side,[side*.13,.34,0],.17,.62,M.cloth));
- child(sphere('shoe'+side,[side*.13,.10,-.09],.24,M.hair));
- child(cylinder('arm'+side,[side*.31,.88,0],.14,.50,M.skin));
+// Character-v4 is a real Blender GLB; no fallback sphere-based avatar is allowed.
+let avatarMeshCount=0,avatarPivots=null,avatarRig=null,avatarWalkedFrames=0;
+async function loadPlayableAvatar(){
+ const r=await B.SceneLoader.ImportMeshAsync('', './assets/hanna/', 'hanna-v4.glb',scene);
+ const meshes=r.meshes.filter(m=>m.getTotalVertices?.()>0);
+ if(meshes.length<80)throw new Error('Modelo Hanna R4 incompleto: '+meshes.length+' malhas');
+ for(const root of r.meshes.filter(x=>!x.parent))root.parent=character;
+ for(const root of r.transformNodes.filter(x=>!x.parent))root.parent=character;
+ const find=n=>r.transformNodes.find(x=>x.name===n||x.name.endsWith('__'+n));
+ const names=['HannaRig','HeadPivot','ArmLeftPivot','ArmRightPivot','LegLeftPivot','LegRightPivot'];
+ const anchors=names.map(find);
+ if(anchors.some(x=>!x))throw new Error('Rig da personagem está incompleto');
+ avatarPivots={head:anchors[1],leftArm:anchors[2],rightArm:anchors[3],leftLeg:anchors[4],rightLeg:anchors[5]};
+ avatarRig=anchors[0];
+ avatarMeshCount=meshes.length;
+ for(const m of meshes){m.isPickable=false;shadow.addShadowCaster(m);}
 }
-child(cylinder('shirt',[0,.90,0],.52,.75,M.berry));
-child(box('apron',[0,.81,-.276],[.32,.42,.05],M.trim));
-const heart=sphere('apronHeart',[0,.96,-.32],.08,M.coral);child(heart);
-child(cylinder('neck',[0,1.17,0],.18,.13,M.skin));
+function updateAvatarAnimation(t,isWalking,dt){
+ if(!avatarPivots)return;
+ const a=avatarPivots,phase=t*7.3;
+ const intensity=isWalking?1:0;
+ a.leftArm.rotation.x=Math.sin(phase)*.35*intensity;
+ a.rightArm.rotation.x=-Math.sin(phase)*.35*intensity;
+ a.leftLeg.rotation.x=-Math.sin(phase)*.25*intensity;
+ a.rightLeg.rotation.x=Math.sin(phase)*.25*intensity;
+ a.head.rotation.z=Math.sin(t*1.8)*.015;
+ if(avatarRig)avatarRig.position.y=isWalking?.020*Math.abs(Math.sin(phase)):.005*Math.sin(t*2);
+ if(isWalking)avatarWalkedFrames++;
+}
 const heldCharm=sphere('heldItem',[.32,1.07,-.37],.16,M.white);heldCharm.parent=character;
 heldCharm.setEnabled(false);
 const targetHalo=B.MeshBuilder.CreateTorus('targetHalo',{diameter:1.25,thickness:.065,tessellation:42},scene);
@@ -282,7 +296,7 @@ scene.onPointerObservable.add(evt=>{
 function updateCamera(){
  const ratio=Math.max(.43,Math.min(2.35,engine.getRenderWidth()/Math.max(1,engine.getRenderHeight())));
  const portrait=ratio<.83;
- const halfHeight=portrait?4.5:ratio>1.35?3.45:4.0;
+ const halfHeight=portrait?3.65:ratio>1.35?2.96:3.45; // Child-first camera: larger playable Hanna, not an aerial dollhouse.
  camera.orthoTop=halfHeight;camera.orthoBottom=-halfHeight;
  camera.orthoLeft=-halfHeight*ratio;camera.orthoRight=halfHeight*ratio;
  engine.resize();
@@ -311,7 +325,14 @@ function loop(){
   if(Math.hypot(dx,dz)<.11){waypoints.shift()}
   else if(!walk(dx,dz,Math.min(dt,Math.hypot(dx,dz)/2.45))){waypoints=[];moving=false;setInfo('Não consegui chegar. Experimente o joystick.')}
  }else if(moving){moving=false;dest=null}
- const following=new B.Vector3(character.position.x*.68,1.02,character.position.z*.60);
+ updateAvatarAnimation(performance.now()/1000,manual||moving,dt);
+ // Keep the character prominent but include a little mission lookahead so the target stays visible.
+ const following=new B.Vector3(character.position.x*.77,1.06,character.position.z*.73);
+ if(currentStep<8){
+  const g=target().proxy.position;
+  following.x=following.x*.87+g.x*.13;
+  following.z=following.z*.88+g.z*.12;
+ }
  if(moving&&dest){following.x=following.x*.80+dest.x*.20;following.z=following.z*.8+dest.z*.2}
  cameraTarget.copyFrom(B.Vector3.Lerp(cameraTarget,following,.075));
  camera.target.copyFrom(cameraTarget);
@@ -351,6 +372,8 @@ function milkCarton(parent,pos){
  return base;
 }
 async function assets(){
+ el('loadDetail').textContent='Preparando a Hanna 3D jogável…';
+ await loadPlayableAvatar();
  const tasks=[
  ['fridge_A','restaurant',[-2.95,0,2],[1.38,2.24,.92],0,'fridge'],
  ['kitchencounter_sink_backsplash','restaurant',[-.94,0,2.01],[1.50,1.18,.92],0],
@@ -427,9 +450,10 @@ async function boot(){
    ready,step:currentStep,missionLength:steps.length,avatar:{x:character.position.x,z:character.position.z},
    currentTarget:target().key,distance:distanceTo(target().nav),walking:moving,pathLength:waypoints.length,
    fps:avgFps,orientation:innerHeight>innerWidth?'portrait':'landscape',modelCount:modelsLoaded,
+   avatarMeshCount,avatarWalkedFrames,avatarKind:'hanna-v4-glb',hasGameplayRig:!!avatarPivots,
    loadErrors:loadErrors.slice(),saved:!!localStorage.getItem(SAVE)
   })});
-  setInfo('Toque na geladeira brilhando ou use «IR ATÉ».',2800);
+  setInfo('Hanna 3D real pronta! Toque na geladeira ou use «IR ATÉ».',2800);
  }catch(e){console.error(e);el('loadDetail').textContent='Erro ao abrir a cozinha: '+e.message;el('loadDetail').setAttribute('data-error','1')}
 }
 boot();
