@@ -116,8 +116,12 @@ uv("collar-binding",(0,-.103,1.332),(.139,.070,.043),TEAL_RIB)
 uv("neck",(0,-.014,1.390),(.094,.080,.092),SKIN)
 for side in [-1,1]:
     # Bare upper shoulders are visible: this is a SLEEVELESS top, not the prior hoodie.
-    uv("tank-shoulder-strap-%s"%side,(side*.193,-.044,1.297),(.067,.139,.072),TEAL)
-    line("armhole-binding-%s"%side,[(side*.240,-.080,1.306),(side*.272,-.085,1.24),(side*.269,-.02,1.167)],.007,TEAL_RIB)
+    # True sleeveless shoulder straps are subtle fabric bands (not round puffballs).
+    line("tank-fabric-shoulder-strap-%s"%side,
+         [(side*.159,-.115,1.296),(side*.190,-.065,1.341),
+          (side*.207,.012,1.317),(side*.215,.079,1.264)],.037,TEAL,root,[1,1,.85,.72])
+    line("armhole-binding-%s"%side,
+         [(side*.244,-.075,1.297),(side*.262,-.072,1.229),(side*.259,-.018,1.175)],.005,TEAL_RIB)
 # 3 separate embroidered flowers, curved on the front of the actual turquoise fabric.
 for idx,(xx,zz,scale) in enumerate([(-.085,1.12,.043),(.105,1.17,.052),(.009,1.035,.041)]):
     for petal in range(5):
@@ -133,10 +137,10 @@ def ruffled_layer(name,z1,z2,top_r,bottom_r,material,phase):
         tt=j/(levels-1);z=z1+(z2-z1)*tt
         for i in range(segments):
             a=i*2*pi/segments
-            wave=sin(a*12+phase)*(.008+.028*tt**1.7)
+            wave=sin(a*10+phase)*(.004+.014*tt**1.7)
             radius=(top_r+(bottom_r-top_r)*tt)+wave
             elliptic_y=.78
-            height_bounce=sin(a*12+phase)*(.024*tt**2)
+            height_bounce=sin(a*10+phase)*(.009*tt**2)
             verts.append((radius*cos(a),radius*elliptic_y*sin(a),z+height_bounce))
     for j in range(levels-1):
         for i in range(segments):
@@ -149,9 +153,17 @@ def ruffled_layer(name,z1,z2,top_r,bottom_r,material,phase):
     modifier.offset=0
     return ob
 uv("skirt-waistband",(0,-.006,.852),(.254,.175,.060),SKIRT)
-ruffled_layer("skirt-layer-under",.88,.62,.245,.42,SKIRT_HEM,0.6)
-ruffled_layer("skirt-layer-middle",.88,.69,.251,.387,SKIRT,1.4)
-ruffled_layer("skirt-layer-top",.88,.76,.254,.330,SKIRT_HEM,2.0)
+ruffled_layer("skirt-layer-under",.88,.61,.245,.393,SKIRT_HEM,0.6)
+ruffled_layer("skirt-layer-middle",.88,.68,.251,.354,SKIRT,1.4)
+ruffled_layer("skirt-layer-top",.88,.75,.254,.315,SKIRT_HEM,2.0)
+# Soft stitched hems follow the lower skirt contours in the same world geometry.
+for layer,z,rad,phase in [("outer",.606,.391,.6),("middle",.678,.353,1.4)]:
+    points=[]
+    for i in range(33):
+        a=i*2*pi/32
+        r=rad+.014*sin(10*a+phase)
+        points.append((r*cos(a),.78*r*sin(a),z+.009*sin(10*a+phase)))
+    line("stitched-skirt-hem-"+layer,points,.007,WHITE,root)
 line("pink-ribbon-waist",[(-.16,-.198,.856),(0,-.215,.853),(.16,-.198,.856)],.012,SKIRT_HEM)
 # Waist bow
 waist_bow=empty("WaistBow",(0,-.219,.852),root)
@@ -162,8 +174,9 @@ for side in [-1,1]:
 uv("skirt-bow-center",(0,-.030,.013),(.030,.030,.028),PINK,waist_bow)
 # Bare legs, anatomically tapered from skirt to ankle. Shoes are pink HIGH TOPS with laces/hearts.
 for side,pivot in [(-1,leftleg),(1,rightleg)]:
-    uv("natural-thigh-"+str(side),(0,0,-.195),(.115,.114,.250),SKIN,pivot)
-    uv("natural-calf-"+str(side),(0,0,-.378),(.098,.102,.189),SKIN,pivot)
+    uv("natural-thigh-"+str(side),(0,0,-.190),(.105,.105,.229),SKIN,pivot)
+    uv("natural-knee-"+str(side),(0,0,-.335),(.091,.092,.095),SKIN,pivot)
+    uv("natural-calf-"+str(side),(0,0,-.423),(.083,.086,.148),SKIN,pivot)
     uv("white-ribbed-sock-"+str(side),(0,-.006,-.528),(.105,.105,.073),WHITE,pivot)
     uv("high-top-sneaker-upper-"+str(side),(0,-.025,-.596),(.129,.169,.123),PINKLIGHT,pivot)
     uv("high-top-sneaker-sole-"+str(side),(0,-.076,-.672),(.145,.195,.032),SOLE,pivot)
@@ -187,20 +200,20 @@ for side,pivot in [(-1,leftarm),(1,rightarm)]:
 # Plush octopus BACKPACK, visible from back and 3/4; hangs directly on HannaRig, not static world.
 # Front of backpack faces +Y; girl's face looks -Y.
 octo=empty("PolvoBackpackAnchor",(0,.223,1.06),root)
-uv("plush-octopus-head",(0,.105,.070),(.209,.151,.177),OCTO_LILAC,octo)
-uv("plush-ivory-face",(0,.228,.048),(.159,.042,.101),OCTO_CREAM,octo)
+uv("plush-octopus-head",(0,.115,.092),(.250,.182,.204),OCTO_LILAC,octo)
+uv("plush-ivory-face",(0,.268,.070),(.182,.043,.115),OCTO_CREAM,octo)
 for side in [-1,1]:
-    uv("plush-small-ear-%s"%side,(side*.172,.122,.172),(.057,.060,.066),OCTO_LILAC,octo,28,18)
-    uv("plush-eye-white-%s"%side,(side*.075,.264,.075),(.041,.014,.049),WHITE,octo,24,16)
-    uv("plush-eye-pupil-%s"%side,(side*.075,.279,.072),(.026,.009,.033),OCTO_DARK,octo,24,16)
-    uv("plush-eye-shine-%s"%side,(side*.068,.285,.091),(.009,.006,.012),SPARKLE,octo,20,12)
-    uv("plush-cheek-%s"%side,(side*.117,.258,.004),(.032,.009,.020),OCTO_PINK,octo,20,12)
-line("plush-smiling-mouth",[(-.050,.272,-.012),(0,.286,-.039),(.050,.272,-.012)],.008,OCTO_DARK,octo)
+    uv("plush-small-ear-%s"%side,(side*.197,.132,.199),(.055,.059,.067),OCTO_LILAC,octo,28,18)
+    uv("plush-eye-white-%s"%side,(side*.084,.300,.089),(.044,.013,.052),WHITE,octo,24,16)
+    uv("plush-eye-pupil-%s"%side,(side*.084,.314,.088),(.027,.009,.034),OCTO_DARK,octo,24,16)
+    uv("plush-eye-shine-%s"%side,(side*.076,.323,.109),(.009,.006,.012),SPARKLE,octo,20,12)
+    uv("plush-cheek-%s"%side,(side*.128,.294,.008),(.036,.009,.020),OCTO_PINK,octo,20,12)
+line("plush-smiling-mouth",[(-.055,.316,.001),(0,.323,-.035),(.055,.316,.001)],.009,OCTO_DARK,octo)
 for i in range(8):
     a=2*pi*i/8
-    x=.116*cos(a);y=.105+.070*sin(a)
+    x=.140*cos(a);y=.128+.085*sin(a)
     line("plush-octopus-tentacle-%02d"%i,
-         [(x,y,-.036),(x*1.28,y+.025,-.165),(x*1.24,y+.034,-.302)],.052,
+         [(x,y,-.032),(x*1.31,y+.037,-.175),(x*1.19,y+.036,-.328)],.059,
          [OCTO_PINK,OCTO_CREAM,OCTO_LILAC,OCTO_BLUE][i%4],octo,[.8,1,.35])
 # Real backpack straps wrap shoulders, not 2D illustration.
 for side in [-1,1]:
@@ -238,7 +251,7 @@ line("smiling-mouth",[(-.071,-.261,-.063),(0,-.273,-.082),(.071,-.259,-.063)],.0
 uv("lower-lip",(0,-.244,-.112),(.050,.007,.009),BLUSH,head,24,16)
 
 # Haircap and thick sculpted locks, with warm highlights and intentional silhouette.
-uv("crown-back",(0,.09,.324),(.342,.306,.269),HAIR,head)
+uv("crown-back",(0,.09,.324),(.334,.299,.265),HAIR,head)
 uv("hair-back-length",(0,.248,-.018),(.275,.123,.307),HAIR,head)
 uv("hair-left-volume",(-.260,.155,.015),(.080,.102,.25),HAIR,head)
 uv("hair-right-volume",(.270,.155,.015),(.076,.108,.249),HAIR,head)
@@ -246,14 +259,14 @@ for side in [-1,1]:
     uv("sideburn-"+str(side),(side*.297,-.086,.072),(.046,.072,.172),HAIR,head)
     uv("side-lock-shine-"+str(side),(side*.302,-.140,.025),(.018,.017,.104),HAIRHL,head)
 # Sculpted swept bangs curve across the forehead.
-# Side-swept layered bangs, not a row of identical vertical cylindrical strips.
-for i in range(7):
-    x=.272-i*.089
-    start=(x+.067,-.092,.539)
-    mid=(x-.027,-.236,.444+.017*sin(i*.75))
-    end=(x-.106,-.262,.306+.040*sin(i*.43))
-    line("side-swept-fringe-%02d"%i,[start,mid,end],
-         .028 if i%2 else .034,HAIRHL if i in (1,5) else HAIR,head,[.38,1,.045])
+# Layered side-swept bangs with less geometric/pencil-like roots and tapered tips.
+for i in range(10):
+    x=.312-i*.067
+    start=(x*.76,-.075,.532)
+    mid=(x-.030,-.175,.478+.014*sin(i*.83))
+    end=(x-.097,-.229,.338+.035*sin(i*.52))
+    line("soft-swept-fringe-%02d"%i,[start,mid,end],
+         .025 if i%2 else .030,HAIRHL if i in (2,7) else HAIR,head,[.35,.93,.009])
 # Directional, curled locks around the face replace unnaturally round side clumps.
 for side in [-1,1]:
     for i in range(4):
@@ -271,14 +284,14 @@ for i in range(20):
           (x+.035*sin(i*1.3),y+.020,-.355),(x+.032,y,-.504)],
          .035,HAIRHL if i in (2,6,11,16) else HAIR,head,[.50,1.15,1,.80,.02])
 # Oversized, fabric-like hair ribbon anchored on the high ponytail, visible front and rear.
-bow=empty("BowAnchor",(0,.252,.504),head)
+bow=empty("BowAnchor",(-.115,-.152,.575),head)
 for side in [-1,1]:
     loop=uv("signature-pink-hair-bow-%s"%side,(side*.097,-.016,.012),(.130,.042,.086),PINKLIGHT,bow)
     loop.rotation_euler[1]=side*.31
     uv("bow-loop-inside-%s"%side,(side*.125,-.056,.012),(.065,.010,.047),PINK,bow,24,18)
     ribbon=uv("bow-tail-%s"%side,(side*.038,.016,-.113),(.034,.020,.120),PINKLIGHT,bow)
     ribbon.rotation_euler[1]=side*.14
-uv("bow-satin-knot",(0,-.063,.002),(.060,.045,.055),PINK,bow)
+uv("bow-satin-knot",(0,-.063,.002),(.066,.046,.060),PINK,bow)
 # Little pastel bracelets and embroidered heart accents.
 uv("teal-outfit-flower-button",(.190,-.153,1.049),(.022,.009,.024),WHITE)
 uv("bow-specular",(0,-.107,.012),(.021,.011,.019),WHITE,bow,24,16)
@@ -318,7 +331,7 @@ bpy.context.scene.render.image_settings.file_format='PNG'
 # Deterministic headless rendering: use Cycles CPU (does not require a GPU/display server).
 bpy.context.scene.render.engine='CYCLES'
 bpy.context.scene.cycles.device='CPU'
-bpy.context.scene.cycles.samples=32
+bpy.context.scene.cycles.samples=20
 if hasattr(bpy.context.scene.cycles,'use_denoising'): bpy.context.scene.cycles.use_denoising=False
 if hasattr(bpy.context.view_layer,'cycles') and hasattr(bpy.context.view_layer.cycles,'use_denoising'):
     bpy.context.view_layer.cycles.use_denoising=False
@@ -341,7 +354,7 @@ print('MODEL_OK',model_path,os.path.getsize(model_path))
 info={
  'name':'Hanna v4 — reference-matched playable prototype',
  'art_contract':'character-v3/ART_DIRECTION_HANNA.md',
- 'round':'R4-outfit-backpack',
+ 'round':'R5-refined-model-playable',
  'format':'GLB (glTF 2.0)',
  'origin':'Blender-generated original geometry; no purchased/downloaded models',
  'license':'Original project asset for Casa da Hanna',
