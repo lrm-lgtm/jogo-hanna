@@ -296,7 +296,7 @@ scene.onPointerObservable.add(evt=>{
 function updateCamera(){
  const ratio=Math.max(.43,Math.min(2.35,engine.getRenderWidth()/Math.max(1,engine.getRenderHeight())));
  const portrait=ratio<.83;
- const halfHeight=portrait?4.5:ratio>1.35?3.45:4.0;
+ const halfHeight=portrait?3.65:ratio>1.35?2.96:3.45; // Child-first camera: larger playable Hanna, not an aerial dollhouse.
  camera.orthoTop=halfHeight;camera.orthoBottom=-halfHeight;
  camera.orthoLeft=-halfHeight*ratio;camera.orthoRight=halfHeight*ratio;
  engine.resize();
@@ -326,7 +326,13 @@ function loop(){
   else if(!walk(dx,dz,Math.min(dt,Math.hypot(dx,dz)/2.45))){waypoints=[];moving=false;setInfo('Não consegui chegar. Experimente o joystick.')}
  }else if(moving){moving=false;dest=null}
  updateAvatarAnimation(performance.now()/1000,manual||moving,dt);
- const following=new B.Vector3(character.position.x*.68,1.02,character.position.z*.60);
+ // Keep the character prominent but include a little mission lookahead so the target stays visible.
+ const following=new B.Vector3(character.position.x*.77,1.06,character.position.z*.73);
+ if(currentStep<8){
+  const g=target().proxy.position;
+  following.x=following.x*.87+g.x*.13;
+  following.z=following.z*.88+g.z*.12;
+ }
  if(moving&&dest){following.x=following.x*.80+dest.x*.20;following.z=following.z*.8+dest.z*.2}
  cameraTarget.copyFrom(B.Vector3.Lerp(cameraTarget,following,.075));
  camera.target.copyFrom(cameraTarget);
