@@ -17,7 +17,7 @@ sound.addEventListener('change',()=>{localStorage.setItem('hanna_kitchen_v2_audi
 window.addEventListener('keydown',e=>{if(e.code==='Escape'){setPause(menu.hidden);e.preventDefault()}});
 get('guideBtn').addEventListener('click',()=>document.dispatchEvent(new CustomEvent('hanna:v2:hint')));
 document.addEventListener('hanna:v2:ready',()=>{window.HannaV2Audio?.setEnabled(sound.checked)});
-if('serviceWorker'in navigator&&location.protocol==='https:'){
+if('serviceWorker'in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(e=>console.warn('Preview sem SW:',e)));
 }
 })();

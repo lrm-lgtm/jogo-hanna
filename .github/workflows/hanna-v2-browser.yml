@@ -1,0 +1,37 @@
+name: Casa da Hanna v2 - real Babylon browser smoke
+on:
+  push:
+    branches: [feature/cozinha-3d-v2-20261022]
+    paths: ['v2/**', '.github/workflows/hanna-v2-browser.yml']
+  workflow_dispatch:
+jobs:
+  chromium:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 26
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Static syntax check
+        run: |
+          node --check v2/cozinha.js
+          node --check v2/mission.js
+          node --check v2/quality.js
+          node --check v2/audio.js
+          node --check v2/ui.js
+          node --check v2/sw.js
+      - name: Install browser and software WebGL
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve independent v2
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/hanna-v2-http.log 2>&1 &
+          for n in {1..30}; do
+            curl -fsS http://127.0.0.1:8765/v2/index.html >/dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Exercise actual Babylon v2
+        run: node --test v2/tests/browser.test.cjs
