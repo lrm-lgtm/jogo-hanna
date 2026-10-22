@@ -24,11 +24,17 @@ test('v2 desktop: real Hanna model and complete eight-step mission with saved pr
   assert.equal(current.step,0);assert.equal(current.saveSchema,2);
   assert.equal(current.avatarKind,'hanna-v5-glb');
   assert.ok(current.avatarMeshCount>=80);
+  assert.equal(current.artPass,'r1');
+  assert.equal(current.cameraMode,0,'third-person perspective mode');
+  assert.ok(current.cameraBeta>1.1,'camera should not be top-down');
   await page.screenshot({path:path.join(screenshots,'desktop-inicial.png')});
   assert.equal(current.modelCount,23);
   for(let step=0;step<8;step++){
    await page.locator('#goBtn').click();
    await page.waitForFunction(n=>window.__hannaKitchenQA?.step===n&&window.__hannaKitchenQA.distance<.72,step,{timeout:33000});
+   if(step===0)await page.screenshot({path:path.join(screenshots,'fridge-approach.png')});
+   if(step===4)await page.screenshot({path:path.join(screenshots,'toaster-approach.png')});
+   if(step===7)await page.screenshot({path:path.join(screenshots,'table-approach.png')});
    await page.locator('#actionBtn').click();
    await page.waitForFunction(n=>window.__hannaKitchenQA?.step===n,step+1,{timeout:7000});
   }

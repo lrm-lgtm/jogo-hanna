@@ -16,10 +16,13 @@ scene.imageProcessingConfiguration.toneMappingEnabled=true;
 scene.imageProcessingConfiguration.toneMappingType=B.ImageProcessingConfiguration.TONEMAPPING_ACES;
 scene.imageProcessingConfiguration.exposure=1.07;
 scene.imageProcessingConfiguration.contrast=1.13;
-const camera=new B.ArcRotateCamera('camera',-Math.PI/2.90,.84,11,new B.Vector3(-.15,.8,0),scene);
-camera.mode=B.Camera.ORTHOGRAPHIC_CAMERA;
-camera.lowerBetaLimit=camera.upperBetaLimit=.84;
-camera.lowerAlphaLimit=-Math.PI/2.90-.22;camera.upperAlphaLimit=-Math.PI/2.90+.22;
+const camera=new B.ArcRotateCamera('camera',-Math.PI/2.65,1.18,7.7,new B.Vector3(-.75,1.1,-.75),scene);
+camera.mode=B.Camera.PERSPECTIVE_CAMERA;
+camera.fov=.72;
+camera.minZ=.12;
+camera.maxZ=120;
+camera.lowerBetaLimit=1.10;camera.upperBetaLimit=1.28;
+camera.lowerAlphaLimit=-Math.PI/2.65-.16;camera.upperAlphaLimit=-Math.PI/2.65+.16;
 camera.panningSensibility=0;
 camera.inputs.clear();
 scene.activeCamera=camera;
@@ -132,7 +135,7 @@ const targetHalo=B.MeshBuilder.CreateTorus('targetHalo',{diameter:1.25,thickness
 targetHalo.rotation.x=Math.PI/2;targetHalo.material=M.gold;targetHalo.position.y=.08;
 targetHalo.isPickable=false;
 const haloGem=sphere('targetSparkle',[0,1.9,0],.19,M.gold);haloGem.isPickable=false;
-const cameraTarget=new B.Vector3(0,.65,0);
+const cameraTarget=new B.Vector3(-.75,1.1,-.75);
 let modelsLoaded=0,currentStep=0,moving=false,waypoints=[],dest=null,joystick={x:0,y:0},pressed=new Set(),toastTimeout=null,frameCount=0,avgFps=0,held='',ready=false,loadErrors=[];
 const mission=new window.HannaV2Mission.BreakfastMission({storage:window.localStorage});
 const steps=window.HannaV2Mission.STEPS.map(s=>({id:s.target,label:s.text,action:s.verb,nav:s.nav,event:s.feedback,voice:s.voice,icon:s.icon,animation:s.animation}));
@@ -326,9 +329,10 @@ function updateCamera(){
  engine.resize();
  const ratio=Math.max(.43,Math.min(2.35,engine.getRenderWidth()/Math.max(1,engine.getRenderHeight())));
  const portrait=ratio<.83;
- const halfHeight=portrait?3.65:ratio>1.35?2.96:3.45; // Child-first camera: larger playable Hanna, not an aerial dollhouse.
- camera.orthoTop=halfHeight;camera.orthoBottom=-halfHeight;
- camera.orthoLeft=-halfHeight*ratio;camera.orthoRight=halfHeight*ratio;
+ // Third-person perspective rather than aerial dollhouse. Zoom is adjusted for a short landscape viewport.
+ camera.radius=portrait?8.8:ratio>1.95?7.0:7.7;
+ camera.fov=portrait?.93:ratio>1.95?.78:.72;
+ camera.beta=1.18;
 }
 window.addEventListener('resize',updateCamera);
 window.addEventListener('orientationchange',()=>setTimeout(updateCamera,240));
@@ -359,14 +363,14 @@ function loop(){
  }else if(moving){moving=false;dest=null}
  updateAvatarAnimation(performance.now()/1000,manual||moving,dt);
  // Keep the character prominent but include a little mission lookahead so the target stays visible.
- const following=new B.Vector3(character.position.x*.77,1.06,character.position.z*.73);
+ const following=new B.Vector3(character.position.x,1.23,character.position.z+.46);
  if(currentStep<8){
   const g=target().proxy.position;
-  following.x=following.x*.87+g.x*.13;
-  following.z=following.z*.88+g.z*.12;
+  following.x=following.x*.76+g.x*.24;
+  following.z=following.z*.77+g.z*.23;
  }
- if(moving&&dest){following.x=following.x*.80+dest.x*.20;following.z=following.z*.8+dest.z*.2}
- cameraTarget.copyFrom(B.Vector3.Lerp(cameraTarget,following,.075));
+ if(moving&&dest){following.x=following.x*.82+dest.x*.18;following.z=following.z*.82+dest.z*.18}
+ cameraTarget.copyFrom(B.Vector3.Lerp(cameraTarget,following,.055));
  camera.target.copyFrom(cameraTarget);
  targetHalo.rotation.z+=dt*.30;
  targetHalo.scaling.x=targetHalo.scaling.z=1+Math.sin(performance.now()/370)*.055;
@@ -437,7 +441,12 @@ async function assets(){
   el('loadDetail').textContent='Montando a cozinha... '+(++i)+'/'+tasks.length+' · '+name;
   try{const out=await addModel(name,pack,pos,scale,rotation);
    modelsLoaded++;
-   if(name==='kitchentable_A_large')out.meshes.forEach(mesh=>{if(mesh.getTotalVertices?.()>0)mesh.material=M.wood});
+   // Disconnected low-poly kit furniture is retained for license/integrity checks but hidden.
+   // Art R1 replaces it with one continuous scene, while game targets and food remain active.
+   const replaced=['fridge_A','kitchencounter_sink_backsplash','kitchencounter_straight_A_backsplash',
+    'kitchencounter_straight_B_backsplash','oven','stove_multi_countertop',
+    'extractorhood','kitchentable_A_large','rug_rectangle_stripes_A','chair_A','cabinet_small_decorated','shelf_A_small'];
+   if(replaced.includes(name))out.root.setEnabled(false);
    if(name==='oven')out.meshes.forEach(mesh=>{if(mesh.getTotalVertices?.()>0)mesh.material=M.mint});
    if(label)visuals.set(label,out.root);
    if(name==='fridge_A'){
@@ -472,6 +481,7 @@ async function assets(){
  cylinder('servedBread',[-.03,1.17,-.69],.30,.09,M.gold,10).parent=served;
  visuals.set('toastTable',served);
  if(!breadModel)throw new Error('O modelo do pão está ausente');
+ window.__hannaArt=window.HannaKitchenArt.rebuild({B,scene,M,box,sphere,cylinder,visuals,shadow,graphics});
 }
 async function boot(){
  try{
@@ -484,6 +494,7 @@ async function boot(){
    ready,step:currentStep,missionLength:steps.length,avatar:{x:character.position.x,z:character.position.z},
    currentTarget:target().key,distance:distanceTo(target().nav),walking:moving,pathLength:waypoints.length,
    fps:avgFps,orientation:innerHeight>innerWidth?'portrait':'landscape',modelCount:modelsLoaded,
+   artPass:window.__hannaArt?.artPass||'missing',cameraMode:camera.mode,cameraBeta:camera.beta,
    avatarMeshCount,avatarWalkedFrames,avatarKind:'hanna-v5-glb',hasGameplayRig:!!avatarPivots,
    loadErrors:loadErrors.slice(),saved:mission.restored||currentStep>0,quality:graphics.resolved,saveSchema:2
   })});
