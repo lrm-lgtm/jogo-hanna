@@ -45,7 +45,7 @@ def add_bevel(o,amount,segments=3):
     bpy.context.view_layer.objects.active=o
     bevel=o.modifiers.new('Furniture soft edges','BEVEL')
     bevel.width=amount;bevel.segments=segments
-    bevel.affect='EDGES' if hasattr(bevel,'affect') else None
+    if hasattr(bevel,'affect'): bevel.affect='EDGES'
     bevel.limit_method='ANGLE'
     normal=o.modifiers.new('Weighted normals','WEIGHTED_NORMAL')
     normal.keep_sharp=True;normal.weight=35
