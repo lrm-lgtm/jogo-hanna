@@ -1,0 +1,81 @@
+name: Hanna 3 - R5 Playable Player in Kitchen
+on:
+  push:
+    branches: [feature/hanna3-player-kitchen-r5-20261022]
+    paths-ignore:
+      - 'pilot/previews/**'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: hanna3-player-r5
+  cancel-in-progress: false
+jobs:
+  gameplay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 26
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify the ORIGINAL R5 Blender GLB is included, not sphere placeholder
+        run: |
+          node --check pilot/cozinha.js
+          node --check pilot/tests/kitchen.test.cjs
+          node pilot/tests/asset-integrity.cjs
+          python3 - <<'PY'
+          import struct,os
+          p='pilot/assets/hanna/hanna-v4.glb'
+          with open(p,'rb') as f: magic,version,length=struct.unpack('<4sII',f.read(12))
+          assert magic==b'glTF' and version==2
+          assert length==os.stat(p).st_size
+          assert length>1000000
+          print('REAL_CHARACTER_GLB_READY',length,'bytes')
+          PY
+      - name: Install browser + CPU software WebGL
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start local preview HTTP server
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/hanna-r5-http.log 2>&1 &
+          for n in {1..30}; do
+            curl -fsS http://127.0.0.1:8765/pilot/cozinha.html >/dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Eight mission steps walking with real Hanna + responsive mobile
+        run: node --test pilot/tests/kitchen.test.cjs
+      - name: Publish REAL in-game viewport screenshot evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hanna-r5-real-gameplay-screenshots
+          path: artifacts/kitchen-v3/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Public playable preview and model smoke test
+        if: success()
+        run: |
+          base="https://rawcdn.githack.com/lrm-lgtm/jogo-hanna/$(git rev-parse HEAD)"
+          curl -fLsS --retry 4 --retry-delay 4 "$base/pilot/cozinha.html" -o /tmp/hanna-r5.html
+          grep -q 'Casa da Hanna 3.0' /tmp/hanna-r5.html
+          curl -fLsS --retry 4 --retry-delay 4 "$base/pilot/assets/hanna/hanna-v4.glb" -o /tmp/hanna-r5.glb
+          test "$(stat -c%s /tmp/hanna-r5.glb)" -gt 1000000
+          echo "PUBLIC_GAME_PREVIEW_OK=$base/pilot/cozinha.html"
+      - name: Store actual in-game desktop and portrait screenshots in R5 branch only
+        if: success() && github.actor != 'github-actions[bot]'
+        run: |
+          mkdir -p pilot/previews
+          cp artifacts/kitchen-v3/01-desktop-landscape.png pilot/previews/hanna-r5-desktop.png
+          cp artifacts/kitchen-v3/05-android-portrait.png pilot/previews/hanna-r5-mobile-portrait.png
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pilot/previews/hanna-r5*
+          if ! git diff --cached --quiet; then
+            git commit -m "evidence(hanna): retain actual Babylon playable GLB screenshots [skip ci]"
+            git push origin "HEAD:$GITHUB_REF_NAME"
+          fi
