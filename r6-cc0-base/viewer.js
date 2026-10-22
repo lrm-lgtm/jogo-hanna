@@ -10,11 +10,11 @@ const hemi=new B.HemisphericLight('ambient',new B.Vector3(0,1,0),scene);hemi.int
 const key=new B.DirectionalLight('key',new B.Vector3(-.5,-1,.6),scene);key.intensity=1.10;
 const platform=B.MeshBuilder.CreateCylinder('base',{diameter:2.5,height:.13,tessellation:48},scene);platform.position.y=-.08;
 const mat=new B.StandardMaterial('cream',scene);mat.diffuseColor=B.Color3.FromHexString('#ecbbc1');platform.material=mat;
-const asset=new B.TransformNode('candidateCC0',scene);
+const asset=new B.TransformNode('candidateCC0',scene);asset.rotation.y=Math.PI; // VRM sample uses opposite forward basis in Babylon's orbit view.
 let ready=false,spinning=false,meshes=0,bones=0,error='';
 window.__hannaR6QA=()=>({ready,spinning,meshes,bones,error});
 document.getElementById('rotate').onclick=()=>spinning=!spinning;
-document.getElementById('front').onclick=()=>{spinning=false;asset.rotation.y=0;cam.alpha=Math.PI/2};
+document.getElementById('front').onclick=()=>{spinning=false;asset.rotation.y=Math.PI;cam.alpha=Math.PI/2};
 engine.runRenderLoop(()=>{if(spinning)asset.rotation.y+=engine.getDeltaTime()/1000*.4;scene.render()});
 window.addEventListener('resize',()=>engine.resize());
 (async()=>{
