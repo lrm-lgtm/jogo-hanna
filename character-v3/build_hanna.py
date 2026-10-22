@@ -25,11 +25,11 @@ def material(name,color,rough=.58,metal=0,subsurf=0):
     if "Subsurface Weight" in p.inputs:p.inputs["Subsurface Weight"].default_value=subsurf
     return m
 
-SKIN=material("warm peach skin",(0.84,.48,.34),.57,subsurf=.04)
+SKIN=material("warm peach skin",(.89,.54,.40),.69,subsurf=.07)
 SKINLIGHT=material("gentle nose highlight",(0.90,.56,.42),.62)
 BLUSH=material("rosy cheek",(.86,.34,.38),.89)
-HAIR=material("deep chocolate brown hair",(.12,.044,.025),.35)
-HAIRHL=material("warm chestnut highlights",(.23,.082,.042),.36)
+HAIR=material("deep chocolate brown hair",(.095,.036,.022),.44)
+HAIRHL=material("warm chestnut highlights",(.16,.069,.038),.49)
 EYEWHITE=material("soft ivory eyes",(.99,.96,.91),.18)
 IRIS=material("honey hazel iris",(.19,.090,.037),.22)
 IRIS2=material("golden iris ring",(.47,.25,.065),.27)
@@ -100,10 +100,10 @@ def line(name,pts,thickness,mat,parent=root,radii=None):
 
 # Stylized child proportions: character model intended for a playful mobile game.
 # Artistic v2: sculpted face, recessed eyes, tapered hair ribbons, softer fabric silhouettes.
-uv("hoodie-body",(0,-.004,1.04),(.295,.208,.328),PINK)
+uv("hoodie-body",(0,-.004,1.04),(.289,.204,.315),PINK)
 uv("hoodie-waist-rib",(0,-.001,.77),(.285,.209,.062),PINKDARK)
-uv("hoodie-hood",(0,.19,1.34),(.28,.12,.22),PINKDARK)
-uv("hood-inner",(0,.253,1.375),(.205,.043,.165),PINKLIGHT)
+uv("hoodie-hood",(0,.171,1.34),(.252,.098,.20),PINKDARK)
+uv("hood-inner",(0,.239,1.375),(.185,.032,.149),PINKLIGHT)
 uv("neck",(0,-.015,1.383),(.103,.085,.10),SKIN)
 # Pouch pocket and kitty stitched detail.
 uv("front-hoodie-pocket",(0,-.21,.94),(.168,.025,.088),PINKLIGHT)
@@ -136,62 +136,74 @@ for side,pivot in [(-1,leftleg),(1,rightleg)]:
 
 # Sleeves have relaxed seams; hands are visible at the correct height.
 for side,pivot in [(-1,leftarm),(1,rightarm)]:
-    sleeve=uv("sleeve-"+str(side),(side*.02,.004,-.178),(.125,.135,.235),PINK,pivot)
+    sleeve=uv("sleeve-"+str(side),(side*.02,.004,-.178),(.110,.121,.245),PINK,pivot)
     sleeve.rotation_euler[1]=side*.16
-    uv("cuff-"+str(side),(side*.045,-.006,-.399),(.112,.114,.052),PINKDARK,pivot)
+    uv("cuff-"+str(side),(side*.045,-.006,-.405),(.106,.103,.044),PINKDARK,pivot)
     uv("hand-"+str(side),(side*.057,-.03,-.510),(.092,.079,.121),SKIN,pivot)
     uv("thumb-"+str(side),(side*.139,-.10,-.520),(.041,.046,.067),SKIN,pivot,24,16)
 
 # Head: cheeks taper subtly, huge expressive eyes, gradient of playful features.
-uv("face-sculpt",(0,-.012,.122),(.342,.310,.352),SKIN,head)
-uv("soft-chin",(0,-.092,-.130),(.246,.195,.130),SKIN,head)
+face_mesh=uv("face-sculpt",(0,-.012,.122),(.342,.310,.352),SKIN,head)
+# Anatomical sculpt: forehead softly round, lower face tapers into ONE continuous chin;
+# no intersecting chin sphere or horizontal seam across her cheeks.
+for v in face_mesh.data.vertices:
+    z=v.co.z
+    if z < -.04:
+        v.co.x *= 1.0 - .17*min(1.0,max(0.,(-z-.04)/.95))
+        v.co.y *= 1.0 - .055*min(1.0,max(0.,(-z-.04)/.95))
+    elif z > .48:
+        v.co.x *= 1.0 - .035*min(1.,(z-.48)/.52)
 for side in [-1,1]:
     uv("ear-"+str(side),(side*.317,.038,.115),(.060,.047,.089),SKIN,head)
     uv("ear-inner-"+str(side),(side*.364,-.006,.115),(.016,.010,.028),BLUSH,head,24,16)
-    uv("sclera-"+str(side),(side*.138,-.284,.176),(.086,.021,.109),EYEWHITE,head)
-    uv("iris-outer-"+str(side),(side*.140,-.302,.167),(.066,.012,.086),IRIS2,head)
-    uv("hazel-iris-"+str(side),(side*.139,-.316,.165),(.053,.011,.072),IRIS,head)
-    uv("black-pupil-"+str(side),(side*.138,-.328,.166),(.037,.012,.051),PUPIL,head)
-    uv("eye-sparkle-large-"+str(side),(side*.122,-.341,.204),(.017,.007,.020),SPARKLE,head,24,16)
-    uv("eye-sparkle-small-"+str(side),(side*.165,-.339,.143),(.008,.005,.010),SPARKLE,head,24,16)
+    uv("sclera-"+str(side),(side*.137,-.287,.176),(.080,.016,.100),EYEWHITE,head)
+    uv("iris-outer-"+str(side),(side*.140,-.305,.169),(.061,.010,.080),IRIS2,head)
+    uv("hazel-iris-"+str(side),(side*.139,-.312,.167),(.050,.008,.068),IRIS,head)
+    uv("black-pupil-"+str(side),(side*.138,-.321,.168),(.036,.007,.050),PUPIL,head)
+    uv("eye-sparkle-large-"+str(side),(side*.122,-.329,.203),(.015,.005,.018),SPARKLE,head,24,16)
+    uv("eye-sparkle-small-"+str(side),(side*.163,-.328,.143),(.008,.004,.010),SPARKLE,head,24,16)
     uv("rosy-cheek-"+str(side),(side*.238,-.222,.019),(.065,.009,.034),BLUSH,head)
-    line("upper-eyelid-"+str(side),[(side*.061,-.300,.263),(side*.136,-.307,.283),(side*.215,-.290,.253)],.008,HAIR,head,[.7,1,.7])
+    line("upper-eyelid-"+str(side),[(side*.058,-.290,.257),(side*.136,-.302,.280),(side*.213,-.288,.251)],.009,HAIR,head,[.7,1,.6])
+    line("soft-lower-lid-"+str(side),[(side*.062,-.289,.104),(side*.138,-.300,.087),(side*.214,-.288,.108)],.007,SKINLIGHT,head,[.2,1,.2])
+    line("outer-eyelash-"+str(side),[(side*.211,-.280,.248),(side*.236,-.271,.273)],.008,HAIR,head,[.8,.03])
     line("eyebrow-"+str(side),[(side*.076,-.277,.321),(side*.139,-.279,.340),(side*.210,-.259,.324)],.010,HAIR,head)
 uv("small-nose",(0,-.306,.066),(.037,.029,.026),SKINLIGHT,head,32,22)
 line("smiling-mouth",[(-.071,-.261,-.063),(0,-.273,-.082),(.071,-.259,-.063)],.008,DARK,head,[.65,1,.65])
 uv("lower-lip",(0,-.244,-.112),(.050,.007,.009),BLUSH,head,24,16)
 
 # Haircap and thick sculpted locks, with warm highlights and intentional silhouette.
-uv("crown-back",(0,.083,.322),(.347,.335,.274),HAIR,head)
-uv("hair-back-length",(0,.247,-.028),(.295,.142,.314),HAIR,head)
+uv("crown-back",(0,.09,.324),(.342,.306,.269),HAIR,head)
+uv("hair-back-length",(0,.248,-.018),(.275,.123,.307),HAIR,head)
 uv("hair-left-volume",(-.260,.155,.015),(.080,.102,.25),HAIR,head)
 uv("hair-right-volume",(.270,.155,.015),(.076,.108,.249),HAIR,head)
 for side in [-1,1]:
     uv("sideburn-"+str(side),(side*.297,-.086,.072),(.046,.072,.172),HAIR,head)
     uv("side-lock-shine-"+str(side),(side*.302,-.140,.025),(.018,.017,.104),HAIRHL,head)
 # Sculpted swept bangs curve across the forehead.
-for i in range(11):
-    x=-.28+i*.056
-    start=(x*.76,-.085,.544)
-    mid=(x*.94,-.243,.442+.022*sin(i*.7))
-    end=(x+.055,-.270,.313+(.026 if i>7 else 0))
-    line("swept-hair-strand-%02d"%i,[start,mid,end],.026 if i%2 else .031,HAIRHL if i in (1,4,8) else HAIR,head,[.9,1,.06])
+# Side-swept layered bangs, not a row of identical vertical cylindrical strips.
+for i in range(7):
+    x=.272-i*.089
+    start=(x+.067,-.092,.539)
+    mid=(x-.027,-.236,.444+.017*sin(i*.75))
+    end=(x-.106,-.262,.306+.040*sin(i*.43))
+    line("side-swept-fringe-%02d"%i,[start,mid,end],
+         .028 if i%2 else .034,HAIRHL if i in (1,5) else HAIR,head,[.38,1,.045])
 # Directional, curled locks around the face replace unnaturally round side clumps.
 for side in [-1,1]:
-    for i in range(5):
-        x=side*(.272 + i*.007)
+    for i in range(4):
+        x=side*(.286 + i*.007)
         line("soft-tapered-side-lock-%s-%s"%(side,i),
-             [(x,-.035,.32-i*.025),(side*(.335+i*.005),-.045,.095-i*.03),(side*(.297+i*.009),.02,-.190-i*.034)],
-             .025,HAIRHL if i==1 else HAIR,head,[1,.8,.05])
+             [(x,-.012,.31-i*.023),(side*(.331+i*.005),-.019,.083-i*.030),(side*(.291+i*.009),.034,-.171-i*.027)],
+             .021,HAIRHL if i==1 else HAIR,head,[1,.73,.028])
 # Single side ponytail, sculpted taper and strands that follow the silhouette.
-uv("ponytail-tie",(.23,.280,.20),(.090,.064,.080),PINKDARK,head)
-for i in range(10):
-    t=2*pi*i/10
-    x=.23+.100*cos(t)
-    y=.280+.07*sin(t)
+uv("ponytail-tie",(.23,.280,.20),(.069,.051,.068),PINKDARK,head)
+for i in range(12):
+    t=2*pi*i/12
+    x=.23+.09*cos(t)
+    y=.278+.047*sin(t)
     line("flowing-ponytail-%02d"%i,
-         [(x,y,.20),(x+.02,.32,-.04),(x+.055,.285,-.31),(x+.037,.255,-.47)],.038,
-         HAIRHL if i in (1,3,7) else HAIR,head,[.55,1,1,.03])
+         [(x,y,.20),(x+.013,.327,-.050),(x+.062,.276,-.30),(x+.037,.247,-.48)],.030,
+         HAIRHL if i in (1,3,7) else HAIR,head,[.43,1,.75,.018])
 # Long hair ribbon tails and heart bow on the right.
 bow=empty("BowAnchor",(.195,-.21,.534),head)
 for side in [-1,1]:
@@ -214,8 +226,8 @@ def area(name,loc,power,color,size):
     data=bpy.data.lights.new(name,'AREA');data.energy=power;data.color=color;data.shape='DISK';data.size=size
     obj=bpy.data.objects.new(name,data);bpy.context.collection.objects.link(obj);obj.location=loc
     direction=Vector((0,0,1.0))-obj.location;obj.rotation_euler=direction.to_track_quat('-Z','Y').to_euler()
-area("STUDIO_ONLY_warm_key",(-3,-4,5),470,(1,.88,.81),4.0)
-area("STUDIO_ONLY_big_softbox",(3,-3,4),250,(.88,.93,1),4.0)
+area("STUDIO_ONLY_warm_key",(-3,-4,5),600,(1,.86,.75),4.0)
+area("STUDIO_ONLY_big_softbox",(3,-3,4),310,(.91,.93,1),4.0)
 area("STUDIO_ONLY_rim_light",(1.2,2.7,4),400,(1,.89,.78),3.0)
 world=bpy.context.scene.world or bpy.data.worlds.new("warm atmosphere")
 bpy.context.scene.world=world;world.use_nodes=True
@@ -240,7 +252,7 @@ bpy.context.scene.render.image_settings.file_format='PNG'
 # Deterministic headless rendering: use Cycles CPU (does not require a GPU/display server).
 bpy.context.scene.render.engine='CYCLES'
 bpy.context.scene.cycles.device='CPU'
-bpy.context.scene.cycles.samples=22
+bpy.context.scene.cycles.samples=32
 if hasattr(bpy.context.scene.cycles,'use_denoising'): bpy.context.scene.cycles.use_denoising=False
 if hasattr(bpy.context.view_layer,'cycles') and hasattr(bpy.context.view_layer.cycles,'use_denoising'):
     bpy.context.view_layer.cycles.use_denoising=False
