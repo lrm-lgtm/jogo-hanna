@@ -1,0 +1,54 @@
+name: Hanna v2 Art R2 - install verified Blender artifact
+on:
+  push:
+    branches: [feature/cozinha-3d-v2-20261022]
+    paths: ['.github/workflows/hanna-v2-adopt-artifact.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  adopt:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Download approved genuine Blender-generated GLB from previous run
+        uses: actions/download-artifact@v4
+        with:
+          name: hanna-v2-blender-kitchen-r2
+          run-id: 39741084801
+          github-token: ${{ github.token }}
+          path: v2/assets
+      - name: Confirm actual Blender mesh and digest, no third-party assets
+        run: |
+          find v2/assets -maxdepth 4 -type f -printf '%p %k KB\n'
+          python3 - <<'PY'
+          import json,os,struct,hashlib,glob
+          candidates=glob.glob('v2/assets/**/kitchen-architecture-r2.glb',recursive=True)
+          assert len(candidates)==1,candidates
+          p=candidates[0]
+          q=p[:-4]+'.json'
+          data=open(p,'rb').read()
+          magic,version,size=struct.unpack_from('<4sII',data)
+          meta=json.load(open(q))
+          assert (magic,version,size)==(b'glTF',2,len(data))
+          assert meta['sha256']==hashlib.sha256(data).hexdigest()
+          assert meta['meshes']>=45
+          assert meta['license']=='CC0-1.0'
+          if os.path.dirname(p)!='v2/assets':
+            os.replace(p,'v2/assets/kitchen-architecture-r2.glb')
+            os.replace(q,'v2/assets/kitchen-architecture-r2.json')
+          print('BLENDER_R2_AVAILABLE',meta)
+          PY
+      - name: Commit GLB to the current isolated branch, no main edits
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add v2/assets/kitchen-architecture-r2.*
+          if ! git diff --cached --quiet; then
+            git commit -m "assets(v2): integrate verified free Blender kitchen GLB R2 [skip ci]"
+            git push origin HEAD:$GITHUB_REF_NAME
+          fi
