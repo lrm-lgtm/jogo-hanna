@@ -407,6 +407,38 @@ function milkCarton(parent,pos){
  roof.position.set(pos[0],pos[1]+.275,pos[2]);roof.rotation.y=Math.PI/4;roof.material=M.white;roof.isPickable=false;roof.parent=parent;
  return base;
 }
+
+async function loadRoundedKitchenArt(){
+ const result=await B.SceneLoader.ImportMeshAsync('','./assets/','kitchen-architecture-r2.glb',scene);
+ const meshes=result.meshes.filter(m=>m.getTotalVertices?.()>0);
+ if(meshes.length<45)throw new Error('Blender R2 exportação incompleta ('+meshes.length+' meshes)');
+ const min=new B.Vector3(Infinity,Infinity,Infinity),max=new B.Vector3(-Infinity,-Infinity,-Infinity);
+ for(const m of meshes){
+  m.computeWorldMatrix(true);
+  const bb=m.getBoundingInfo().boundingBox;
+  min.minimizeInPlace(bb.minimumWorld);max.maximizeInPlace(bb.maximumWorld);
+  m.isPickable=false;m.receiveShadows=true;
+  if(/B2_(table|chair|fridge)/.test(m.name))shadow.addShadowCaster(m);
+ }
+ // Detect a Blender coordinate conversion mistake instead of delivering mirrored/scaled furniture.
+ if(min.x< -5||max.x>5||min.z< -4||max.z>4||min.y< -.5||max.y>4)
+  throw new Error('Coordenadas Blender GLB incorretas: '+min.toString()+'/'+max.toString());
+ const r2Decor=new Set(['fridgeBody','fridgeSide','fridgeTop','fridgeToeKick',
+  'counterBase','oakCounterEdge','stoneCounterTop','counterShadow',
+  'cabinetFace','cabinetInset','cabinetGoldPull',
+  'sinkRim','sinkInterior','sinkInnerWhite','brassFaucet','faucetHandle',
+  'hobBase','hobBurner','ovenDoor','ovenGlass','ovenGoldHandle',
+  'upperCabinetFrame','upperCabinetDoor','upperInset','upperCabinetKnob','cabinetUpperTrim',
+  'breakfastTableTop','breakfastTableLip','breakfastTableSilkyTop','tableCenterPedestal','tableFootX','tableFootZ',
+  'chairSeat','chairCushion','chairBackUpright','chairPaddedBack','chairLeg',
+  'smallFlowerVase','smallFlowerStem','tinyFlowerPetal']);
+ let hidden=0;
+ for(const mesh of scene.meshes){
+  if(r2Decor.has(mesh.name)){mesh.setEnabled(false);hidden++}
+ }
+ window.__hannaArt=Object.freeze({artPass:'r2-blender',gltfMeshCount:meshes.length,proceduralHidden:hidden,
+  bbox:{min:[min.x,min.y,min.z].map(v=>+v.toFixed(2)),max:[max.x,max.y,max.z].map(v=>+v.toFixed(2))}});
+}
 async function assets(){
  el('loadDetail').textContent='Preparando a Hanna 3D jogável…';
  await loadPlayableAvatar();
@@ -481,7 +513,8 @@ async function assets(){
  cylinder('servedBread',[-.03,1.17,-.69],.30,.09,M.gold,10).parent=served;
  visuals.set('toastTable',served);
  if(!breadModel)throw new Error('O modelo do pão está ausente');
- window.__hannaArt=window.HannaKitchenArt.rebuild({B,scene,M,box,sphere,cylinder,visuals,shadow,graphics});
+ window.HannaKitchenArt.rebuild({B,scene,M,box,sphere,cylinder,visuals,shadow,graphics});
+ await loadRoundedKitchenArt();
 }
 async function boot(){
  try{
@@ -494,7 +527,7 @@ async function boot(){
    ready,step:currentStep,missionLength:steps.length,avatar:{x:character.position.x,z:character.position.z},
    currentTarget:target().key,distance:distanceTo(target().nav),walking:moving,pathLength:waypoints.length,
    fps:avgFps,orientation:innerHeight>innerWidth?'portrait':'landscape',modelCount:modelsLoaded,
-   artPass:window.__hannaArt?.artPass||'missing',cameraMode:camera.mode,cameraBeta:camera.beta,
+   artPass:window.__hannaArt?.artPass||'missing',gltfMeshCount:window.__hannaArt?.gltfMeshCount||0,artBounds:window.__hannaArt?.bbox,cameraMode:camera.mode,cameraBeta:camera.beta,
    avatarMeshCount,avatarWalkedFrames,avatarKind:'hanna-v5-glb',hasGameplayRig:!!avatarPivots,
    loadErrors:loadErrors.slice(),saved:mission.restored||currentStep>0,quality:graphics.resolved,saveSchema:2
   })});

@@ -24,7 +24,8 @@ test('v2 desktop: real Hanna model and complete eight-step mission with saved pr
   assert.equal(current.step,0);assert.equal(current.saveSchema,2);
   assert.equal(current.avatarKind,'hanna-v5-glb');
   assert.ok(current.avatarMeshCount>=80);
-  assert.equal(current.artPass,'r1');
+  assert.equal(current.artPass,'r2-blender');
+  assert.ok(current.gltfMeshCount>=45,'real imported Blender furniture must be present');
   assert.equal(current.cameraMode,0,'third-person perspective mode');
   assert.ok(current.cameraBeta>1.1,'camera should not be top-down');
   await page.screenshot({path:path.join(screenshots,'desktop-inicial.png')});
