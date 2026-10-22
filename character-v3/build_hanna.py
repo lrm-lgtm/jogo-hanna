@@ -210,15 +210,17 @@ bpy.context.scene.camera=cam_obj;camera.type='ORTHO';camera.ortho_scale=2.9
 def aim_camera(pos,look=(0,0,1.05)):
     cam_obj.location=pos
     cam_obj.rotation_euler=(Vector(look)-cam_obj.location).to_track_quat('-Z','Y').to_euler()
-bpy.context.scene.render.resolution_x=850
-bpy.context.scene.render.resolution_y=1040
+bpy.context.scene.render.resolution_x=720
+bpy.context.scene.render.resolution_y=880
 bpy.context.scene.render.resolution_percentage=100
 bpy.context.scene.render.image_settings.file_format='PNG'
 # Deterministic headless rendering: use Cycles CPU (does not require a GPU/display server).
 bpy.context.scene.render.engine='CYCLES'
 bpy.context.scene.cycles.device='CPU'
-bpy.context.scene.cycles.samples=20
-bpy.context.scene.cycles.use_denoising=True
+bpy.context.scene.cycles.samples=12
+if hasattr(bpy.context.scene.cycles,'use_denoising'): bpy.context.scene.cycles.use_denoising=True
+if hasattr(bpy.context.view_layer,'cycles') and hasattr(bpy.context.view_layer.cycles,'use_denoising'):
+    bpy.context.view_layer.cycles.use_denoising=True
 bpy.context.scene.camera.data.lens=46
 bpy.context.view_layer.update()
 for label,pos in [('front',(0,-5.7,2.58)),('threequarter',(3.2,-5.5,2.45)),('profile',(5.8,-.7,2.2))]:
