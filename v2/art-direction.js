@@ -13,30 +13,30 @@ function rebuild({B,scene,M,box,sphere,cylinder,visuals,shadow,graphics}){
    return m;
  }
  const P={
-  wall:pbr('buttercream','#f5e4d9',.95),
-  panel:pbr('blushPanel','#ead3c7',.95),
+  wall:pbr('buttercream','#ebd2bf',.95),
+  panel:pbr('blushPanel','#d8ad9f',.95),
   ivory:pbr('warmIvory','#fff5e9',.84),
   porcelain:pbr('porcelain','#f5e9d9',.27),
-  sage:pbr('sageCabinets','#9eafa1',.79),
-  sageLight:pbr('sageCabinetsLight','#c7d4bb',.72),
-  sageDark:pbr('sageShadow','#728a7b',.8),
-  oak:pbr('oakHoney','#bb8661',.71),
-  oakLight:pbr('oatOak','#e5c4a0',.73),
-  oakDark:pbr('darkWood','#8b6659',.79),
+  sage:pbr('sageCabinets','#78968b',.79),
+  sageLight:pbr('sageCabinetsLight','#b8cfb3',.72),
+  sageDark:pbr('sageShadow','#58786c',.8),
+  oak:pbr('oakHoney','#ab7459',.71),
+  oakLight:pbr('oatOak','#d8b38a',.73),
+  oakDark:pbr('darkWood','#7b5541',.79),
   tile:pbr('backsplash','#f8eee4',.45),
   tileLine:pbr('grout','#e4d4c9',.95),
-  glass:pbr('windowGlass','#a9d9cc',.13,.05),
-  exterior:pbr('landscapeSky','#b1dbe1',.88),
-  leaves:pbr('eucalyptus','#709877',.96),
-  leaves2:pbr('olive','#95ab81',.95),
+  glass:pbr('windowGlass','#85c0c1',.13,.05),
+  exterior:pbr('landscapeSky','#89cadc',.88),
+  leaves:pbr('eucalyptus','#598c64',.96),
+  leaves2:pbr('olive','#82a67b',.95),
   coral:pbr('coral','#dc957e',.73),
-  rose:pbr('rose','#e9b3a5',.74),
+  rose:pbr('rose','#d79191',.74),
   gold:pbr('brushedBrass','#d1a26e',.27,.55),
   charcoal:pbr('hobs','#494c4a',.31,.14),
   black:pbr('shadows','#777770',1),
   white:pbr('ceramicWhite','#fdfbf5',.26),
   blue:pbr('blue','#95bdd1',.73),
-  textile:pbr('seatCushion','#e9c7b2',.98)
+  textile:pbr('seatCushion','#ddad9c',.98)
  };
  function tile(id,x,y,z,w,h,d,material){const m=box(id,[x,y,z],[w,h,d],material);m.receiveShadows=true;return m}
  function tube(id,path,r,material){const m=B.MeshBuilder.CreateTube(id,{path:path.map(p=>new B.Vector3(...p)),radius:r,tessellation:10,cap:B.Mesh.CAP_ALL},scene);m.material=material;m.isPickable=false;return m}
@@ -52,22 +52,33 @@ function rebuild({B,scene,M,box,sphere,cylinder,visuals,shadow,graphics}){
   'backCounterPlinth','rugBase','rugInset'];
  hide.forEach(name=>scene.getMeshByName(name)?.setEnabled(false));
  // Make the room a complete, welcoming set rather than a gray void.
- scene.clearColor=B.Color4.FromHexString('#e8dbcdff');
- scene.imageProcessingConfiguration.exposure=.93;
- scene.imageProcessingConfiguration.contrast=1.23;
+ scene.clearColor=B.Color4.FromHexString('#f0ddcbff');
+ scene.imageProcessingConfiguration.exposure=.89;
+ scene.imageProcessingConfiguration.contrast=1.33;
  scene.ambientColor=c('#695a52');
  const floor=scene.getMeshByName('walkableKitchenFloor');
- if(floor)floor.material=P.oakLight;
+ if(floor){
+  floor.material=P.oakLight;
+  floor.scaling.set(1.85,1,2.55);
+  floor.position.z=-2.7; // Hide the former dollhouse platform edge beyond the camera.
+ }
+ tile('extendedBackWall',0,1.75,3.19,14,3.50,.19,P.wall);
  const back=scene.getMeshByName('backWall');if(back)back.material=P.wall;
  const left=scene.getMeshByName('leftWall');if(left)left.material=P.wall;
  scene.getMeshByName('backWainscot')?.setEnabled(false);
  scene.getMeshByName('leftWainscot')?.setEnabled(false);
  // Narrow floorboard seams retain physical scale with low visual noise.
- for(let i=0;i<19;i++){
-   const z=-2.92+i*.325;
-   tile('oakFloorBoard'+i,0,.016,z,7.92,.018,.308,i%5===0?P.oakLight:i%3===0?P.porcelain:P.oakLight);
-   if(i<18)tile('plankSeam'+i,0,.026,z+.154,7.92,.004,.004,P.oak);
+ for(let i=0;i<48;i++){
+   const z=-10.42+i*.30;
+   const board=tile('oakFloorBoard'+i,0,.016,z,13.85,.018,.284,i%5===0?P.oakLight:i%3===0?P.oatOak:P.oakLight);
+   board.receiveShadows=true;
+   if(i<47)tile('plankSeam'+i,0,.026,z+.142,13.85,.004,.004,P.oak);
  }
+ // Thin woven oval carpet anchors the breakfast table without obscuring movement.
+ const carpet=B.MeshBuilder.CreateDisc('pastelDiningCarpet',{radius:1,tessellation:52,sideOrientation:B.Mesh.DOUBLESIDE},scene);
+ carpet.rotation.x=Math.PI/2;carpet.position.set(-.07,.033,-.72);carpet.scaling.set(1.66,.99,1);carpet.material=P.sageLight;carpet.isPickable=false;
+ const carpetInset=B.MeshBuilder.CreateDisc('pastelDiningCarpetInset',{radius:1,tessellation:52,sideOrientation:B.Mesh.DOUBLESIDE},scene);
+ carpetInset.rotation.x=Math.PI/2;carpetInset.position.set(-.07,.034,-.72);carpetInset.scaling.set(1.52,.88,1);carpetInset.material=P.textile;carpetInset.isPickable=false;
  tile('leftBaseboardNew',-3.885,.14,1.36,.08,.27,3.22,P.ivory);
  tile('backBaseboardNew',0,.14,2.88,7.9,.28,.07,P.ivory);
  tile('accentWallLower',0,.51,2.855,7.75,.94,.028,P.panel);
@@ -208,9 +219,9 @@ function rebuild({B,scene,M,box,sphere,cylinder,visuals,shadow,graphics}){
  contact('chairContactR',1.39,-.69,.91,1.0);
  // Soft spotlight windowside and diffuse sky; no harsh PBR overexposure.
  const sky=scene.getLightByName('softSky'),sun=scene.getLightByName('warmWindowLight'),fill=scene.getLightByName('warmFill');
- if(sky){sky.intensity=.83;sky.groundColor=c('#ab9784')}
- if(sun){sun.intensity=1.85;sun.diffuse=c('#fff2de');sun.direction=new B.Vector3(-.46,-1,.32)}
- if(fill){fill.intensity=.22;fill.diffuse=c('#ffe1ca')}
+ if(sky){sky.intensity=.68;sky.groundColor=c('#ab9784')}
+ if(sun){sun.intensity=1.38;sun.diffuse=c('#fff2de');sun.direction=new B.Vector3(-.46,-1,.32)}
+ if(fill){fill.intensity=.28;fill.diffuse=c('#ffe1ca')}
  if(shadow){shadow.bias=.001;shadow.normalBias=.014}
  return Object.freeze({artPass:'r1',subsystems:['architecture','cabinets','floor','window','table','lighting']});
 }
