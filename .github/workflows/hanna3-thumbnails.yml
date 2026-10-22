@@ -1,4 +1,4 @@
-name: Hanna 3 - Small visual review images
+name: Hanna 3 - Visual review renders R2
 on:
   push:
     branches: [feature/hanna3-art-character-free-20261022]
