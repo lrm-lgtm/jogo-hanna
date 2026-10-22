@@ -12,4 +12,4 @@ Execução local na raiz do projeto: python3 -m http.server 8765; abrir http://l
 - cozinha.js: cena adaptada do piloto R5, glTF locais em ../pilot/assets.
 - Testes: node --test v2/tests/*.test.cjs
 
-PENDÊNCIAS: a primeira carga ainda usa Babylon CDN; SW tenta guardar scripts para uso posterior offline. FPS, tamanho, iPhone/Android físicos e comparação visual premium NÃO estão comprovados. A personagem continua sendo a R5 (rig simples), não a Hanna final. Não mesclar automaticamente.
+Babylon e loaders UMD 9.29.0 versionados em v2/vendor, sem dependência de CDN de runtime; o service worker faz cache de ambos. FPS, tamanho, iPhone/Android físicos e comparação visual premium NÃO estão comprovados. A personagem continua sendo a R5 (rig simples), não a Hanna final. Não mesclar automaticamente.
