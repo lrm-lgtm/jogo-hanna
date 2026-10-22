@@ -121,7 +121,7 @@ function updateAvatarAnimation(t,isWalking,dt){
  const a=avatarPivots,phase=t*7.3;
  const intensity=isWalking?1:0;
  a.leftArm.rotation.x=Math.sin(phase)*.35*intensity;
- a.rightArm.rotation.x=-Math.sin(phase)*.35*intensity;
+ a.rightArm.rotation.x=-Math.sin(phase)*.35*intensity-(held?.24:0);
  a.leftLeg.rotation.x=-Math.sin(phase)*.25*intensity;
  a.rightLeg.rotation.x=Math.sin(phase)*.25*intensity;
  a.head.rotation.z=Math.sin(t*1.8)*.015;
@@ -129,9 +129,32 @@ function updateAvatarAnimation(t,isWalking,dt){
  if(avatarRig)avatarRig.position.y=isWalking?.020*Math.abs(Math.sin(phase)):.005*Math.sin(t*2);
  if(isWalking)avatarWalkedFrames++;
 }
-const heldCharm=sphere('heldItem',[.32,1.07,-.37],.16,M.white);heldCharm.parent=character;
-heldCharm.setEnabled(false);
-const targetHalo=B.MeshBuilder.CreateTorus('targetHalo',{diameter:1.25,thickness:.065,tessellation:42},scene);
+// A carried item is a recognizable miniature prop — not the old placeholder sphere.
+const carryRoot=new B.TransformNode('carriedBreakfastProp',scene);
+carryRoot.parent=character;carryRoot.position.set(.34,1.05,-.33);
+function carryBox(parent,name,pos,dims,material){
+ const mesh=B.MeshBuilder.CreateBox(name,{width:dims[0],height:dims[1],depth:dims[2]},scene);
+ mesh.parent=parent;mesh.position.set(...pos);mesh.material=material;mesh.isPickable=false;
+ return mesh;
+}
+const carried=Object.create(null);
+carried.milk=new B.TransformNode('carriedMilkCarton',scene);carried.milk.parent=carryRoot;
+carryBox(carried.milk,'carriedMilkBody',[0,0,0],[.18,.26,.16],M.white);
+carryBox(carried.milk,'carriedMilkLabel',[0,0,-.086],[.155,.10,.008],M.blue);
+const milkRoof=B.MeshBuilder.CreateCylinder('carriedMilkTop',{diameterTop:0,diameterBottom:.22,height:.10,tessellation:4},scene);
+milkRoof.rotation.y=Math.PI/4;milkRoof.position.y=.174;milkRoof.material=M.white;milkRoof.parent=carried.milk;milkRoof.isPickable=false;
+function breadProp(name,middle,crust){
+ const group=new B.TransformNode('carried'+name,scene);group.parent=carryRoot;
+ const body=B.MeshBuilder.CreateCylinder(name+'Slice',{diameter:.25,height:.057,tessellation:18},scene);
+ body.rotation.x=Math.PI/2;body.material=crust;body.parent=group;body.isPickable=false;
+ const face=B.MeshBuilder.CreateCylinder(name+'Crumb',{diameter:.211,height:.061,tessellation:18},scene);
+ face.rotation.x=Math.PI/2;face.position.z=-.003;face.material=middle;face.parent=group;face.isPickable=false;
+ return group;
+}
+carried.bread=breadProp('Bread',M.plate,M.wood);
+carried.toast=breadProp('Toast',M.gold,M.wood);
+for(const group of Object.values(carried))group.setEnabled(false);
+const targetHalo=B.MeshBuilder.CreateTorus('targetHalo',{diameter:.93,thickness:.055,tessellation:42},scene);
 targetHalo.rotation.x=Math.PI/2;targetHalo.material=M.gold;targetHalo.position.y=.08;
 targetHalo.isPickable=false;
 const haloGem=sphere('targetSparkle',[0,1.9,0],.19,M.gold);haloGem.isPickable=false;
@@ -198,11 +221,11 @@ function updateVisuals(){
  const milkTable=visuals.get('milkTable');if(milkTable)milkTable.setEnabled(currentStep>=3);
  const toastTable=visuals.get('toastTable');if(toastTable)toastTable.setEnabled(currentStep>=8);
  held=currentStep===2?'milk':currentStep===4?'bread':currentStep===7?'toast':'';
- heldCharm.setEnabled(!!held);
- heldCharm.material=held==='milk'?M.white:held==='bread'?M.gold:M.coral;
+ for(const [kind,group] of Object.entries(carried))group.setEnabled(kind===held);
  const goal=target();
  // Highlight the actual object, not the walk destination.
- targetHalo.position.x=goal.proxy.position.x;targetHalo.position.z=goal.proxy.position.z;
+ targetHalo.position.x=goal.nav.x;targetHalo.position.z=goal.nav.z;
+ targetHalo.position.y=.06;
  haloGem.position.x=goal.proxy.position.x;haloGem.position.z=goal.proxy.position.z;haloGem.position.y=goal.proxy.position.y+goal.proxy.getBoundingInfo().boundingBox.extendSizeWorld.y+.35;
  if(currentStep===8){targetHalo.setEnabled(false);haloGem.setEnabled(false);el('finish').hidden=false}
 }
@@ -372,7 +395,7 @@ function loop(){
  if(moving&&dest){following.x=following.x*.82+dest.x*.18;following.z=following.z*.82+dest.z*.18}
  cameraTarget.copyFrom(B.Vector3.Lerp(cameraTarget,following,.055));
  camera.target.copyFrom(cameraTarget);
- targetHalo.rotation.z+=dt*.30;
+ targetHalo.rotation.y+=dt*.30; // Rotate horizontally; Z rotation had tilted the goal ring through Hanna.
  targetHalo.scaling.x=targetHalo.scaling.z=1+Math.sin(performance.now()/370)*.055;
  haloGem.position.y+=Math.sin(performance.now()/480)*.00055;
  if(frameCount%9===0){avgFps=engine.getFps();updateAction()}
