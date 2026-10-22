@@ -1,0 +1,88 @@
+name: Hanna 3 - Character GLB and real Blender renders
+on:
+  push:
+    branches: [feature/hanna3-art-character-free-20261022]
+    paths:
+      - 'character-v3/build_hanna.py'
+      - 'character-v3/preview.html'
+      - 'character-v3/preview.js'
+      - 'character-v3/preview.css'
+      - '.github/workflows/hanna3-character-art.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: hanna3-character-art
+  cancel-in-progress: false
+jobs:
+  build-character:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Install free Blender from Ubuntu repositories
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq blender
+          blender --version | head -n 2
+      - name: Export original 3D character and 3 true Blender renders
+        run: |
+          blender --background --factory-startup --python character-v3/build_hanna.py > /tmp/hanna-blender.log 2>&1 || { tail -160 /tmp/hanna-blender.log; exit 1; }
+          grep -E 'RENDER_OK|MODEL_OK|CHARACTER_BUILD_COMPLETE' /tmp/hanna-blender.log
+          ls -lh character-v3/build/
+      - name: Verify actual GLB 2.0, view renders and mesh data
+        run: |
+          python3 - <<'PY'
+          import json,struct,os
+          p='character-v3/build/'
+          m=json.load(open(p+'manifest.json'))
+          s=open(p+'hanna-v3.glb','rb').read()
+          magic,version,length=struct.unpack_from('<4sII',s)
+          assert magic==b'glTF' and version==2 and length==len(s)
+          assert len(s)>35000
+          for kind in ['front','threequarter','profile']:
+            fn=p+'hanna-'+kind+'.png'
+            with open(fn,'rb') as f: assert f.read(8)==b'\x89PNG\r\n\x1a\n'
+            assert os.stat(fn).st_size>15000
+          assert m['meshes']>50
+          print('REAL_3D_VERIFIED',len(s),'bytes',m['meshes'],'meshes')
+          PY
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium for model runtime smoke checks
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start local HTTP preview server
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/hanna-http.log 2>&1 &
+          for n in {1..30}; do
+            curl -fsS http://127.0.0.1:8765/character-v3/preview.html >/dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Test real GLB rendering and controls in Chromium
+        run: node --test character-v3/preview.test.cjs
+      - name: Publish generated GLB and image renders to isolated branch
+        if: success() && github.actor != 'github-actions[bot]'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add character-v3/build/
+          if ! git diff --cached --quiet; then
+            git commit -m "assets(hanna): publish real Blender-generated GLB and renders [skip ci]"
+            git push origin "HEAD:$GITHUB_REF_NAME"
+          fi
+      - name: Keep renders and browser screenshots as evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hanna3-real-character-renders
+          path: |
+            character-v3/build/
+            character-v3/evidence/
+          if-no-files-found: warn
+          retention-days: 30
