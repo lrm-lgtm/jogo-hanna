@@ -89,3 +89,18 @@ Vídeo original recebido: 65 s; o usuário mostrou porta da geladeira em looping
 - Novo módulo sem loops v2/object-motion.js e testes unitários v2/tests/object-motion.test.cjs; testes de navegador v2/tests/objects.browser.cjs verificam abertura de porta uma única vez, permanência aberta inclusive após reload de save, torrada ancorada ao slot e sem nova animação após 2,4 s.
 - Evidência CI: https://github.com/lrm-lgtm/jogo-hanna/actions/runs/40125031947 (em execução na publicação desta nota). Teste Android joystick/hip com novo limite coerente com passo mais sutil: https://github.com/lrm-lgtm/jogo-hanna/actions/runs/40125157931
 - Gate artístico ainda reprovado; repetir vídeo Samsung real antes de aprovar. Branch feature isolada, main/v1.9 intocada.
+
+## R15 — sequência geladeira → leite → mesa (100% grátis; 24/10/2026)
+
+**Problema de fundo:** a missão avançava quando a Hanna tocava no botão, embora o ombro fosse o único pivô do braço. Abrir/pegar/servir eram genericamente simulados e os alimentos reapareciam na mão ou na mesa, sem preparação espacial.
+
+**Implementado:**
+- Fonte Blender original `v2/blender/build_hanna_r8.py` modificada para criar `ElbowLeft/RightPivot`, `WristLeft/RightPivot`, `HandLeft/RightGrip`, além dos quadris e joelhos existentes. O GLB é reconstruído gratuitamente pelo workflow Blender sem licenças pagas.
+- `v2/interaction-anchors.js`: oito pares declarativos de *stand spot* (no piso acessível) e posição-alvo real de mão em coordenadas 3D da geladeira/leite/mesa/pão/torradeira.
+- `v2/cozinha.js`: após apertar INTERAGIR, a Hanna se reposiciona andando devagar até a área acessível, gira em direção ao ponto de contato e só então inicia o gesto de alcançar. O braço direito usa ombro/cotovelo/pulso com aproximação cinemática de dois segmentos; o objeto carregado é preso ao `HandRightGrip` do GLB, e não ao corpo nem ao ombro.
+- `v2/tests/interaction-anchors.test.cjs` verifica consistência com missão e proximidade dos alvos. `v2/tests/contacts.browser.cjs` executa sequência real Android simulada (geladeira, leite, mesa), mede ponto de parada e erro espacial da mão, e captura imagens.
+- Joystick e lógica de frente aprovados pelo usuário foram preservados; progresso v2 permanece separado e PR segue em rascunho.
+
+**Limitações:** a cinemática ainda usa pivôs segmentados, sem skinning/deformação profissional e sem clips finais do Blender. Aprovação estética premium e Samsung físico pendentes; testes Chromium não demonstram beleza por si sós.
+
+**Evidências:** [CI R15 das três interações](https://github.com/lrm-lgtm/jogo-hanna/actions/runs/40134150898), [CI regressão v1.9](https://github.com/lrm-lgtm/jogo-hanna/actions/runs/40134154361).
