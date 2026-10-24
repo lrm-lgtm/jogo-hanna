@@ -19,7 +19,7 @@ function rotateFace(face,heading){
 function headingForDirection(front,dx,dz){
  const u=normalize(front.x,front.z),v=normalize(dx,dz);
  if(!Math.hypot(u.x,u.z)||!Math.hypot(v.x,v.z))return 0;
- return Math.atan2(u.x*v.z-u.z*v.x,u.x*v.x+u.z*v.z);
+ return Math.atan2(u.z*v.x-u.x*v.z,u.x*v.x+u.z*v.z);
 }
 function facingDot(face,heading,dx,dz){
  const a=rotateFace(face,heading),b=normalize(dx,dz);

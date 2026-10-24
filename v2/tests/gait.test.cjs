@@ -9,8 +9,8 @@ test('face points in the actual travel direction irrespective of imported model 
    assert.ok(dot>.999999,{face,dx,dz,heading,dot});
   }
  }
- assert.ok(Math.abs(A.headingForDirection({x:0,z:1},1,0)+Math.PI/2)<.001);
- assert.ok(Math.abs(A.headingForDirection({x:0,z:-1},1,0)-Math.PI/2)<.001);
+ assert.ok(Math.abs(A.headingForDirection({x:0,z:1},1,0)-Math.PI/2)<.001);
+ assert.ok(Math.abs(A.headingForDirection({x:0,z:-1},1,0)+Math.PI/2)<.001);
 });
 test('leg gait is distance-driven rather than clock-driven, alternates and flexes knees',()=>{
  let state={phase:0,blend:0,totalDistance:0};

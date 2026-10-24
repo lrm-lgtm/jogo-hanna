@@ -33,6 +33,7 @@ test('Android 360° touch: deadzone, right/left, up/down, release and pause',{ti
    await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:t(x+dx,y+dy)});
    await page.waitForTimeout(hold);
    const inside=await qa();
+   if(Math.hypot(dx,dy)>8)await page.screenshot({path:path.join(DIR,'em-movimento-'+(dx>8?'direita':dx< -8?'esquerda':dy<0?'frente':'tras')+'.png')});
    await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
    await page.waitForTimeout(190);
    const after=await qa();
@@ -60,6 +61,7 @@ test('Android 360° touch: deadzone, right/left, up/down, release and pause',{ti
    a.ok(held.faceDot>.8,name+' must look where Hanna travels: '+JSON.stringify({front:held.frontAxis,world:held.worldFace,dot:held.faceDot}));
    a.ok(held.gait?.peakHip>.20,name+' actual hip animation must be visible');
    a.ok(held.gait?.peakKnee>.20,name+' knees must flex via GLB joints');
+   a.ok(held.gait?.blend>.3,name+' gait must be active while finger is held');
    a.ok(held.gait?.distance>.15,name+' gait phase must follow traveled meters');
    a.ok(next.cameraFrame?.visible,name+' moved Hanna outside frame: '+JSON.stringify(next.cameraFrame));
    const v=movement(prev,next);
