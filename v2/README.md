@@ -69,3 +69,14 @@ Babylon e loaders UMD 9.29.0 versionados em v2/vendor, sem dependência de CDN d
 - A primeira execução R12 revelou um sinal invertido na fórmula, com alinhamento -0,876; a fórmula corrigida passou com gesto real `40120972173`. Os testes mais rigorosos de rotação de joints da última rodada foram iniciados em `40121266549`.
 
 **Portões de aceite:** teste no Android físico ainda pendente; qualidade artística/animação premium continua reprovada (rig segmentado não equivale a animação esquelética profissional). PR #10 continua em rascunho, v1.9 main preservada.
+
+
+## R13 — caminhada e objetos segurados (Samsung real, 24/10/2026)
+**Retorno do teste físico no Samsung:** direção da Hanna e joystick aprovados. Caminhada ainda REPROVADA visualmente (pernas mexem, mas feio); ao pegar a torrada ela aparecia nas costas.
+- v2/gait.js: novo ciclo de apoio/elevação com IK quadril/joelho/tornozelo, balanço de braços/tronco leve e fase sincronizada à distância real. A direção aprovada continua preservada.
+- v2/cozinha.js: objeto carregado agora preso ao pivô da MÃO DIREITA importada do GLB, com transformação por centro da malha hand-1 e deslocamento na frente da personagem, não mais fixado ao torso.
+- v2/interactions.js: oito animações de alcance, contato, pegar e retrair; mission.advance ocorre no contato. Porta da geladeira anima dobradiça; a torrada salta da torradeira; ao servir ela desce sobre o prato.
+- v2/tests/interactions.test.cjs e gait.test.cjs: cinemática e tempo das ações.
+- Browser completo comprova 8 etapas e proximidade objeto↔mão para leite/pão/torrada. Browser dedicado props.browser.cjs inicia legitimamente no save da etapa 6, pega torrada, leva à mesa e testa a posição em frente ao corpo.
+- Teste joystick com quatro direções após R13 APROVADO: https://github.com/lrm-lgtm/jogo-hanna/actions/runs/40122946834. Testes do último fluxo de objetos/missão ainda executando.
+Não chamar premium. Rig segmentado ainda pode ficar feio; teste visual no Samsung físico será a palavra final. PR #10 em rascunho; main/v1.9 inalterada.
