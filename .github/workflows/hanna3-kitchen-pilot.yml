@@ -1,0 +1,82 @@
+name: Casa da Hanna 3 - Cozinha Piloto
+on:
+  push:
+    branches: [feature/hanna-3-premium-kitchen-pilot-20261011]
+    paths-ignore:
+      - 'pilot/previews/**'
+permissions:
+  contents: write
+concurrency:
+  group: hanna3-kitchen
+  cancel-in-progress: false
+jobs:
+  premium-kitchen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download pinned CC0 KayKit models
+        run: node pilot/install-assets.cjs
+      - name: Commit only vendored assets to the pilot branch
+        run: |
+          if test -n "$(git status --porcelain -- pilot/assets)"; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add pilot/assets
+            git commit -m "assets(kitchen): vendor CC0 KayKit from pinned commits"
+            git push origin "HEAD:$GITHUB_REF_NAME"
+          fi
+      - name: Validate source syntax and 26 local assets
+        run: |
+          node --check pilot/cozinha.js
+          node --check pilot/install-assets.cjs
+          node pilot/tests/asset-integrity.cjs
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start HTTP server
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/hanna-kitchen-http.log 2>&1 &
+          for n in {1..30}; do
+            curl -fsS http://127.0.0.1:8765/pilot/cozinha.html >/dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Run real walking and 8-step mission tests in browser
+        run: node --test pilot/tests/kitchen.test.cjs
+      - name: Save portrait landscape and gameplay screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hanna3-kitchen-evidence
+          path: artifacts/kitchen-v3/
+          if-no-files-found: warn
+          retention-days: 21
+      - name: Preserve visual review screenshots on branch
+        if: always() && github.actor != 'github-actions[bot]'
+        run: |
+          mkdir -p pilot/previews
+          test -f artifacts/kitchen-v3/01-desktop-landscape.png && cp artifacts/kitchen-v3/01-desktop-landscape.png pilot/previews/desktop.png || true
+          test -f artifacts/kitchen-v3/05-android-portrait.png && cp artifacts/kitchen-v3/05-android-portrait.png pilot/previews/portrait.png || true
+          git add pilot/previews
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "evidence(kitchen): capture actual desktop and portrait rendering"
+            git push origin "HEAD:$GITHUB_REF_NAME"
+          fi
+      - name: Smoke check immutable public preview
+        if: success()
+        run: |
+          base="https://rawcdn.githack.com/lrm-lgtm/jogo-hanna/$(git rev-parse HEAD)"
+          curl --fail --retry 4 --retry-delay 5 -Ls "$base/pilot/cozinha.html" -o /tmp/hanna-kitchen-preview.html
+          grep -q "Casa da Hanna 3.0" /tmp/hanna-kitchen-preview.html
+          curl --fail --retry 4 --retry-delay 5 -Ls "$base/pilot/assets/restaurant/fridge_A.gltf" -o /tmp/hanna-fridge.gltf
+          test -s /tmp/hanna-fridge.gltf
+          echo "PREVIEW_OK=$base/pilot/cozinha.html"

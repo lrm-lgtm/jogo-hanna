@@ -1,0 +1,58 @@
+name: Casa da Hanna v2 - real Babylon browser smoke
+on:
+  push:
+    branches: [feature/cozinha-3d-v2-20261022]
+    paths: ['v2/**', '.github/workflows/hanna-v2-browser.yml']
+  workflow_dispatch:
+jobs:
+  chromium:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 26
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Static syntax check
+        run: |
+          node --check v2/cozinha.js
+          node --check v2/camera-follow.js
+          node --test v2/tests/camera.test.cjs
+          node --check v2/mission.js
+          node --check v2/quality.js
+          node --check v2/audio.js
+          node --check v2/ui.js
+          node --check v2/sw.js
+      - name: Install browser and software WebGL
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve independent v2
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/hanna-v2-http.log 2>&1 &
+          for n in {1..30}; do
+            curl -fsS http://127.0.0.1:8765/v2/index.html >/dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Exercise actual Babylon v2
+        run: node --test v2/tests/browser.test.cjs
+      - name: Publish actual gameplay screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cozinha-hanna-v2-real-chromium
+          path: artifacts/kitchen-v2/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Verify public immutable preview
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://rawcdn.githack.com/lrm-lgtm/jogo-hanna/$(git rev-parse HEAD)"
+          curl -fLsS --retry 4 --retry-delay 4 "$base/v2/index.html" -o /tmp/hanna-v2-public.html
+          grep -q 'Casa da Hanna' /tmp/hanna-v2-public.html
+          curl -fLsS --retry 4 --retry-delay 4 "$base/v2/vendor/babylon.js" -o /tmp/hanna-v2-babylon.js
+          test "$(stat -c%s /tmp/hanna-v2-babylon.js)" -gt 2000000
+          echo "PUBLIC_PREVIEW_OK=$base/v2/index.html"

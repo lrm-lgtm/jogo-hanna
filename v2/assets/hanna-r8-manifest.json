@@ -1,0 +1,16 @@
+{
+  "name": "Hanna R12 — free articulated legs and pink denim style",
+  "art_contract": "v2/blender/ART_R8.md",
+  "round": "R12-articulated-hip-knee-ankle",
+  "format": "GLB (glTF 2.0)",
+  "origin": "Blender-generated original geometry; no purchased/downloaded models",
+  "license": "Original project asset for Casa da Hanna",
+  "limitations": "R12 three-joint articulated legs (hips/knees/ankles), still unskinned facial rig; premium approval pending",
+  "nodes": 165,
+  "meshes": 94,
+  "files": [
+    "hanna-free-r8.glb",
+    "hanna-r8-front.png",
+    "hanna-r8-threequarter.png"
+  ]
+}

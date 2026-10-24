@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#f7e8d7">
+<title>Casa da Hanna 3.0 — Cozinha Piloto</title>
+<link rel="stylesheet" href="./cozinha.css">
+</head>
+<body>
+<canvas id="game" aria-label="Cozinha 3D interativa da Casa da Hanna"></canvas>
+<div id="loading"><div class="loadingIcon">🍓</div><strong>Preparando a cozinha da Hanna...</strong><small>Modelos 3D gratuitos • Prévia isolada</small><div id="loadDetail" role="status">Carregando...</div></div>
+<div id="hud">
+  <div class="missionBox"><div class="eyebrow">🏡 CASA DA HANNA · COZINHA PILOTO</div>
+   <div class="stepTitle" id="instruction">Abra a geladeira</div>
+   <div class="progress"><div id="progressFill"></div></div>
+   <div class="stepMeta"><span id="stepLabel">1 de 8</span><span id="statusText">Encontre o objeto brilhando ✨</span></div>
+  </div>
+  <div class="topActions"><div class="stars" id="stars">⭐ 0</div><button id="resetBtn" aria-label="Reiniciar a missão" title="Reiniciar">↻</button></div>
+</div>
+<div class="helpBubble" id="helpBubble" role="status" aria-live="polite">Toque no objeto ou use «IR ATÉ».</div>
+<div class="bottomControls">
+  <div id="joystick" role="group" aria-label="Controle de movimento"><div id="stick"></div></div>
+  <div class="taskButtons">
+    <button id="goBtn">👣 IR ATÉ</button>
+    <button id="actionBtn" disabled>ABRIR</button>
+  </div>
+</div>
+<div id="quality">🌿 PREVIEW • CARTOON 3D</div>
+<div id="finish" hidden><div class="finishCard"><span class="celebrate">🌈🥣✨</span><h1>Que café da manhã gostoso!</h1><p>A Hanna completou as oito etapas. Parabéns!</p><strong>⭐ +1 estrela</strong><button id="againBtn">Brincar de novo</button></div></div>
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+<script src="./cozinha.js"></script>
+</body>
+</html>
