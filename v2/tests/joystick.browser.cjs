@@ -55,6 +55,12 @@ test('Android 360° touch: deadzone, right/left, up/down, release and pause',{ti
    const prev=await qa();
    const gesture=await touch(dx,dy,770);
    const next=gesture.after;
+   const held=gesture.inside;
+   a.ok(held.frontAxis?.confidence>.09,'front axis must be measured from GLB eyes');
+   a.ok(held.faceDot>.8,name+' must look where Hanna travels: '+JSON.stringify({front:held.frontAxis,world:held.worldFace,dot:held.faceDot}));
+   a.ok(held.gait?.peakHip>.20,name+' actual hip animation must be visible');
+   a.ok(held.gait?.peakKnee>.20,name+' knees must flex via GLB joints');
+   a.ok(held.gait?.distance>.15,name+' gait phase must follow traveled meters');
    a.ok(next.cameraFrame?.visible,name+' moved Hanna outside frame: '+JSON.stringify(next.cameraFrame));
    const v=movement(prev,next);
    a.ok(length(v)>.11,name+' must move Hanna in the world, not only animate the knob: '+JSON.stringify(v));

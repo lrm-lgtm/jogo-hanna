@@ -25,9 +25,10 @@ test('v2 desktop: real Hanna model and complete eight-step mission with saved pr
   s=await start(browser,{width:1280,height:720});
   const {page,errors}=s;let current=await qa(page);
   assert.equal(current.step,0);assert.equal(current.saveSchema,2);
-  assert.equal(current.avatarKind,'hanna-r8-free-glb');
+  assert.equal(current.avatarKind,'hanna-r12-free-glb');
   assert.ok(current.blinkMeshCount>=8,'real facial eye meshes are animated');
   assert.ok(current.avatarMeshCount>=80);
+  assert.ok(current.frontAxis?.confidence>.09,'face-forward vector must be measured from actual GLB');
   assert.equal(current.artPass,'r2-blender');
   assert.ok(current.gltfMeshCount>=45,'real imported Blender furniture must be present');
   assert.equal(current.cameraMode,0,'third-person perspective mode');
@@ -92,7 +93,7 @@ test('v2 offline: second opening loads local Babylon, avatar and kitchen after S
   await context.setOffline(true);
   await page.reload({waitUntil:'domcontentloaded',timeout:60000});
   await page.waitForFunction(()=>window.__hannaKitchenQA?.ready,null,{timeout:100000});
-  assert.equal((await qa(page)).avatarKind,'hanna-r8-free-glb');
+  assert.equal((await qa(page)).avatarKind,'hanna-r12-free-glb');
   assert.deepEqual((await qa(page)).loadErrors,[]);
   await page.screenshot({path:path.join(screenshots,'retorno-offline.png')});
   assert.deepEqual(errors,[]);

@@ -5,8 +5,8 @@ const el=id=>document.getElementById(id);
 if(!B){el('loadDetail').textContent='Não foi possível carregar Babylon.js. Verifique a internet.';return}
 const scene=new B.Scene(new B.Engine(canvas,true,{adaptToDeviceRatio:true,stencil:true}));
 const engine=scene.getEngine();
-const quality=window.HannaV2Quality,Controls=window.HannaV2Controls,Cam=window.HannaV2Camera;
-if(!Controls||!Cam)throw new Error('Controles ou câmera não foram carregados');
+const quality=window.HannaV2Quality,Controls=window.HannaV2Controls,Cam=window.HannaV2Camera,Gait=window.HannaV2Gait;
+if(!Controls||!Cam||!Gait)throw new Error('Controles, câmera ou animações não foram carregados');
 const graphics=quality.select(quality.load(window.localStorage),{
  mobile:/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent),
  width:innerWidth,memory:navigator.deviceMemory||0,cores:navigator.hardwareConcurrency||4
@@ -107,9 +107,11 @@ const roomRoot=new B.TransformNode('kitchenModelImports',scene);
 const objects=new Map(),visuals=new Map();
 const character=new B.TransformNode('HannaCharacter',scene);
 character.position.set(-1.65,0,-2.03);
-character.rotation.y=2.45; // Introduce Hanna face/3-4 to the player instead of her back.
-// Character-v4 is a real Blender GLB; no fallback sphere-based avatar is allowed.
+character.rotation.y=0; // Neutral yaw for calibrating actual imported GLB frontal direction.
 let avatarMeshCount=0,avatarPivots=null,avatarRig=null,avatarWalkedFrames=0,blinkParts=[];
+const avatarRest=new Map();let avatarRigBaseY=0,avatarFront={x:0,z:1},faceCalibration=0;
+let gaitState={phase:0,blend:0,totalDistance:0},lastGait=null,lastFrameMeters=0,lastTravel={x:0,z:0};
+let topKneeFlex=0,topHipSwing=0;
 async function loadPlayableAvatar(){
  const r=await B.SceneLoader.ImportMeshAsync('', './assets/', 'hanna-free-r8.glb',scene);
  const meshes=r.meshes.filter(m=>m.getTotalVertices?.()>0);
@@ -117,33 +119,68 @@ async function loadPlayableAvatar(){
  for(const root of r.meshes.filter(x=>!x.parent))root.parent=character;
  for(const root of r.transformNodes.filter(x=>!x.parent))root.parent=character;
  const find=n=>r.transformNodes.find(x=>x.name===n||x.name.endsWith('__'+n));
- const names=['HannaRig','HeadPivot','ArmLeftPivot','ArmRightPivot','LegLeftPivot','LegRightPivot'];
+ const names=['HannaRig','HeadPivot','ArmLeftPivot','ArmRightPivot','LegLeftPivot','LegRightPivot',
+  'KneeLeftPivot','KneeRightPivot','AnkleLeftPivot','AnkleRightPivot'];
  const anchors=names.map(find);
- if(anchors.some(x=>!x))throw new Error('Rig da personagem está incompleto');
- avatarPivots={head:anchors[1],leftArm:anchors[2],rightArm:anchors[3],leftLeg:anchors[4],rightLeg:anchors[5]};
- avatarRig=anchors[0];
+ if(anchors.some(x=>!x))throw new Error('Rig R12 incompleto: '+names.filter((_,i)=>!anchors[i]).join(', '));
+ avatarPivots={head:anchors[1],leftArm:anchors[2],rightArm:anchors[3],leftLeg:anchors[4],rightLeg:anchors[5],
+  leftKnee:anchors[6],rightKnee:anchors[7],leftAnkle:anchors[8],rightAnkle:anchors[9]};
+ avatarRig=anchors[0];avatarRigBaseY=avatarRig.position.y;
+ // glTF imports rotationQuaternion; writing node.rotation.x has no visible effect.
+ for(const node of Object.values(avatarPivots)){
+  const rest=node.rotationQuaternion?.clone()||B.Quaternion.FromEulerAngles(node.rotation.x,node.rotation.y,node.rotation.z);
+  avatarRest.set(node,rest);
+  node.rotationQuaternion=rest.clone();
+ }
  avatarMeshCount=meshes.length;
+ // Calibrate forward from actual head/pupil geometry, independent of Blender axis conversion.
+ const face=meshes.find(m=>m.name.includes('face-sculpt'));
+ const pupils=meshes.filter(m=>m.name.includes('black-pupil-'));
+ if(!face||pupils.length!==2)throw new Error('Faltam rosto/pupilas GLB para calibração da frente');
+ const center=m=>{m.computeWorldMatrix(true);return m.getBoundingInfo().boundingSphere.centerWorld.clone()};
+ const facePos=center(face),eyePos=center(pupils[0]).add(center(pupils[1])).scale(.5);
+ const diff=eyePos.subtract(facePos);
+ faceCalibration=Math.hypot(diff.x,diff.z);
+ if(faceCalibration<.09)throw new Error('Face GLB sem frente definida ('+faceCalibration.toFixed(3)+')');
+ avatarFront=Gait.normalize(diff.x,diff.z);
+ const toCamera=camera.position.subtract(character.position);
+ character.rotation.y=Gait.headingForDirection(avatarFront,toCamera.x,toCamera.z);
  const eyeNames=/sclera-|iris-|black-pupil-|eye-sparkle-/;
  blinkParts=meshes.filter(m=>eyeNames.test(m.name)).map(m=>({mesh:m,scale:m.scaling.y}));
  for(const m of meshes){m.isPickable=false;shadow.addShadowCaster(m);}
  window.__hannaAvatar=Object.freeze({version:'r8-free-blender',model:'hanna-free-r8.glb',eyes:blinkParts.length});
 }
-function updateAvatarAnimation(t,isWalking,dt){
+function jointPose(node,x=0,y=0,z=0){
+ const base=avatarRest.get(node);
+ if(!base)return;
+ const motion=B.Quaternion.RotationYawPitchRoll(y,x,z);
+ const result=base.multiply(motion);
+ if(node.rotationQuaternion)node.rotationQuaternion.copyFrom(result);
+ else node.rotationQuaternion=result;
+}
+function updateAvatarAnimation(t,travel,dt){
  if(!avatarPivots)return;
- const a=avatarPivots,phase=t*7.3;
- const intensity=isWalking?1:0;
- a.leftArm.rotation.x=Math.sin(phase)*.35*intensity;
- a.rightArm.rotation.x=-Math.sin(phase)*.35*intensity-(held?.24:0);
- a.leftLeg.rotation.x=-Math.sin(phase)*.25*intensity;
- a.rightLeg.rotation.x=Math.sin(phase)*.25*intensity;
- a.head.rotation.z=Math.sin(t*1.8)*.024;
- a.head.rotation.y=Math.sin(t*.93)*.09;
+ gaitState=Gait.sample(gaitState,travel,dt,t);
+ const a=avatarPivots,p=gaitState;
+ jointPose(a.leftLeg,p.leftHip);
+ jointPose(a.rightLeg,p.rightHip);
+ jointPose(a.leftKnee,p.leftKnee);
+ jointPose(a.rightKnee,p.rightKnee);
+ jointPose(a.leftAnkle,p.leftAnkle);
+ jointPose(a.rightAnkle,p.rightAnkle);
+ jointPose(a.leftArm,p.arms.left);
+ let rightArm=p.arms.right-(held?.25:0);
+ if(performance.now()<gestureUntil)rightArm=-.95;
+ jointPose(a.rightArm,rightArm);
+ jointPose(a.head,0,Math.sin(t*.93)*.065,Math.sin(t*1.8)*.02);
  const period=t%5.4;
  const blink=Math.abs(period-2.62)<.095?Math.max(.10,Math.abs(period-2.62)/.095):1;
  for(const part of blinkParts)part.mesh.scaling.y=part.scale*blink;
- if(performance.now()<gestureUntil)a.rightArm.rotation.x=-1.00;
- if(avatarRig)avatarRig.position.y=isWalking?.020*Math.abs(Math.sin(phase)):.005*Math.sin(t*2);
- if(isWalking)avatarWalkedFrames++;
+ if(avatarRig)avatarRig.position.y=avatarRigBaseY+p.bob;
+ if(travel>.00005)avatarWalkedFrames++;
+ topKneeFlex=Math.max(topKneeFlex,p.leftKnee,p.rightKnee);
+ topHipSwing=Math.max(topHipSwing,Math.abs(p.leftHip),Math.abs(p.rightHip));
+ lastGait=p;
 }
 // A carried item is a recognizable miniature prop — not the old placeholder sphere.
 const carryRoot=new B.TransformNode('carriedBreakfastProp',scene);
@@ -318,10 +355,12 @@ function walk(vx,vz,dt,throttle=1){
  const now=character.position,oldX=now.x,oldZ=now.z;
  if(!occupied(now.x+dx,now.z))now.x+=dx;
  if(!occupied(now.x,now.z+dz))now.z+=dz;
- const actualX=now.x-oldX,actualZ=now.z-oldZ;
- if(Math.hypot(actualX,actualZ)>.00001){
-  const targetYaw=Math.atan2(actualX,-actualZ);
+ const actualX=now.x-oldX,actualZ=now.z-oldZ,travel=Math.hypot(actualX,actualZ);
+ if(travel>.00001){
+  const targetYaw=Gait.headingForDirection(avatarFront,actualX,actualZ);
   character.rotation.y=Controls.smoothAngle(character.rotation.y,targetYaw,dt,16);
+  lastFrameMeters+=travel;
+  lastTravel={x:actualX/travel,z:actualZ/travel};
   return true;
  }
  return false;
@@ -418,7 +457,7 @@ window.addEventListener('resize',()=>{engine.setHardwareScalingLevel(hardwareSca
 window.addEventListener('orientationchange',()=>setTimeout(updateCamera,240));
 updateCamera();
 function loop(){
- const actualDt=Math.max(.001,engine.getDeltaTime()/1000),dt=Math.min(.055,actualDt);frameCount++;
+ const actualDt=Math.max(.001,engine.getDeltaTime()/1000),dt=Math.min(.055,actualDt);frameCount++;lastFrameMeters=0;
  if(!ready||paused){scene.render();return}
  if(frameCount%100===0&&currentStep<8&&performance.now()-lastInput>14000&&performance.now()-lastHint>14000){
   lastHint=performance.now();setInfo('Precisa de ajuda? Use IR ATÉ ou siga o brilho ✨',4300);
@@ -445,7 +484,7 @@ function loop(){
   if(Math.hypot(dx,dz)<.11){waypoints.shift()}
   else if(!walk(dx,dz,Math.min(dt,Math.hypot(dx,dz)/2.45))){waypoints=[];moving=false;setInfo('Não consegui chegar. Experimente o joystick.')}
  }else if(moving){moving=false;dest=null}
- updateAvatarAnimation(performance.now()/1000,manual||moving,dt);
+ updateAvatarAnimation(performance.now()/1000,lastFrameMeters,dt);
  // Child-first framing: real frame-time follow + slight goal lead, never let a wall take the foreground.
  const navTarget=currentStep<8?target().proxy.position:character.position;
  const wanted=Cam.focus(character.position.x,character.position.z,navTarget.x,navTarget.z,
@@ -646,7 +685,13 @@ async function boot(){
    samples:graphics.samples,
    artPass:window.__hannaArt?.artPass||'missing',gltfMeshCount:window.__hannaArt?.gltfMeshCount||0,artBounds:window.__hannaArt?.bbox,cameraMode:camera.mode,cameraBeta:camera.beta,cameraRadius:camera.radius,
    cameraFrame:projectedHanna(),cutawayHidden:cutawayHidden.slice(),cameraTarget:{x:+cameraTarget.x.toFixed(2),z:+cameraTarget.z.toFixed(2)},
-   avatarMeshCount,avatarWalkedFrames,blinkMeshCount:blinkParts.length,avatarKind:'hanna-r8-free-glb',hasGameplayRig:!!avatarPivots,
+   avatarMeshCount,avatarWalkedFrames,blinkMeshCount:blinkParts.length,avatarKind:'hanna-r12-free-glb',hasGameplayRig:!!avatarPivots,
+   frontAxis:{x:+avatarFront.x.toFixed(3),z:+avatarFront.z.toFixed(3),confidence:+faceCalibration.toFixed(3)},
+   worldFace:(()=>{const v=Gait.rotateFace(avatarFront,character.rotation.y);return {x:+v.x.toFixed(3),z:+v.z.toFixed(3)}})(),
+   faceDot:Math.hypot(lastTravel.x,lastTravel.z)>0?+Gait.facingDot(avatarFront,character.rotation.y,lastTravel.x,lastTravel.z).toFixed(3):null,
+   gait:{distance:+gaitState.totalDistance.toFixed(3),blend:+gaitState.blend.toFixed(3),phase:+gaitState.phase.toFixed(3),
+         hipSwing:+(lastGait?.leftHip||0).toFixed(3),leftKnee:+(lastGait?.leftKnee||0).toFixed(3),rightKnee:+(lastGait?.rightKnee||0).toFixed(3),
+         peakKnee:+topKneeFlex.toFixed(3),peakHip:+topHipSwing.toFixed(3)},
    loadErrors:loadErrors.slice(),saved:mission.restored||currentStep>0,quality:graphics.resolved,saveSchema:2
   })});
   setInfo('A cozinha está pronta! Siga o brilho para começar ✨',2800);
