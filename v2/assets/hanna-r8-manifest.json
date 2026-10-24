@@ -1,12 +1,12 @@
 {
-  "name": "Hanna R12 — free articulated legs and pink denim style",
+  "name": "Hanna R15 — free articulated hands and breakfast interaction rig",
   "art_contract": "v2/blender/ART_R8.md",
-  "round": "R12-articulated-hip-knee-ankle",
+  "round": "R15-elbow-wrist-grip-anchors",
   "format": "GLB (glTF 2.0)",
   "origin": "Blender-generated original geometry; no purchased/downloaded models",
   "license": "Original project asset for Casa da Hanna",
-  "limitations": "R12 three-joint articulated legs (hips/knees/ankles), still unskinned facial rig; premium approval pending",
-  "nodes": 165,
+  "limitations": "Segmented hips/knees/ankles plus R15 elbows/wrists/grips, not a fully skinned professional character. Mobile art approval pending",
+  "nodes": 171,
   "meshes": 94,
   "files": [
     "hanna-free-r8.glb",
