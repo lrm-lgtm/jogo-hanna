@@ -11,7 +11,7 @@ const key=new B.DirectionalLight('key',new B.Vector3(-.5,-1,.6),scene);key.inten
 const platform=B.MeshBuilder.CreateCylinder('base',{diameter:2.5,height:.13,tessellation:48},scene);platform.position.y=-.08;
 const mat=new B.StandardMaterial('cream',scene);mat.diffuseColor=B.Color3.FromHexString('#ecbbc1');platform.material=mat;
 const kind=new URLSearchParams(location.search).get('candidate');
-const candidate=kind==='r11'?'hanna-r11.glb':kind==='r10'?'hanna-r10.glb':kind==='r9'?'hanna-r9.glb':kind==='r8'?'hanna-r8.glb':kind==='r7'?'hanna-r7.glb':'HairSample_Female.glb';
+const candidate=kind==='r12'?'hanna-r12.glb':kind==='r11'?'hanna-r11.glb':kind==='r10'?'hanna-r10.glb':kind==='r9'?'hanna-r9.glb':kind==='r8'?'hanna-r8.glb':kind==='r7'?'hanna-r7.glb':'HairSample_Female.glb';
 const asset=new B.TransformNode('candidateCC0',scene);asset.rotation.y=Math.PI; // VRM sample uses opposite forward basis in Babylon's orbit view.
 let ready=false,spinning=false,meshes=0,bones=0,error='',animationGroups=0;
 window.__hannaR6QA=()=>({ready,spinning,meshes,bones,error,candidate,animationGroups});
@@ -26,8 +26,8 @@ window.addEventListener('resize',()=>engine.resize());
  bones=r.skeletons.reduce((n,s)=>n+s.bones.length,0);
  if(meshes<5)throw Error('Modelo sem malhas suficientes: '+meshes);
  animationGroups=r.animationGroups?.length||0;
- if((kind==='r9'||kind==='r10'||kind==='r11')&&animationGroups<1)throw Error('Animação de braços abaixados R9 não exportada');
- if(kind==='r9'||kind==='r10'||kind==='r11')for(const group of r.animationGroups)group.start(true);
+ if((kind==='r9'||kind==='r10'||kind==='r11'||kind==='r12')&&animationGroups<1)throw Error('Animação de braços abaixados R9 não exportada');
+ if(kind==='r9'||kind==='r10'||kind==='r11'||kind==='r12')for(const group of r.animationGroups)group.start(true);
  const roots=[...r.meshes,...r.transformNodes].filter(n=>!n.parent&&n!==asset);
  const lower=new B.Vector3(Infinity,Infinity,Infinity),upper=new B.Vector3(-Infinity,-Infinity,-Infinity);
  for(const mesh of r.meshes.filter(m=>m.getTotalVertices?.()>0)){
