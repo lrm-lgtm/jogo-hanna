@@ -1,0 +1,16 @@
+{
+  "name": "Hanna R8 — free reference-inspired pink outfit pilot",
+  "art_contract": "v2/blender/ART_R8.md",
+  "round": "R8-pink-hoodie-blue-denim",
+  "format": "GLB (glTF 2.0)",
+  "origin": "Blender-generated original geometry; no purchased/downloaded models",
+  "license": "Original project asset for Casa da Hanna",
+  "limitations": "Segmented pivot animations, no facial blendshapes; premium approval and device checks pending",
+  "nodes": 161,
+  "meshes": 94,
+  "files": [
+    "hanna-free-r8.glb",
+    "hanna-r8-front.png",
+    "hanna-r8-threequarter.png"
+  ]
+}
