@@ -5,6 +5,8 @@ on:
     paths:
       - 'v2/art-direction.js'
       - 'v2/cozinha.js'
+      - 'v2/quality.js'
+      - 'v2/tests/snapshot.cjs'
       - 'v2/assets/**'
       - '.github/workflows/hanna-v2-art-snapshot.yml'
   workflow_dispatch:
