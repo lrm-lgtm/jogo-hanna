@@ -5,8 +5,8 @@ const el=id=>document.getElementById(id);
 if(!B){el('loadDetail').textContent='Não foi possível carregar Babylon.js. Verifique a internet.';return}
 const scene=new B.Scene(new B.Engine(canvas,true,{adaptToDeviceRatio:true,stencil:true}));
 const engine=scene.getEngine();
-const quality=window.HannaV2Quality,Controls=window.HannaV2Controls;
-if(!Controls)throw new Error('Controles de movimento não foram carregados');
+const quality=window.HannaV2Quality,Controls=window.HannaV2Controls,Cam=window.HannaV2Camera;
+if(!Controls||!Cam)throw new Error('Controles ou câmera não foram carregados');
 const graphics=quality.select(quality.load(window.localStorage),{
  mobile:/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent),
  width:innerWidth,memory:navigator.deviceMemory||0,cores:navigator.hardwareConcurrency||4
@@ -174,8 +174,8 @@ const targetHalo=B.MeshBuilder.CreateTorus('targetHalo',{diameter:.93,thickness:
 targetHalo.rotation.x=Math.PI/2;targetHalo.material=M.gold;targetHalo.position.y=.08;
 targetHalo.isPickable=false;
 const haloGem=sphere('targetSparkle',[0,1.9,0],.19,M.gold);haloGem.isPickable=false;
-const cameraTarget=new B.Vector3(-.93,1.20,-.95);
-let modelsLoaded=0,currentStep=0,moving=false,waypoints=[],dest=null,joystick={x:0,y:0},smoothInput={x:0,y:0},manualMeters=0,pressed=new Set(),toastTimeout=null,frameCount=0,avgFps=0,held='',ready=false,loadErrors=[];
+const cameraTarget=new B.Vector3(-1.5,1.26,-1.7);
+let cutawayHidden=[],modelsLoaded=0,currentStep=0,moving=false,waypoints=[],dest=null,joystick={x:0,y:0},smoothInput={x:0,y:0},manualMeters=0,pressed=new Set(),toastTimeout=null,frameCount=0,avgFps=0,held='',ready=false,loadErrors=[];
 const mission=new window.HannaV2Mission.BreakfastMission({storage:window.localStorage});
 const steps=window.HannaV2Mission.STEPS.map(s=>({id:s.target,label:s.text,action:s.verb,nav:s.nav,event:s.feedback,voice:s.voice,icon:s.icon,animation:s.animation}));
 currentStep=mission.step;
@@ -418,7 +418,7 @@ window.addEventListener('resize',()=>{engine.setHardwareScalingLevel(hardwareSca
 window.addEventListener('orientationchange',()=>setTimeout(updateCamera,240));
 updateCamera();
 function loop(){
- const dt=Math.min(.055,engine.getDeltaTime()/1000);frameCount++;
+ const actualDt=Math.max(.001,engine.getDeltaTime()/1000),dt=Math.min(.055,actualDt);frameCount++;
  if(!ready||paused){scene.render();return}
  if(frameCount%100===0&&currentStep<8&&performance.now()-lastInput>14000&&performance.now()-lastHint>14000){
   lastHint=performance.now();setInfo('Precisa de ajuda? Use IR ATÉ ou siga o brilho ✨',4300);
@@ -446,15 +446,13 @@ function loop(){
   else if(!walk(dx,dz,Math.min(dt,Math.hypot(dx,dz)/2.45))){waypoints=[];moving=false;setInfo('Não consegui chegar. Experimente o joystick.')}
  }else if(moving){moving=false;dest=null}
  updateAvatarAnimation(performance.now()/1000,manual||moving,dt);
- // Keep the character prominent but include a little mission lookahead so the target stays visible.
- const following=new B.Vector3(character.position.x*.76+.04,1.20,character.position.z+.24);
- if(currentStep<8){
-  const g=target().proxy.position;
-  following.x=following.x*.87+g.x*.13;
-  following.z=following.z*.91+g.z*.09;
- }
- if(moving&&dest){following.x=following.x*.82+dest.x*.18;following.z=following.z*.82+dest.z*.18}
- cameraTarget.copyFrom(B.Vector3.Lerp(cameraTarget,following,.055));
+ // Child-first framing: real frame-time follow + slight goal lead, never let a wall take the foreground.
+ const navTarget=currentStep<8?target().proxy.position:character.position;
+ const wanted=Cam.focus(character.position.x,character.position.z,navTarget.x,navTarget.z,
+                         moving, dest?.x??navTarget.x,dest?.z??navTarget.z);
+ cameraTarget.x+=(wanted.x-cameraTarget.x)*Cam.alpha(actualDt);
+ cameraTarget.y+=(wanted.y-cameraTarget.y)*Cam.alpha(actualDt);
+ cameraTarget.z+=(wanted.z-cameraTarget.z)*Cam.alpha(actualDt);
  camera.target.copyFrom(cameraTarget);
  targetHalo.rotation.y+=dt*.30; // Rotate horizontally; Z rotation had tilted the goal ring through Hanna.
  targetHalo.scaling.x=targetHalo.scaling.z=1+Math.sin(performance.now()/370)*.055;
@@ -613,6 +611,21 @@ async function assets(){
  window.HannaKitchenArt.rebuild({B,scene,M,box,sphere,cylinder,visuals,shadow,graphics});
  await loadRoundedKitchenArt();
  window.HannaFreeCorner.polish({B,scene,shadow,M,graphics});
+ // Deliberate dollhouse cutaway: side wall concealed visually but physics/mission rules unchanged.
+ cutawayHidden=[];
+ for(const id of Cam.CUTAWAY){
+  const mesh=scene.getMeshByName(id);
+  if(mesh){mesh.setEnabled(false);cutawayHidden.push(id)}
+ }
+ if(!cutawayHidden.includes('leftWall'))throw new Error('Parede lateral não foi removida do enquadramento');
+}
+function projectedHanna(){
+ const viewport=camera.viewport.toGlobal(engine.getRenderWidth(),engine.getRenderHeight());
+ const projected=B.Vector3.Project(character.position.add(new B.Vector3(0,1.40,0)),
+                                    B.Matrix.Identity(),scene.getTransformMatrix(),viewport);
+ return {x:+(projected.x/engine.getRenderWidth()).toFixed(3),
+         y:+(projected.y/engine.getRenderHeight()).toFixed(3),
+         visible:Cam.framedHead(projected.x/engine.getRenderWidth(),projected.y/engine.getRenderHeight())};
 }
 async function boot(){
  try{
@@ -632,6 +645,7 @@ async function boot(){
    cssWidth:canvas.clientWidth,cssHeight:canvas.clientHeight,
    samples:graphics.samples,
    artPass:window.__hannaArt?.artPass||'missing',gltfMeshCount:window.__hannaArt?.gltfMeshCount||0,artBounds:window.__hannaArt?.bbox,cameraMode:camera.mode,cameraBeta:camera.beta,cameraRadius:camera.radius,
+   cameraFrame:projectedHanna(),cutawayHidden:cutawayHidden.slice(),cameraTarget:{x:+cameraTarget.x.toFixed(2),z:+cameraTarget.z.toFixed(2)},
    avatarMeshCount,avatarWalkedFrames,blinkMeshCount:blinkParts.length,avatarKind:'hanna-r8-free-glb',hasGameplayRig:!!avatarPivots,
    loadErrors:loadErrors.slice(),saved:mission.restored||currentStep>0,quality:graphics.resolved,saveSchema:2
   })});

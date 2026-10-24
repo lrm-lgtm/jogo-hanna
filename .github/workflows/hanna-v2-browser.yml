@@ -16,6 +16,8 @@ jobs:
       - name: Static syntax check
         run: |
           node --check v2/cozinha.js
+          node --check v2/camera-follow.js
+          node --test v2/tests/camera.test.cjs
           node --check v2/mission.js
           node --check v2/quality.js
           node --check v2/audio.js
