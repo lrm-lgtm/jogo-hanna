@@ -283,7 +283,7 @@ function updateHUD(){
 function updateAction(){
  const e=target(),close=e&&distanceTo(e.nav)<.73&&currentStep<8;
  el('actionBtn').disabled=!close||!!actionState;
- el('goBtn').disabled=currentStep>=8;
+ el('goBtn').disabled=currentStep>=8||!!actionState;
  el('statusText').textContent=currentStep>=8?'Muito bem!':close?'Agora toque em '+steps[currentStep].action:'Encontre o objeto brilhando ✨';
 }
 function updateVisuals(){

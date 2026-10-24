@@ -49,7 +49,19 @@ test('v2 desktop: real Hanna model and complete eight-step mission with saved pr
    if(step===4)await page.screenshot({path:path.join(screenshots,'toaster-approach.png')});
    if(step===7)await page.screenshot({path:path.join(screenshots,'table-approach.png')});
    await page.locator('#actionBtn').click();
-   await page.waitForFunction(n=>window.__hannaKitchenQA?.step===n,step+1,{timeout:7000});
+   if(step===0||step===4||step===6){
+    await page.waitForFunction(()=>window.__hannaKitchenQA?.action!==null,null,{timeout:5000});
+    await page.screenshot({path:path.join(screenshots,'gesto-'+step+'-inicio.png')});
+   }
+   await page.waitForFunction(n=>window.__hannaKitchenQA?.step===n,step+1,{timeout:25000});
+   const acted=await qa(page);
+   assert.equal(acted.interactionsCompleted,step+1,'mission must advance exactly one action on contact');
+   if(step===1||step===3||step===6){
+    assert.equal(acted.carryParent,'ArmRightPivot','milk/bread/toast must be attached to the real right hand');
+    assert.ok(acted.propHandDistance<.23,'carried prop is away from the palm: '+JSON.stringify(acted));
+    assert.equal(acted.held,step===1?'milk':step===3?'bread':'toast');
+    await page.screenshot({path:path.join(screenshots,step===6?'torrada-na-mao.png':step===1?'leite-na-mao.png':'pao-na-mao.png')});
+   }
   }
   assert.equal(await page.locator('#finish').isVisible(),true);
   await page.screenshot({path:path.join(screenshots,'cafe-completo.png')});
