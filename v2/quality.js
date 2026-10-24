@@ -20,14 +20,17 @@ function select(requested='auto',info={}){
  const resolved=choice==='auto'?(small?(memory>0&&memory<=3?'baixo':(cores>=8&&memory>=6?'alto':'medio')):(cores>=8?'alto':'medio')):choice;
  return Object.freeze({requested:choice,resolved,...PROFILES[resolved]});
 }
-// Babylon hardwareScalingLevel = physical DPR / desired physical pixels per CSS pixel.
-// A high DPR 3.0 Android with medium 1.85 now draws at 1.85x CSS, versus 1.35x before.
-// Viewport cap and supersampling floor prevent expensive 4K+ framebuffers on low-end GPUs.
+// Babylon hardwareScalingLevel = 1 / desired drawing-buffer pixels per CSS pixel.
+// devicePixelRatio is NOT multiplied here: Babylon setHardwareScalingLevel already
+// uses CSS viewport coordinates to size the drawing buffer. Multiplying by DPR was
+// the original bug: a simulated DPR=3 phone rendered only 525px for 852px of CSS.
+// The user may choose how close to native physical DPI to render via graphics mode.
 function hardwareScale(profile,dpr=1,viewport={width:1280,height:720}){
- const ratio=Number.isFinite(+dpr)&&+dpr>0?+dpr:1;
  const side=Math.max(1,Number(viewport.width)||1,Number(viewport.height)||1);
- const target=Math.min(profile.pixels||1,3200/side);
- return Math.max(.78,Math.min(4,ratio/Math.max(1,target)));
+ const ratio=Number.isFinite(+dpr)&&+dpr>0?+dpr:1;
+ const nativeCeiling=Math.max(1,ratio);
+ const target=Math.max(1,Math.min(profile.pixels||1,3200/side,nativeCeiling));
+ return 1/target;
 }
 function load(storage){try{const item=storage.getItem(KEY);return choices.includes(item)?item:'auto'}catch(_e){return 'auto'}}
 function save(storage,choice){if(!choices.includes(choice))return false;try{storage.setItem(KEY,choice);return true}catch(_e){return false}}

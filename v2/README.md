@@ -40,3 +40,9 @@ Babylon e loaders UMD 9.29.0 versionados em v2/vendor, sem dependência de CDN d
 - HUD oferece máxima nitidez manual (consumo maior de GPU e bateria), e a prévia de Android em CI emula DPR=3 para validar tamanho do framebuffer.
 - Isso corrige nitidez técnica e não entrega, por si só, personagem ou arte premium. Não confundir teste Chromium com desempenho em aparelho físico.
 - O teste offline da R8 tinha uma expectativa obsoleta de nome do personagem R5 e foi atualizado para a nova R8.
+
+### Hotfix R9.1 — causa raiz provada por imagem/telemetria
+- No teste Android DPR 3, código R9 anterior produziu **buffer 525 × 242** para viewport CSS **852 × 393**. O fator de escala foi calculado incorretamente como `DPR / pixels`; isso reduz o buffer até abaixo da resolução CSS.
+- R9.1 corrige para `hardwareScalingLevel = 1 / min(perfil, DPR, limite de framebuffer)`. Exemplo esperado de perfil médio: 852 × 393 CSS deve gerar cerca de **1576 × 727 pixels** internos. A prova será o log de screenshot CI, não o valor idealizado.
+- Testes de missão usam perfil baixo para evitar confundir sobrecarga do SwiftShader CPU com lógica da missão; screenshots emulados DPR3 testam render real do perfil automático separadamente.
+- Arte e rig premium continuam pendentes, mesmo com imagem limpa.

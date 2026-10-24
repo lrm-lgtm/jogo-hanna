@@ -43,9 +43,10 @@ test('quality profiles and storage',()=>{
  assert.equal(Q.select('nitido').pixels,3);
  assert.equal(Q.select('nitido').samples,4);
  assert.equal(Q.select('auto',{mobile:true,memory:8,cores:8}).resolved,'alto');
- assert.ok(Q.hardwareScale(Q.select('medio'),3,{width:850,height:390})<1.7);
- assert.equal(Q.hardwareScale(Q.select('nitido'),3,{width:850,height:390}),1);
- assert.ok(Q.hardwareScale(Q.select('alto'),1,{width:1280,height:720})>=.78);
+ assert.ok(Math.abs(Q.hardwareScale(Q.select('medio'),3,{width:850,height:390})-1/1.85)<.0001);
+ assert.ok(Math.abs(Q.hardwareScale(Q.select('nitido'),3,{width:850,height:390})-1/3)<.0001);
+ assert.equal(Q.hardwareScale(Q.select('alto'),1,{width:1280,height:720}),1);
+ assert.ok(Q.hardwareScale(Q.select('nitido'),3,{width:2000,height:900})>=.625);
  const s=createMemoryStore();assert.equal(Q.save(s,'alto'),true);assert.equal(Q.load(s),'alto');
  assert.equal(Q.save(s,'wrong'),false);
 });

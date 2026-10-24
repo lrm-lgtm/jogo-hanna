@@ -7,6 +7,9 @@ const URL='http://127.0.0.1:8765/v2/index.html';
 const launch=()=>chromium.launch({headless:true,args:['--no-sandbox','--enable-webgl','--ignore-gpu-blocklist','--use-gl=angle','--use-angle=swiftshader-webgl']});
 async function start(browser,viewport,mobile=false){
  const context=await browser.newContext({viewport,isMobile:mobile,hasTouch:mobile,deviceScaleFactor:1});
+ // Browser mission validates gameplay logic at CSS-pixel resolution; separate
+ // snapshot suite audits true DPR=3 and higher-resolution graphic fidelity.
+ await context.addInitScript(()=>localStorage.setItem('hanna_kitchen_v2_quality','baixo'));
  const page=await context.newPage(),errors=[];
  page.on('pageerror',e=>errors.push(e.message));
  await page.goto(URL,{waitUntil:'domcontentloaded',timeout:90000});
@@ -16,7 +19,7 @@ async function start(browser,viewport,mobile=false){
  return {context,page,errors};
 }
 const qa=page=>page.evaluate(()=>window.__hannaKitchenQA);
-test('v2 desktop: real Hanna model and complete eight-step mission with saved progress',{timeout:360000},async()=>{
+test('v2 desktop: real Hanna model and complete eight-step mission with saved progress',{timeout:540000},async()=>{
  const browser=await launch();let s;
  try{
   s=await start(browser,{width:1280,height:720});
