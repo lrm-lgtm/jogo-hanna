@@ -29,7 +29,7 @@ scene.activeCamera=camera;
 const hemi=new B.HemisphericLight('softSky',new B.Vector3(-.2,1,-.25),scene);
 hemi.intensity=.73;hemi.groundColor=B.Color3.FromHexString('#aa8883');
 const sun=new B.DirectionalLight('warmWindowLight',new B.Vector3(-.42,-1,.35),scene);
-sun.position.set(-3.2,8,-5.8);sun.intensity=1.55;
+sun.position.set(1.6,7,5);sun.intensity=1.65;
 sun.diffuse=B.Color3.FromHexString('#fff3df');
 const warm=new B.PointLight('warmFill',new B.Vector3(3,3,-2),scene);warm.intensity=.20;warm.diffuse=B.Color3.FromHexString('#ffd5a9');
 const pipeline=new B.DefaultRenderingPipeline('premiumCartoon',true,scene,[camera]);
@@ -99,12 +99,13 @@ const roomRoot=new B.TransformNode('kitchenModelImports',scene);
 const objects=new Map(),visuals=new Map();
 const character=new B.TransformNode('HannaCharacter',scene);
 character.position.set(-1.65,0,-2.03);
+character.rotation.y=2.45; // Introduce Hanna face/3-4 to the player instead of her back.
 // Character-v4 is a real Blender GLB; no fallback sphere-based avatar is allowed.
-let avatarMeshCount=0,avatarPivots=null,avatarRig=null,avatarWalkedFrames=0;
+let avatarMeshCount=0,avatarPivots=null,avatarRig=null,avatarWalkedFrames=0,blinkParts=[];
 async function loadPlayableAvatar(){
- const r=await B.SceneLoader.ImportMeshAsync('', '../pilot/assets/hanna/', 'hanna-v5.glb',scene);
+ const r=await B.SceneLoader.ImportMeshAsync('', './assets/', 'hanna-free-r8.glb',scene);
  const meshes=r.meshes.filter(m=>m.getTotalVertices?.()>0);
- if(meshes.length<80)throw new Error('Modelo Hanna R5 incompleto: '+meshes.length+' malhas');
+ if(meshes.length<80)throw new Error('Modelo Hanna R8 incompleto: '+meshes.length+' malhas');
  for(const root of r.meshes.filter(x=>!x.parent))root.parent=character;
  for(const root of r.transformNodes.filter(x=>!x.parent))root.parent=character;
  const find=n=>r.transformNodes.find(x=>x.name===n||x.name.endsWith('__'+n));
@@ -114,7 +115,10 @@ async function loadPlayableAvatar(){
  avatarPivots={head:anchors[1],leftArm:anchors[2],rightArm:anchors[3],leftLeg:anchors[4],rightLeg:anchors[5]};
  avatarRig=anchors[0];
  avatarMeshCount=meshes.length;
+ const eyeNames=/sclera-|iris-|black-pupil-|eye-sparkle-/;
+ blinkParts=meshes.filter(m=>eyeNames.test(m.name)).map(m=>({mesh:m,scale:m.scaling.y}));
  for(const m of meshes){m.isPickable=false;shadow.addShadowCaster(m);}
+ window.__hannaAvatar=Object.freeze({version:'r8-free-blender',model:'hanna-free-r8.glb',eyes:blinkParts.length});
 }
 function updateAvatarAnimation(t,isWalking,dt){
  if(!avatarPivots)return;
@@ -124,7 +128,11 @@ function updateAvatarAnimation(t,isWalking,dt){
  a.rightArm.rotation.x=-Math.sin(phase)*.35*intensity-(held?.24:0);
  a.leftLeg.rotation.x=-Math.sin(phase)*.25*intensity;
  a.rightLeg.rotation.x=Math.sin(phase)*.25*intensity;
- a.head.rotation.z=Math.sin(t*1.8)*.015;
+ a.head.rotation.z=Math.sin(t*1.8)*.024;
+ a.head.rotation.y=Math.sin(t*.93)*.09;
+ const period=t%5.4;
+ const blink=Math.abs(period-2.62)<.095?Math.max(.10,Math.abs(period-2.62)/.095):1;
+ for(const part of blinkParts)part.mesh.scaling.y=part.scale*blink;
  if(performance.now()<gestureUntil)a.rightArm.rotation.x=-1.00;
  if(avatarRig)avatarRig.position.y=isWalking?.020*Math.abs(Math.sin(phase)):.005*Math.sin(t*2);
  if(isWalking)avatarWalkedFrames++;
@@ -551,6 +559,7 @@ async function assets(){
  if(!breadModel)throw new Error('O modelo do pão está ausente');
  window.HannaKitchenArt.rebuild({B,scene,M,box,sphere,cylinder,visuals,shadow,graphics});
  await loadRoundedKitchenArt();
+ window.HannaFreeCorner.polish({B,scene,shadow,M,graphics});
 }
 async function boot(){
  try{
@@ -564,7 +573,7 @@ async function boot(){
    currentTarget:target().key,distance:distanceTo(target().nav),walking:moving,pathLength:waypoints.length,
    fps:avgFps,orientation:innerHeight>innerWidth?'portrait':'landscape',modelCount:modelsLoaded,
    artPass:window.__hannaArt?.artPass||'missing',gltfMeshCount:window.__hannaArt?.gltfMeshCount||0,artBounds:window.__hannaArt?.bbox,cameraMode:camera.mode,cameraBeta:camera.beta,
-   avatarMeshCount,avatarWalkedFrames,avatarKind:'hanna-v5-glb',hasGameplayRig:!!avatarPivots,
+   avatarMeshCount,avatarWalkedFrames,blinkMeshCount:blinkParts.length,avatarKind:'hanna-r8-free-glb',hasGameplayRig:!!avatarPivots,
    loadErrors:loadErrors.slice(),saved:mission.restored||currentStep>0,quality:graphics.resolved,saveSchema:2
   })});
   setInfo('A cozinha está pronta! Siga o brilho para começar ✨',2800);

@@ -22,7 +22,8 @@ test('v2 desktop: real Hanna model and complete eight-step mission with saved pr
   s=await start(browser,{width:1280,height:720});
   const {page,errors}=s;let current=await qa(page);
   assert.equal(current.step,0);assert.equal(current.saveSchema,2);
-  assert.equal(current.avatarKind,'hanna-v5-glb');
+  assert.equal(current.avatarKind,'hanna-r8-free-glb');
+  assert.ok(current.blinkMeshCount>=8,'real facial eye meshes are animated');
   assert.ok(current.avatarMeshCount>=80);
   assert.equal(current.artPass,'r2-blender');
   assert.ok(current.gltfMeshCount>=45,'real imported Blender furniture must be present');
