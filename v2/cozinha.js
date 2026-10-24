@@ -5,7 +5,8 @@ const el=id=>document.getElementById(id);
 if(!B){el('loadDetail').textContent='Não foi possível carregar Babylon.js. Verifique a internet.';return}
 const scene=new B.Scene(new B.Engine(canvas,true,{adaptToDeviceRatio:true,stencil:true}));
 const engine=scene.getEngine();
-const quality=window.HannaV2Quality;
+const quality=window.HannaV2Quality,Controls=window.HannaV2Controls;
+if(!Controls)throw new Error('Controles de movimento não foram carregados');
 const graphics=quality.select(quality.load(window.localStorage),{
  mobile:/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent),
  width:innerWidth,memory:navigator.deviceMemory||0,cores:navigator.hardwareConcurrency||4
@@ -174,7 +175,7 @@ targetHalo.rotation.x=Math.PI/2;targetHalo.material=M.gold;targetHalo.position.y
 targetHalo.isPickable=false;
 const haloGem=sphere('targetSparkle',[0,1.9,0],.19,M.gold);haloGem.isPickable=false;
 const cameraTarget=new B.Vector3(-.93,1.20,-.95);
-let modelsLoaded=0,currentStep=0,moving=false,waypoints=[],dest=null,joystick={x:0,y:0},pressed=new Set(),toastTimeout=null,frameCount=0,avgFps=0,held='',ready=false,loadErrors=[];
+let modelsLoaded=0,currentStep=0,moving=false,waypoints=[],dest=null,joystick={x:0,y:0},smoothInput={x:0,y:0},manualMeters=0,pressed=new Set(),toastTimeout=null,frameCount=0,avgFps=0,held='',ready=false,loadErrors=[];
 const mission=new window.HannaV2Mission.BreakfastMission({storage:window.localStorage});
 const steps=window.HannaV2Mission.STEPS.map(s=>({id:s.target,label:s.text,action:s.verb,nav:s.nav,event:s.feedback,voice:s.voice,icon:s.icon,animation:s.animation}));
 currentStep=mission.step;
@@ -182,8 +183,8 @@ const audio=()=>window.HannaV2Audio;
 let paused=false,lastInput=performance.now(),lastHint=performance.now(),gestureUntil=0,joyMaxSince=0;
 function persist(){return mission.persist()}
 document.addEventListener('hanna:v2:pause',e=>{
- paused=!!e.detail.paused;pressed.clear();joystick.x=joystick.y=0;
- const k=document.getElementById('stick');if(k)k.style.transform='translate(0px,0px)';
+ paused=!!e.detail.paused;
+ if(paused){pressed.clear();smoothInput.x=smoothInput.y=0;releaseJoystick()}
 });
 document.addEventListener('hanna:v2:hint',()=>{
  setInfo('Procure o brilho dourado ✨ Use IR ATÉ para chegar perto.',6000);
@@ -308,31 +309,72 @@ function navigate(destination){
  if(!waypoints.length){setInfo('O caminho está bloqueado. Tente outra posição.');return}
  moving=true;setInfo('👣 Indo até o objeto...',1400);
 }
-function walk(vx,vz,dt){
- const length=Math.hypot(vx,vz);if(length<.001)return false;
- const speed=2.45*(joyMaxSince&&performance.now()-joyMaxSince>650?1.45:1),dx=vx/length*speed*dt,dz=vz/length*speed*dt;
- const now=character.position;
- let changed=false;
- if(!occupied(now.x+dx,now.z)){now.x+=dx;changed=true}
- if(!occupied(now.x,now.z+dz)){now.z+=dz;changed=true}
- if(changed)character.rotation.y=Math.atan2(vx,-vz);
- return changed;
+function walk(vx,vz,dt,throttle=1){
+ const length=Math.hypot(vx,vz);
+ if(length<.001||throttle<.015)return false;
+ // Analog magnitude is intentionally preserved: gentle deflection = slow walk.
+ const speed=2.45*(joyMaxSince&&performance.now()-joyMaxSince>1100?1.16:1)*Math.min(1,Math.max(0,throttle));
+ const dx=vx/length*speed*dt,dz=vz/length*speed*dt;
+ const now=character.position,oldX=now.x,oldZ=now.z;
+ if(!occupied(now.x+dx,now.z))now.x+=dx;
+ if(!occupied(now.x,now.z+dz))now.z+=dz;
+ const actualX=now.x-oldX,actualZ=now.z-oldZ;
+ if(Math.hypot(actualX,actualZ)>.00001){
+  const targetYaw=Math.atan2(actualX,-actualZ);
+  character.rotation.y=Controls.smoothAngle(character.rotation.y,targetYaw,dt,16);
+  return true;
+ }
+ return false;
 }
-const joystickOuter=el('joystick'),stick=el('stick');let captured=null;
+const joystickOuter=el('joystick'),stick=el('stick');
+let captured=null;
 function touchJoy(e){
- const r=joystickOuter.getBoundingClientRect(),x=e.clientX-(r.left+r.width/2),y=e.clientY-(r.top+r.height/2);
- const d=Math.hypot(x,y),max=r.width*.29,k=d>max?max/d:1;
- joystick.x=x*k/max;joystick.y=-y*k/max;
- if(Math.hypot(joystick.x,joystick.y)>.96){if(!joyMaxSince)joyMaxSince=performance.now()}else joyMaxSince=0;
- stick.style.transform='translate('+(x*k)+'px,'+(y*k)+'px)';
+ const r=joystickOuter.getBoundingClientRect();
+ const x=e.clientX-(r.left+r.width/2),y=e.clientY-(r.top+r.height/2);
+ const pad=Controls.pad(x,y,Math.max(12,r.width*.29));
+ joystick.x=pad.x;joystick.y=pad.y;
+ if(pad.magnitude>.96){if(!joyMaxSince)joyMaxSince=performance.now()}else joyMaxSince=0;
+ stick.style.transform='translate('+pad.knobX.toFixed(2)+'px,'+pad.knobY.toFixed(2)+'px)';
 }
-joystickOuter.addEventListener('pointerdown',e=>{e.preventDefault();captured=e.pointerId;joystickOuter.setPointerCapture(e.pointerId);touchJoy(e);lastInput=performance.now();waypoints=[];moving=false});
-joystickOuter.addEventListener('pointermove',e=>{if(e.pointerId===captured){touchJoy(e);lastInput=performance.now()}});
-function endJoy(e){if(e.pointerId!==captured)return;captured=null;joyMaxSince=0;joystick.x=joystick.y=0;stick.style.transform='translate(0px,0px)'}
-joystickOuter.addEventListener('pointercancel',endJoy);joystickOuter.addEventListener('pointerup',endJoy);
-window.addEventListener('keydown',e=>{if(/^(Arrow|Key[WASD])/.test(e.code)){pressed.add(e.code);lastInput=performance.now();waypoints=[];moving=false;e.preventDefault()}});
+function releaseJoystick(){
+ const id=captured;captured=null;joyMaxSince=0;
+ joystick.x=joystick.y=0;smoothInput.x=smoothInput.y=0;
+ stick.style.transform='translate(0px,0px)';
+ if(id!==null&&joystickOuter.hasPointerCapture?.(id)){
+  try{joystickOuter.releasePointerCapture(id)}catch(_e){/* already released */}
+ }
+}
+joystickOuter.addEventListener('pointerdown',e=>{
+ if(captured!==null||paused||!ready)return;
+ e.preventDefault();
+ captured=e.pointerId;
+ try{joystickOuter.setPointerCapture(e.pointerId)}catch(_e){/* use window fallback */}
+ touchJoy(e);lastInput=performance.now();
+ waypoints=[];moving=false;
+});
+joystickOuter.addEventListener('pointermove',e=>{
+ if(e.pointerId!==captured)return;
+ e.preventDefault();touchJoy(e);lastInput=performance.now();
+});
+function endJoy(e){if(e.pointerId===captured)releaseJoystick()}
+joystickOuter.addEventListener('pointerup',endJoy);
+joystickOuter.addEventListener('pointercancel',endJoy);
+joystickOuter.addEventListener('lostpointercapture',endJoy);
+window.addEventListener('pointerup',endJoy);
+window.addEventListener('pointercancel',endJoy);
+window.addEventListener('keydown',e=>{
+ if(paused)return;
+ if(/^(Arrow|Key[WASD])/.test(e.code)){
+  pressed.add(e.code);lastInput=performance.now();waypoints=[];moving=false;e.preventDefault()
+ }
+});
 window.addEventListener('keyup',e=>pressed.delete(e.code));
-window.addEventListener('blur',()=>{pressed.clear();joystick.x=joystick.y=0;joyMaxSince=0;stick.style.transform='translate(0px,0px)'});
+window.addEventListener('blur',()=>{
+ pressed.clear();releaseJoystick()
+});
+document.addEventListener('visibilitychange',()=>{
+ if(document.hidden){pressed.clear();releaseJoystick()}
+});
 scene.onPointerObservable.add(evt=>{
  if(evt.type!==B.PointerEventTypes.POINTERPICK)return;
  const pick=evt.pickInfo;if(!pick?.hit||!pick.pickedMesh)return;
@@ -381,19 +423,23 @@ function loop(){
  if(frameCount%100===0&&currentStep<8&&performance.now()-lastInput>14000&&performance.now()-lastHint>14000){
   lastHint=performance.now();setInfo('Precisa de ajuda? Use IR ATÉ ou siga o brilho ✨',4300);
  }
- let ix=(pressed.has('KeyD')||pressed.has('ArrowRight')?1:0)-(pressed.has('KeyA')||pressed.has('ArrowLeft')?1:0)+joystick.x;
- let iz=(pressed.has('KeyW')||pressed.has('ArrowUp')?1:0)-(pressed.has('KeyS')||pressed.has('ArrowDown')?1:0)+joystick.y;
- const manual=Math.hypot(ix,iz)>.07;
+ const keyX=(pressed.has('KeyD')||pressed.has('ArrowRight')?1:0)-(pressed.has('KeyA')||pressed.has('ArrowLeft')?1:0);
+ const keyY=(pressed.has('KeyW')||pressed.has('ArrowUp')?1:0)-(pressed.has('KeyS')||pressed.has('ArrowDown')?1:0);
+ const wantedX=keyX||joystick.x,wantedY=keyY||joystick.y;
+ smoothInput.x=Controls.smoothAxis(smoothInput.x,wantedX,dt,15);
+ smoothInput.y=Controls.smoothAxis(smoothInput.y,wantedY,dt,15);
+ if(!wantedX&&Math.abs(smoothInput.x)<.02)smoothInput.x=0;
+ if(!wantedY&&Math.abs(smoothInput.y)<.02)smoothInput.y=0;
+ const manual=Math.hypot(smoothInput.x,smoothInput.y)>.055;
  if(manual){
   waypoints=[];moving=false;
-  // Current on-screen camera basis projected to kitchen floor (same in portrait/landscape).
   const forward=camera.target.subtract(camera.position);forward.y=0;forward.normalize();
   const right=new B.Vector3(-forward.z,0,forward.x);
-  const view=camera.getViewMatrix();
-  const rScreen=B.Vector3.TransformNormal(right,view);
-  if(rScreen.x<0)right.scaleInPlace(-1);
-  const move=forward.scale(iz).add(right.scale(ix));
-  walk(move.x,move.z,dt);
+  const rightScreen=B.Vector3.TransformNormal(right,camera.getViewMatrix());
+  const move=Controls.screenToWorld(smoothInput.x,smoothInput.y,forward.x,forward.z,rightScreen.x<0?-1:1);
+  const ox=character.position.x,oz=character.position.z;
+  walk(move.x,move.z,dt,move.magnitude);
+  manualMeters+=Math.hypot(character.position.x-ox,character.position.z-oz);
  }else if(moving&&waypoints.length){
   const next=waypoints[0],dx=next.x-character.position.x,dz=next.z-character.position.z;
   if(Math.hypot(dx,dz)<.11){waypoints.shift()}
@@ -576,7 +622,9 @@ async function boot(){
   document.dispatchEvent(new CustomEvent('hanna:v2:ready'));
   // Pilot QA exposes immutable measurements, never an editing/teleport command.
   Object.defineProperty(window,'__hannaKitchenQA',{get:()=>Object.freeze({
-   ready,step:currentStep,missionLength:steps.length,avatar:{x:character.position.x,z:character.position.z},
+   ready,step:currentStep,missionLength:steps.length,avatar:{x:character.position.x,z:character.position.z,yaw:character.rotation.y},
+   joystick:{x:joystick.x,y:joystick.y,active:captured!==null,magnitude:Math.hypot(joystick.x,joystick.y)},
+   manualMeters:+manualMeters.toFixed(3),
    currentTarget:target().key,distance:distanceTo(target().nav),walking:moving,pathLength:waypoints.length,
    fps:avgFps,orientation:innerHeight>innerWidth?'portrait':'landscape',modelCount:modelsLoaded,
    dpr:window.devicePixelRatio||1,renderScale:engine.getHardwareScalingLevel(),
