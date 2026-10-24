@@ -128,6 +128,7 @@ async function loadPlayableAvatar(){
  avatarPivots={head:anchors[1],leftArm:anchors[2],rightArm:anchors[3],leftLeg:anchors[4],rightLeg:anchors[5],
   leftKnee:anchors[6],rightKnee:anchors[7],leftAnkle:anchors[8],rightAnkle:anchors[9]};
  avatarRig=anchors[0];avatarRigBaseY=avatarRig.position.y;
+ avatarRest.set(avatarRig,avatarRig.rotationQuaternion?.clone()||B.Quaternion.FromEulerAngles(avatarRig.rotation.x,avatarRig.rotation.y,avatarRig.rotation.z));
  // glTF imports rotationQuaternion; writing node.rotation.x has no visible effect.
  for(const node of Object.values(avatarPivots)){
   const rest=node.rotationQuaternion?.clone()||B.Quaternion.FromEulerAngles(node.rotation.x,node.rotation.y,node.rotation.z);
@@ -198,8 +199,7 @@ function updateAvatarAnimation(t,travel,dt){
  const period=t%5.4;
  const blink=Math.abs(period-2.62)<.095?Math.max(.10,Math.abs(period-2.62)/.095):1;
  for(const part of blinkParts)part.mesh.scaling.y=part.scale*blink;
- if(avatarRig){avatarRig.position.y=avatarRigBaseY+p.bob;avatarRig.rotationQuaternion=avatarRig.rotationQuaternion||B.Quaternion.Identity();
-  avatarRig.rotationQuaternion.copyFrom(B.Quaternion.RotationYawPitchRoll(0,0,p.pelvisSway));}
+ if(avatarRig){avatarRig.position.y=avatarRigBaseY+p.bob;jointPose(avatarRig,0,0,p.pelvisSway)}
  if(travel>.00005)avatarWalkedFrames++;
  topKneeFlex=Math.max(topKneeFlex,p.leftKnee,p.rightKnee);
  topHipSwing=Math.max(topHipSwing,Math.abs(p.leftHip),Math.abs(p.rightHip));
@@ -330,7 +330,7 @@ function stepAction(){
  if(distanceTo(goal.nav)>.73){setInfo('Vamos caminhar até '+steps[currentStep].label.toLowerCase()+'!');navigate(goal.nav);return}
  const can=mission.canInteract(goal.key,distanceTo(goal.nav));
  if(!can.ok){setInfo('Vamos fazer uma coisa de cada vez!');return}
- actionState={id:steps[currentStep].animation==='celebrate'?'serve-toast':steps[currentStep].id,
+ actionState={id:window.HannaV2Mission.STEPS[currentStep].id,
   previous:currentStep,elapsed:0,committed:false};
  moving=false;waypoints=[];dest=null;pressed.clear();releaseJoystick();
  updateAction();
