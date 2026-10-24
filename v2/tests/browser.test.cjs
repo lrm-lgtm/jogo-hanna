@@ -25,7 +25,7 @@ test('v2 desktop: real Hanna model and complete eight-step mission with saved pr
   s=await start(browser,{width:1280,height:720});
   const {page,errors}=s;let current=await qa(page);
   assert.equal(current.step,0);assert.equal(current.saveSchema,2);
-  assert.equal(current.avatarKind,'hanna-r13-free-glb');
+  assert.equal(current.avatarKind,'hanna-r15-free-glb');
   assert.ok(current.blinkMeshCount>=8,'real facial eye meshes are animated');
   assert.ok(current.avatarMeshCount>=80);
   assert.ok(current.frontAxis?.confidence>.09,'face-forward vector must be measured from actual GLB');
@@ -57,7 +57,7 @@ test('v2 desktop: real Hanna model and complete eight-step mission with saved pr
    const acted=await qa(page);
    assert.equal(acted.interactionsCompleted,step+1,'mission must advance exactly one action on contact');
    if(step===1||step===3||step===6){
-    assert.equal(acted.carryParent,'ArmRightPivot','milk/bread/toast must be attached to the real right hand');
+    assert.equal(acted.carryParent,'HandRightGrip','milk/bread/toast must be attached to the real right hand');
     assert.ok(acted.propHandDistance<.23,'carried prop is away from the palm: '+JSON.stringify(acted));
     assert.equal(acted.held,step===1?'milk':step===3?'bread':'toast');
     await page.screenshot({path:path.join(screenshots,step===6?'torrada-na-mao.png':step===1?'leite-na-mao.png':'pao-na-mao.png')});
@@ -105,7 +105,7 @@ test('v2 offline: second opening loads local Babylon, avatar and kitchen after S
   await context.setOffline(true);
   await page.reload({waitUntil:'domcontentloaded',timeout:60000});
   await page.waitForFunction(()=>window.__hannaKitchenQA?.ready,null,{timeout:100000});
-  assert.equal((await qa(page)).avatarKind,'hanna-r13-free-glb');
+  assert.equal((await qa(page)).avatarKind,'hanna-r15-free-glb');
   assert.deepEqual((await qa(page)).loadErrors,[]);
   await page.screenshot({path:path.join(screenshots,'retorno-offline.png')});
   assert.deepEqual(errors,[]);

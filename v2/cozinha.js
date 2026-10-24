@@ -6,8 +6,8 @@ if(!B){el('loadDetail').textContent='Não foi possível carregar Babylon.js. Ver
 const scene=new B.Scene(new B.Engine(canvas,true,{adaptToDeviceRatio:true,stencil:true}));
 const engine=scene.getEngine();
 const quality=window.HannaV2Quality,Controls=window.HannaV2Controls,Cam=window.HannaV2Camera,
- Gait=window.HannaV2Gait,Actions=window.HannaV2Actions,Motion=window.HannaObjectMotion;
-if(!Controls||!Cam||!Gait||!Actions||!Motion)throw new Error('Controles, câmera ou animações de objetos não foram carregados');
+ Gait=window.HannaV2Gait,Actions=window.HannaV2Actions,Motion=window.HannaObjectMotion,Anchors=window.HannaV2Anchors;
+if(!Controls||!Cam||!Gait||!Actions||!Motion||!Anchors)throw new Error('Controles, câmera ou alvos de interação não foram carregados');
 const graphics=quality.select(quality.load(window.localStorage),{
  mobile:/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent),
  width:innerWidth,memory:navigator.deviceMemory||0,cores:navigator.hardwareConcurrency||4
@@ -116,6 +116,7 @@ const avatarRest=new Map();let avatarRigBaseY=0,avatarFront={x:0,z:1},faceCalibr
 let gaitState={phase:0,blend:0,totalDistance:0},lastGait=null,lastFrameMeters=0,lastTravel={x:0,z:0};
 let topKneeFlex=0,topHipSwing=0,topActualKneeDegrees=0,topActualHipDegrees=0;
 let handMesh=null,actionState=null,lastActionId='',interactionsCompleted=0;
+let closestInteractionError=Infinity,lastContactError=null,lastStandDistance=null,lastHandTarget=null;
 async function loadPlayableAvatar(){
  const r=await B.SceneLoader.ImportMeshAsync('', './assets/', 'hanna-free-r8.glb',scene);
  const meshes=r.meshes.filter(m=>m.getTotalVertices?.()>0);
@@ -124,18 +125,20 @@ async function loadPlayableAvatar(){
  for(const root of r.transformNodes.filter(x=>!x.parent))root.parent=character;
  const find=n=>r.transformNodes.find(x=>x.name===n||x.name.endsWith('__'+n));
  const names=['HannaRig','HeadPivot','ArmLeftPivot','ArmRightPivot','LegLeftPivot','LegRightPivot',
-  'KneeLeftPivot','KneeRightPivot','AnkleLeftPivot','AnkleRightPivot'];
+  'KneeLeftPivot','KneeRightPivot','AnkleLeftPivot','AnkleRightPivot',
+  'ElbowLeftPivot','ElbowRightPivot','WristLeftPivot','WristRightPivot','HandRightGrip'];
  const anchors=names.map(find);
  if(anchors.some(x=>!x))throw new Error('Rig R12 incompleto: '+names.filter((_,i)=>!anchors[i]).join(', '));
  avatarPivots={head:anchors[1],leftArm:anchors[2],rightArm:anchors[3],leftLeg:anchors[4],rightLeg:anchors[5],
-  leftKnee:anchors[6],rightKnee:anchors[7],leftAnkle:anchors[8],rightAnkle:anchors[9]};
+  leftKnee:anchors[6],rightKnee:anchors[7],leftAnkle:anchors[8],rightAnkle:anchors[9],
+  leftElbow:anchors[10],rightElbow:anchors[11],leftWrist:anchors[12],rightWrist:anchors[13],grip:anchors[14]};
  avatarRig=anchors[0];avatarRigBaseY=avatarRig.position.y;
  avatarRest.set(avatarRig,avatarRig.rotationQuaternion?.clone()||B.Quaternion.FromEulerAngles(avatarRig.rotation.x,avatarRig.rotation.y,avatarRig.rotation.z));
  // glTF imports rotationQuaternion; writing node.rotation.x has no visible effect.
  for(const node of Object.values(avatarPivots)){
   const rest=node.rotationQuaternion?.clone()||B.Quaternion.FromEulerAngles(node.rotation.x,node.rotation.y,node.rotation.z);
   avatarRest.set(node,rest);
-  node.rotationQuaternion=rest.clone();
+  if(node!==avatarPivots.grip)node.rotationQuaternion=rest.clone();
  }
  avatarMeshCount=meshes.length;
  // Calibrate forward from actual head/pupil geometry, independent of Blender axis conversion.
@@ -148,18 +151,12 @@ async function loadPlayableAvatar(){
  faceCalibration=Math.hypot(diff.x,diff.z);
  if(faceCalibration<.09)throw new Error('Face GLB sem frente definida ('+faceCalibration.toFixed(3)+')');
  avatarFront=Gait.normalize(diff.x,diff.z);
- // Hold props near the imported right palm, NOT behind the torso in character space.
+ // The prop's grip is part of the Blender wrist hierarchy, not a world-space approximation.
  handMesh=meshes.find(m=>m.name==='hand-1'||m.name.endsWith('__hand-1'));
  if(!handMesh)throw new Error('A malha real da mão direita está ausente');
- handMesh.computeWorldMatrix(true);
- avatarPivots.rightArm.computeWorldMatrix(true);
- const palm=handMesh.getBoundingInfo().boundingSphere.centerWorld;
- const nearPalm=palm.add(new B.Vector3(avatarFront.x*.105,.025,avatarFront.z*.105));
- const localPalm=B.Vector3.TransformCoordinates(nearPalm,avatarPivots.rightArm.getWorldMatrix().clone().invert());
- carryRoot.parent=avatarPivots.rightArm;
- carryRoot.position.copyFrom(localPalm);
- carryRoot.rotationQuaternion=null;
- carryRoot.rotation.set(0,0,0);
+ carryRoot.parent=avatarPivots.grip;
+ carryRoot.position.set(0,0,0);
+ carryRoot.rotationQuaternion=null;carryRoot.rotation.set(0,0,0);
  const toCamera=camera.position.subtract(character.position);
  character.rotation.y=Gait.headingForDirection(avatarFront,toCamera.x,toCamera.z);
  const eyeNames=/sclera-|iris-|black-pupil-|eye-sparkle-/;
@@ -192,12 +189,40 @@ function updateAvatarAnimation(t,travel,dt){
  jointPose(a.rightKnee,p.rightKnee);
  jointPose(a.leftAnkle,p.leftAnkle);
  jointPose(a.rightAnkle,p.rightAnkle);
- const gesture=actionState?Actions.pose(actionState.id,actionState.elapsed):null;
- const reaching=gesture?.reach||0;
- jointPose(a.leftArm,p.arms.left+(reaching*.08));
- let rightArm=p.arms.right-(held?.76:0)+(gesture?.armX||0); // Chest-height carrying pose so food is plainly visible in the palm.
+ const gesture=actionState&&!actionState.approaching?Actions.pose(actionState.id,actionState.elapsed):null;
+ const reach=gesture?.reach||0;
+ jointPose(a.leftArm,p.arms.left);
+ let rightArm=p.arms.right-(held?.76:0);
+ let elbow=.11,wrist=-.11;
+ if(actionState&&reach>.005){
+  // Constrained two-link reach for the Blender arm: shoulder .232m + forearm .228m.
+  const c=actionState.contact;
+  const shoulder=a.rightArm;shoulder.computeWorldMatrix(true);
+  const pivot=shoulder.getAbsolutePosition();
+  const front=Gait.rotateFace(avatarFront,character.rotation.y);
+  const forward=(c.hand[0]-pivot.x)*front.x+(c.hand[2]-pivot.z)*front.z;
+  const drop=pivot.y-c.hand[1];
+  const d=Math.max(.12,Math.min(.456,Math.hypot(forward,drop)));
+  const bent=Math.acos(Math.max(-1,Math.min(1,(d*d-.232*.232-.228*.228)/(2*.232*.228))));
+  const shoulderPitch=-Math.atan2(Math.max(.04,forward),drop)+
+   Math.acos(Math.max(-1,Math.min(1,(.232*.232+d*d-.228*.228)/(2*.232*d))));
+  rightArm=rightArm*(1-reach)+shoulderPitch*reach;
+  elbow=-bent*reach;
+  wrist=(bent*.40-shoulderPitch*.22)*reach;
+  lastHandTarget=c.hand;
+ }
  jointPose(a.rightArm,rightArm,0,gesture?.armZ||0);
+ jointPose(a.rightElbow,elbow);
+ jointPose(a.rightWrist,wrist);
+ jointPose(a.leftElbow,.08);
+ jointPose(a.leftWrist,-.08);
  jointPose(a.head,gesture?.lean||0,Math.sin(t*.93)*.05,Math.sin(t*1.8)*.014);
+ if(actionState&&reach>.25){
+  a.grip.computeWorldMatrix(true);
+  const hp=a.grip.getAbsolutePosition(),c=actionState.contact.hand;
+  const err=Math.hypot(hp.x-c[0],hp.y-c[1],hp.z-c[2]);
+  closestInteractionError=Math.min(closestInteractionError,err);
+ }
  const period=t%5.4;
  const blink=Math.abs(period-2.62)<.095?Math.max(.10,Math.abs(period-2.62)/.095):1;
  for(const part of blinkParts)part.mesh.scaling.y=part.scale*blink;
@@ -349,17 +374,40 @@ function stepAction(){
  if(distanceTo(goal.nav)>.73){setInfo('Vamos caminhar até '+steps[currentStep].label.toLowerCase()+'!');navigate(goal.nav);return}
  const can=mission.canInteract(goal.key,distanceTo(goal.nav));
  if(!can.ok){setInfo('Vamos fazer uma coisa de cada vez!');return}
- actionState={id:window.HannaV2Mission.STEPS[currentStep].id,
-  previous:currentStep,elapsed:0,committed:false};
+ const id=window.HannaV2Mission.STEPS[currentStep].id;
+ const contact=Anchors.targetFor(id);
+ actionState={id,contact,previous:currentStep,elapsed:0,committed:false,approaching:true}; 
+ closestInteractionError=Infinity;lastContactError=null;
+ lastStandDistance=null;lastHandTarget=null;
  moving=false;waypoints=[];dest=null;pressed.clear();releaseJoystick();
  updateAction();
 }
 function updateActionSequence(dt){
  if(!actionState)return;
  const state=actionState;
+ if(state.approaching){
+  const stand=state.contact.stand;
+  const dist=Anchors.distance2(character.position.x,character.position.z,...stand);
+  lastStandDistance=dist;
+  if(dist>.055){
+   const moved=walk(stand[0]-character.position.x,stand[1]-character.position.z,Math.min(dt,dist/1.6),.65);
+   if(!moved&&dist>.35){setInfo('Chegue mais perto do objeto para interagir.');actionState=null;updateAction()}
+   return;
+  }
+  const aim=Anchors.direction(stand,state.contact.hand),yaw=Gait.headingForDirection(avatarFront,aim.x,aim.z);
+  character.rotation.y=Controls.smoothAngle(character.rotation.y,yaw,Math.min(dt,.055),12);
+  const aligned=Gait.facingDot(avatarFront,character.rotation.y,aim.x,aim.z);
+  if(aligned<.985)return;
+  state.approaching=false;state.elapsed=0;
+ }
  state.elapsed+=Math.min(.14,dt);
  const pose=Actions.pose(state.id,state.elapsed);
- if(pose.contact&&!state.committed)commitAction(state);
+ if(pose.contact&&!state.committed){
+  avatarPivots.grip?.computeWorldMatrix(true);
+  const hand=avatarPivots.grip?.getAbsolutePosition(),c=state.contact.hand;
+  lastContactError=hand?+Math.hypot(hand.x-c[0],hand.y-c[1],hand.z-c[2]).toFixed(3):null;
+  commitAction(state);
+ }
  if(pose.done){
   // Let the hand return to natural carry pose; never drop an item behind the character.
   if(!state.committed)commitAction(state);
@@ -763,15 +811,19 @@ async function boot(){
    samples:graphics.samples,
    artPass:window.__hannaArt?.artPass||'missing',gltfMeshCount:window.__hannaArt?.gltfMeshCount||0,artBounds:window.__hannaArt?.bbox,cameraMode:camera.mode,cameraBeta:camera.beta,cameraRadius:camera.radius,
    cameraFrame:projectedHanna(),cutawayHidden:cutawayHidden.slice(),cameraTarget:{x:+cameraTarget.x.toFixed(2),z:+cameraTarget.z.toFixed(2)},
-   avatarMeshCount,avatarWalkedFrames,blinkMeshCount:blinkParts.length,avatarKind:'hanna-r13-free-glb',hasGameplayRig:!!avatarPivots,
+   avatarMeshCount,avatarWalkedFrames,blinkMeshCount:blinkParts.length,avatarKind:'hanna-r15-free-glb',hasGameplayRig:!!avatarPivots,
    held,action:actionState?{id:actionState.id,progress:+Actions.pose(actionState.id,actionState.elapsed).progress.toFixed(2),
      contact:actionState.committed}:null,interactionsCompleted,lastActionId,
-   propHandDistance:handMesh?+(B.Vector3.Distance(handMesh.getBoundingInfo().boundingSphere.centerWorld,carryRoot.getAbsolutePosition())).toFixed(3):null,
+   propHandDistance:avatarPivots?.grip?+(B.Vector3.Distance(avatarPivots.grip.getAbsolutePosition(),carryRoot.getAbsolutePosition())).toFixed(3):null,
    heldFrontOffset:(()=>{
     const f=Gait.rotateFace(avatarFront,character.rotation.y),w=carryRoot.getAbsolutePosition();
     return +((w.x-character.position.x)*f.x+(w.z-character.position.z)*f.z).toFixed(3);
    })(),
    carryParent:carryRoot.parent?.name||'',
+   interaction:{id:actionState?.id||lastActionId,approaching:!!actionState?.approaching,
+    stageDistance:lastStandDistance,contactError:lastContactError,
+    closestError:Number.isFinite(closestInteractionError)?+closestInteractionError.toFixed(3):null,
+    target:lastHandTarget},
    objectMotion:Object.fromEntries(Object.entries(objectMotion).map(([k,v])=>
     [k,{plays:v.plays,playing:v.playing,value:+v.value.toFixed(3)}])),
    toasterSlotY:TOAST_SLOT.y,
