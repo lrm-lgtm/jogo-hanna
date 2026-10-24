@@ -34,6 +34,9 @@ jobs:
       - name: Capture desktop and Android without mission walkthrough
         run: |
           node v2/tests/snapshot.cjs
+      - name: Quality gate - scene must not render nearly black
+        if: success()
+        run: python3 v2/tests/check_visual_luminance.py artifacts/hanna-v2-art/desktop.png artifacts/hanna-v2-art/android-paisagem.png
       - uses: actions/upload-artifact@v4
         if: always()
         with:

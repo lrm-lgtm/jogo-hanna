@@ -38,7 +38,7 @@ const pipeline=new B.DefaultRenderingPipeline('premiumCartoon',true,scene,[camer
 pipeline.samples=graphics.samples;
 pipeline.fxaaEnabled=graphics.samples===1;
 pipeline.sharpenEnabled=graphics.sharpen;
-if(pipeline.sharpenEnabled){pipeline.sharpen.edgeAmount=.24;pipeline.sharpen.colorAmount=.42}
+if(pipeline.sharpenEnabled){pipeline.sharpen.edgeAmount=.16;pipeline.sharpen.colorAmount=1.0 // 1.0 preserves original color; .42 was a severe brightness regression}
 pipeline.bloomEnabled=graphics.bloom;
 if(graphics.bloom){pipeline.bloomWeight=.055;pipeline.bloomThreshold=1.2}
 const shadow=new B.ShadowGenerator(graphics.shadow,sun);
@@ -462,7 +462,7 @@ async function loadRoundedKitchenArt(){
   const bb=m.getBoundingInfo().boundingBox;
   min.minimizeInPlace(bb.minimumWorld);max.maximizeInPlace(bb.maximumWorld);
   m.isPickable=false;m.receiveShadows=true;
-  if(/B2_(table|chair|fridge|counter|upper|oven|sink|hob)/.test(m.name))shadow.addShadowCaster(m);
+  if(/B2_(table|chair|fridge)/.test(m.name)) // Avoid room-filling cabinet shadow castsshadow.addShadowCaster(m);
  }
  // Detect a Blender coordinate conversion mistake instead of delivering mirrored/scaled furniture.
  const fridgeNode=result.transformNodes.find(n=>n.name?.includes('B2_fridge_enclosure'))||
