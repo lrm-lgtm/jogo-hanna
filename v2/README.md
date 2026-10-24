@@ -32,3 +32,11 @@ Babylon e loaders UMD 9.29.0 versionados em v2/vendor, sem dependência de CDN d
 - Comparação: R8 tem personagem visível de frente, paleta coesa e câmera mais próxima, mas **NÃO ALCANÇOU A META PREMIUM**. Rostos, cabelo, materiais e animações seguem simplificados; screenshot não pode ser usado como aprovação artística.
 - Testes de regressão unitários e v1.9 passaram no commit 666ad60f. Missão completa + persistência/offline da rodada R8 requer aprovação do workflow de browser correspondente.
 - v1.9 `main` permanece intocada, PR #10 em rascunho. Sem gastos, créditos ou assinaturas.
+
+## Gráficos R9 — nitidez nativa e controle de performance (24/10/2026)
+- Problema medido no código anterior: modo automático comum de celular renderizava apenas 1,35 pixels por unidade CSS. Android DPR=3 mostrava fração da resolução física.
+- Profiles separados por qualidade/performance: baixo 1,15, médio 1,85, alto 2,4, máxima nitidez até 3 pixels por unidade CSS, com limite de framebuffer 3.200 px no maior lado.
+- Multisampling Babylon.js, sharpening delicado e FXAA apenas no perfil sem MSAA; sem bloom agressivo.
+- HUD oferece máxima nitidez manual (consumo maior de GPU e bateria), e a prévia de Android em CI emula DPR=3 para validar tamanho do framebuffer.
+- Isso corrige nitidez técnica e não entrega, por si só, personagem ou arte premium. Não confundir teste Chromium com desempenho em aparelho físico.
+- O teste offline da R8 tinha uma expectativa obsoleta de nome do personagem R5 e foi atualizado para a nova R8.

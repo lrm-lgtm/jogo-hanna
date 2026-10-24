@@ -77,13 +77,13 @@ test('v2 offline: second opening loads local Babylon, avatar and kitchen after S
    const names=await caches.keys(),key=names.find(k=>k.startsWith('hanna-kitchen-v2-'));
    if(!key)return false;
    const cache=await caches.open(key);
-   const refs=['./index.html','./vendor/babylon.js','./vendor/babylonjs.loaders.min.js','../pilot/assets/hanna/hanna-v5.glb'];
+   const refs=['./index.html','./vendor/babylon.js','./vendor/babylonjs.loaders.min.js','./assets/hanna-free-r8.glb'];
    return (await Promise.all(refs.map(r=>cache.match(new URL(r,document.baseURI))))).every(Boolean);
   },null,{timeout:120000});
   await context.setOffline(true);
   await page.reload({waitUntil:'domcontentloaded',timeout:60000});
   await page.waitForFunction(()=>window.__hannaKitchenQA?.ready,null,{timeout:100000});
-  assert.equal((await qa(page)).avatarKind,'hanna-v5-glb');
+  assert.equal((await qa(page)).avatarKind,'hanna-r8-free-glb');
   assert.deepEqual((await qa(page)).loadErrors,[]);
   await page.screenshot({path:path.join(screenshots,'retorno-offline.png')});
   assert.deepEqual(errors,[]);

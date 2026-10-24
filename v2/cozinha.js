@@ -10,7 +10,8 @@ const graphics=quality.select(quality.load(window.localStorage),{
  mobile:/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent),
  width:innerWidth,memory:navigator.deviceMemory||0,cores:navigator.hardwareConcurrency||4
 });
-engine.setHardwareScalingLevel(Math.max(1,(window.devicePixelRatio||1)/graphics.pixels));
+const hardwareScale=()=>quality.hardwareScale(graphics,window.devicePixelRatio||1,{width:innerWidth,height:innerHeight});
+engine.setHardwareScalingLevel(hardwareScale());
 scene.clearColor=B.Color4.FromHexString('#dcebe5ff');
 scene.imageProcessingConfiguration.toneMappingEnabled=true;
 scene.imageProcessingConfiguration.toneMappingType=B.ImageProcessingConfiguration.TONEMAPPING_ACES;
@@ -33,7 +34,13 @@ sun.position.set(1.6,7,5);sun.intensity=1.65;
 sun.diffuse=B.Color3.FromHexString('#fff3df');
 const warm=new B.PointLight('warmFill',new B.Vector3(3,3,-2),scene);warm.intensity=.20;warm.diffuse=B.Color3.FromHexString('#ffd5a9');
 const pipeline=new B.DefaultRenderingPipeline('premiumCartoon',true,scene,[camera]);
-pipeline.fxaaEnabled=true;pipeline.samples=1;pipeline.bloomEnabled=graphics.bloom;if(graphics.bloom){pipeline.bloomWeight=.12;pipeline.bloomThreshold=.88}
+// Native multisampling is cleaner than full-screen FXAA, which softens stylized eyes and hair.
+pipeline.samples=graphics.samples;
+pipeline.fxaaEnabled=graphics.samples===1;
+pipeline.sharpenEnabled=graphics.sharpen;
+if(pipeline.sharpenEnabled){pipeline.sharpen.edgeAmount=.24;pipeline.sharpen.colorAmount=.42}
+pipeline.bloomEnabled=graphics.bloom;
+if(graphics.bloom){pipeline.bloomWeight=.055;pipeline.bloomThreshold=1.2}
 const shadow=new B.ShadowGenerator(graphics.shadow,sun);
 shadow.useBlurExponentialShadowMap=graphics.blur;shadow.blurKernel=graphics.blur?18:1;
 const materials={};
@@ -365,7 +372,7 @@ function updateCamera(){
  camera.fov=portrait?.91:ratio>1.95?.72:.66;
  camera.beta=1.17;
 }
-window.addEventListener('resize',updateCamera);
+window.addEventListener('resize',()=>{engine.setHardwareScalingLevel(hardwareScale());updateCamera()});
 window.addEventListener('orientationchange',()=>setTimeout(updateCamera,240));
 updateCamera();
 function loop(){
@@ -455,7 +462,7 @@ async function loadRoundedKitchenArt(){
   const bb=m.getBoundingInfo().boundingBox;
   min.minimizeInPlace(bb.minimumWorld);max.maximizeInPlace(bb.maximumWorld);
   m.isPickable=false;m.receiveShadows=true;
-  if(/B2_(table|chair|fridge)/.test(m.name))shadow.addShadowCaster(m);
+  if(/B2_(table|chair|fridge|counter|upper|oven|sink|hob)/.test(m.name))shadow.addShadowCaster(m);
  }
  // Detect a Blender coordinate conversion mistake instead of delivering mirrored/scaled furniture.
  const fridgeNode=result.transformNodes.find(n=>n.name?.includes('B2_fridge_enclosure'))||
@@ -572,6 +579,10 @@ async function boot(){
    ready,step:currentStep,missionLength:steps.length,avatar:{x:character.position.x,z:character.position.z},
    currentTarget:target().key,distance:distanceTo(target().nav),walking:moving,pathLength:waypoints.length,
    fps:avgFps,orientation:innerHeight>innerWidth?'portrait':'landscape',modelCount:modelsLoaded,
+   dpr:window.devicePixelRatio||1,renderScale:engine.getHardwareScalingLevel(),
+   bufferWidth:engine.getRenderWidth(),bufferHeight:engine.getRenderHeight(),
+   cssWidth:canvas.clientWidth,cssHeight:canvas.clientHeight,
+   samples:graphics.samples,
    artPass:window.__hannaArt?.artPass||'missing',gltfMeshCount:window.__hannaArt?.gltfMeshCount||0,artBounds:window.__hannaArt?.bbox,cameraMode:camera.mode,cameraBeta:camera.beta,cameraRadius:camera.radius,
    avatarMeshCount,avatarWalkedFrames,blinkMeshCount:blinkParts.length,avatarKind:'hanna-r8-free-glb',hasGameplayRig:!!avatarPivots,
    loadErrors:loadErrors.slice(),saved:mission.restored||currentStep>0,quality:graphics.resolved,saveSchema:2
