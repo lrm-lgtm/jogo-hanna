@@ -735,7 +735,7 @@ async function assets(){
  ['rug_rectangle_stripes_A','furniture',[-.08,.035,-.86],[2.70,.052,1.64],0],
  ['chair_A','restaurant',[-1.51,0,-.64],[.56,.83,.64],-1.40],
  ['chair_A','restaurant',[1.42,0,-.64],[.56,.83,.64],1.40],
- ['plate','restaurant',[-.04,.99,-.68],[.56,.12,.56],0],
+ ['plate','restaurant',[-.04,.99,-1.01],[.56,.12,.56],0],
  ['bowl','restaurant',[.30,1.00,-.68],[.31,.16,.31],0],
  ['jar_A_small','restaurant',[-.76,1.08,1.72],[.20,.32,.20],0],
  ['jar_B_small','restaurant',[-.52,1.08,1.72],[.20,.32,.20],0],
@@ -779,7 +779,7 @@ async function assets(){
  box('fridgeInnerShelf2',[-2.92,1.54,1.45],[.75,.045,.34],M.trim).parent=fridgeShelfGroup;
  visuals.set('fridgeShelves',fridgeShelfGroup);
  const milk=new B.TransformNode('milkInFridge',scene);milkCarton(milk,[-3.00,1.25,1.30]);visuals.set('milk',milk);
- const tableMilk=new B.TransformNode('milkOnTable',scene);milkCarton(tableMilk,[-.65,1.22,-.68]);visuals.set('milkTable',tableMilk);
+ const tableMilk=new B.TransformNode('milkOnTable',scene);milkCarton(tableMilk,[-.65,1.22,-1.10]);visuals.set('milkTable',tableMilk);
  const breadModel=visuals.get('bread');
  const toaster=new B.TransformNode('roundedToaster',scene);
  const body=box('toasterBody',[1.08,1.21,1.55],[.46,.27,.33],M.coral);body.parent=toaster;
@@ -795,7 +795,7 @@ async function assets(){
  crumb.parent=toast;crumb.material=M.gold;crumb.isPickable=false;
  visuals.set('toast',toast);
  const served=new B.TransformNode('servedToast',scene);
- cylinder('servedBread',[-.03,1.10,-.69],.30,.09,M.gold,10).parent=served;
+ cylinder('servedBread',[-.03,1.10,-1.01],.30,.09,M.gold,10).parent=served;
  visuals.set('toastTable',served);
  if(!breadModel)throw new Error('O modelo do pão está ausente');
  window.HannaKitchenArt.rebuild({B,scene,M,box,sphere,cylinder,visuals,shadow,graphics});
