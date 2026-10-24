@@ -28,27 +28,65 @@ function facingDot(face,heading,dx,dz){
 function damping(current,target,dt,rate){
  return current+(target-current)*(1-Math.exp(-rate*clamp(dt||0,0,.14)));
 }
+// R13 gait: stance/swing curves and 2-bone inverse kinematics for a grounded foot.
+// Calibrated to free Blender rig: hip -> knee .300m; knee -> ankle .253m.
+// This replaces the high-stepping single sine-wave/clock-driven puppet motion.
+const smoothstep=t=>{const v=clamp(t,0,1);return v*v*(3-2*v)};
+function leg(phase,speed){
+ const u=((phase/(2*Math.PI))%1+1)%1;
+ const stance=.63,walking=clamp(speed/1.7,0,1);
+ let forward=0,lift=0,roll=0,planted=false;
+ if(u<stance){
+  const v=u/stance;
+  // During stance, feet advance relative to the body in the opposite direction.
+  forward=.092*(1-2*v);
+  roll=smoothstep((v-.72)/.28)*.14;
+  planted=true;
+ }else{
+  const v=(u-stance)/(1-stance);
+  forward=-.092+.184*smoothstep(v);
+  lift=Math.sin(v*Math.PI)*.055;
+  roll=-(Math.sin(Math.PI*v)*.12);
+ }
+ // Target ankle: leg fully extends on planted steps, flexes only to clear floor.
+ const thigh=.300,shin=.253,down=.546-lift;
+ const reach=clamp(Math.hypot(forward,down),.001,thigh+shin-.0008);
+ const adjustedForward=forward*reach/Math.max(.001,Math.hypot(forward,down));
+ const adjustedDown=down*reach/Math.max(.001,Math.hypot(forward,down));
+ const knee=Math.acos(clamp((reach*reach-thigh*thigh-shin*shin)/(2*thigh*shin),-1,1));
+ const alpha=Math.acos(clamp((thigh*thigh+reach*reach-shin*shin)/(2*thigh*reach),-1,1));
+ const hip=Math.atan2(adjustedForward,adjustedDown)+alpha;
+ // Ankle compensates calf angle; a little roll at push-off and landing.
+ const ankle=clamp(-hip+knee*.64+roll,-.45,.5);
+ return Object.freeze({hip,knee,ankle,forward:adjustedForward,lift,planted});
+}
 function sample(state,travel,dt,t){
- // Advance ONLY when the player actually moves on the walkable floor.
- const distance=clamp(Number(travel)||0,0,.25);
+ const distance=clamp(Number(travel)||0,0,.20);
  const time=clamp(Number(dt)||0,0,.10);
  const speed=time>0?distance/time:0;
- const strength=damping(state.blend||0,clamp(speed/1.65,0,1),time,9);
- const phase=(state.phase||0)+distance*7.30;
- const stride=Math.sin(phase),reverse=-stride;
- const leftHip=-stride*.55*strength,rightHip=stride*.55*strength;
- const leftKnee=Math.max(0,stride)*.72*strength,rightKnee=Math.max(0,reverse)*.72*strength;
- const leftAnkle=(-leftHip*.45-leftKnee*.48)*strength;
- const rightAnkle=(-rightHip*.45-rightKnee*.48)*strength;
- const arms={
-  left: -leftHip*.73,
-  right: -rightHip*.73
- };
- const bob=(Math.abs(Math.sin(phase))*.037*strength)+(1-strength)*.006*Math.sin((t||0)*2);
+ // Stable ground-speed estimate; smooth speed spikes from SwiftShader low FPS.
+ const target=clamp(speed/2.15,0,1);
+ const blend=damping(state.blend||0,target,time,target>0?8:12);
+ // One FULL left/right cycle per approximately 1.02 meters (two steps).
+ const phase=(state.phase||0)+distance*(2*Math.PI/1.02);
+ const L=leg(phase,speed),R=leg(phase+Math.PI,speed);
+ // At rest, settle each articulated leg into its original bind pose.
+ const leftHip=L.hip*blend,rightHip=R.hip*blend;
+ const leftKnee=L.knee*blend,rightKnee=R.knee*blend;
+ const leftAnkle=L.ankle*blend,rightAnkle=R.ankle*blend;
+ const shoulder=Math.sin(phase);
+ const arms={left:-shoulder*.26*blend,right:shoulder*.26*blend};
+ const bob=Math.pow(Math.sin(phase),2)*.014*blend;
+ const pelvisSway=Math.sin(phase)*.014*blend;
+ const chestSway=-pelvisSway*.6;
+ const headCounter=-pelvisSway*.8;
  return Object.freeze({
-  phase,blend:strength,speed,distance,totalDistance:(state.totalDistance||0)+distance,
-  leftHip,rightHip,leftKnee,rightKnee,leftAnkle,rightAnkle,arms,bob
+  phase,blend,speed,distance,totalDistance:(state.totalDistance||0)+distance,
+  leftHip,rightHip,leftKnee,rightKnee,leftAnkle,rightAnkle,arms,bob,pelvisSway,chestSway,headCounter,
+  foot:{left:{forward:L.forward,lift:L.lift,planted:L.planted},
+        right:{forward:R.forward,lift:R.lift,planted:R.planted}},
+  strideLength:1.02
  });
 }
-return Object.freeze({normalize,rotateFace,headingForDirection,facingDot,damping,sample});
+return Object.freeze({normalize,rotateFace,headingForDirection,facingDot,damping,leg,sample});
 });
