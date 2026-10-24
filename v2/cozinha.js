@@ -193,7 +193,7 @@ function updateAvatarAnimation(t,travel,dt){
  const gesture=actionState?Actions.pose(actionState.id,actionState.elapsed):null;
  const reaching=gesture?.reach||0;
  jointPose(a.leftArm,p.arms.left+(reaching*.08));
- let rightArm=p.arms.right-(held?.27:0)+(gesture?.armX||0);
+ let rightArm=p.arms.right-(held?.76:0)+(gesture?.armX||0); // Chest-height carrying pose so food is plainly visible in the palm.
  jointPose(a.rightArm,rightArm,0,gesture?.armZ||0);
  jointPose(a.head,gesture?.lean||0,Math.sin(t*.93)*.05,Math.sin(t*1.8)*.014);
  const period=t%5.4;

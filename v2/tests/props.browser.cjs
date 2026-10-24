@@ -24,7 +24,7 @@ test('R13 Android: take toast -> carry in right hand -> lower onto plate',{timeo
   await page.locator('#actionBtn').tap();
   await page.waitForFunction(()=>window.__hannaKitchenQA?.step===7,null,{timeout:30000});
   const held=await state();
-  console.log('R13_TOAST_IN_HAND',JSON.stringify({step:held.step,held:held.held,parent:held.carryParent,palmDistance:held.propHandDistance}));
+  console.log('R13_TOAST_IN_HAND',JSON.stringify({step:held.step,held:held.held,parent:held.carryParent,palmDistance:held.propHandDistance,front:held.heldFrontOffset}));
   assert.equal(held.held,'toast');
   assert.equal(held.carryParent,'ArmRightPivot');
   assert.ok(held.propHandDistance<.23,'Toast still misplaced: '+JSON.stringify(held));
