@@ -80,3 +80,12 @@ Babylon e loaders UMD 9.29.0 versionados em v2/vendor, sem dependência de CDN d
 - Browser completo comprova 8 etapas e proximidade objeto↔mão para leite/pão/torrada. Browser dedicado props.browser.cjs inicia legitimamente no save da etapa 6, pega torrada, leva à mesa e testa a posição em frente ao corpo.
 - Teste joystick com quatro direções após R13 APROVADO: https://github.com/lrm-lgtm/jogo-hanna/actions/runs/40122946834. Testes do último fluxo de objetos/missão ainda executando.
 Não chamar premium. Rig segmentado ainda pode ficar feio; teste visual no Samsung físico será a palavra final. PR #10 em rascunho; main/v1.9 inalterada.
+
+## R14 — revisão baseada em vídeo REAL do Samsung (24/10/2026)
+Vídeo original recebido: 65 s; o usuário mostrou porta da geladeira em looping, torrada acima da torradeira e caminhada artificial.
+- Porta: retirada CreateAndStartAnimation (loop implícito) e substituída por transição one-shot independente de FPS (0 → -1,28 rad em 820 ms), com posição final travada e sem replay ao restaurar save.
+- Torrada: excluído disco cilíndrico solto na cota y=1,50 m; nova fatia vertical de pão com casca, realmente colocada dentro da ranhura da torradeira em y=1,195 m e ejetada uma única vez até y=1,39 m (base continua abaixo da fenda em y=1,367 m). Ao servir, torrada pousa à altura correta do prato.
+- Passos: amplitude horizontal -0,092→-0,075 m, elevação do pé 5,5→3,2 cm, cadência mais baixa (ciclo de dois passos a cada 1,36 m, era 1,02 m), ombros e balanço de corpo reduzidos. Isso melhora a estética mas NÃO torna o rig um sistema profissional com malha deformada.
+- Novo módulo sem loops v2/object-motion.js e testes unitários v2/tests/object-motion.test.cjs; testes de navegador v2/tests/objects.browser.cjs verificam abertura de porta uma única vez, permanência aberta inclusive após reload de save, torrada ancorada ao slot e sem nova animação após 2,4 s.
+- Evidência CI: https://github.com/lrm-lgtm/jogo-hanna/actions/runs/40125031947 (em execução na publicação desta nota). Teste Android joystick/hip com novo limite coerente com passo mais sutil: https://github.com/lrm-lgtm/jogo-hanna/actions/runs/40125157931
+- Gate artístico ainda reprovado; repetir vídeo Samsung real antes de aprovar. Branch feature isolada, main/v1.9 intocada.
