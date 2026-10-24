@@ -163,16 +163,23 @@ for side,hip in [(-1,leftleg),(1,rightleg)]:
              (0,-.213,z-.009),(.071,-.182,z)],.006,CREAM_FABRIC,ankle)
     uv("shoe-side-heart-%s"%side,(side*.13,-.025,-.067),(.022,.020,.026),PINKDARK,ankle,24,16)
 
-# Hoodie sleeves and human-like palms use compatible arm pivots; fingers remain independent.
-for side,pivot in [(-1,leftarm),(1,rightarm)]:
-    uv("hoodie-puff-sleeve-%s"%side,(side*.009,0,-.100),(.137,.127,.160),PINK,pivot)
-    uv("hoodie-cuff-%s"%side,(side*.034,-.007,-.235),(.102,.105,.050),PINK_CUFF,pivot)
-    uv("forearm-%s"%side,(side*.044,-.005,-.345),(.080,.080,.139),SKIN,pivot)
-    uv("hand-%s"%side,(side*.057,-.023,-.478),(.079,.074,.109),SKIN,pivot)
-    uv("thumb-%s"%side,(side*.106,-.073,-.483),(.032,.040,.060),SKIN,pivot,24,16)
+# R15: articulated shoulder > elbow > wrist with a stable grip marker.
+# Meshes are parented to the joint that actually moves them, not to a stiff upper arm.
+for side,shoulder in [(-1,leftarm),(1,rightarm)]:
+    elbow=empty("ElbowLeftPivot" if side<0 else "ElbowRightPivot",
+                (side*.035,-.007,-.232),shoulder)
+    wrist=empty("WristLeftPivot" if side<0 else "WristRightPivot",
+                (side*.021,-.016,-.228),elbow)
+    grip=empty("HandLeftGrip" if side<0 else "HandRightGrip",
+               (side*.002,-.058,-.037),wrist)
+    uv("hoodie-puff-sleeve-%s"%side,(side*.009,0,-.100),(.137,.127,.160),PINK,shoulder)
+    uv("hoodie-cuff-%s"%side,(0,0,.008),(.105,.106,.049),PINK_CUFF,elbow)
+    uv("forearm-%s"%side,(side*.009,0,-.118),(.081,.081,.134),SKIN,elbow)
+    uv("hand-%s"%side,(0,0,-.019),(.079,.074,.106),SKIN,wrist)
+    uv("thumb-%s"%side,(side*.052,-.05,-.023),(.032,.039,.058),SKIN,wrist,24,16)
     for finger in range(3):
-        uv("finger-%s-%s"%(side,finger),(side*.058+(finger-1)*.034,-.050,-.563),
-           (.022,.028,.038),SKIN,pivot,20,12)
+        uv("finger-%s-%s"%(side,finger),((finger-1)*.034,-.042,-.093),
+           (.022,.028,.041),SKIN,wrist,20,12)
 
 # Head: cheeks taper subtly, huge expressive eyes, gradient of playful features.
 face_mesh=uv("face-sculpt",(0,-.012,.122),(.342,.310,.352),SKIN,head)
@@ -305,13 +312,13 @@ bpy.ops.export_scene.gltf(filepath=model_path,export_format='GLB',use_selection=
     export_yup=True,export_apply=False,export_animations=False,export_materials='EXPORT')
 print('MODEL_OK',model_path,os.path.getsize(model_path))
 info={
- 'name':'Hanna R12 — free articulated legs and pink denim style',
+ 'name':'Hanna R15 — free articulated hands and breakfast interaction rig',
  'art_contract':'v2/blender/ART_R8.md',
- 'round':'R12-articulated-hip-knee-ankle',
+ 'round':'R15-elbow-wrist-grip-anchors',
  'format':'GLB (glTF 2.0)',
  'origin':'Blender-generated original geometry; no purchased/downloaded models',
  'license':'Original project asset for Casa da Hanna',
- 'limitations':'R12 three-joint articulated legs (hips/knees/ankles), still unskinned facial rig; premium approval pending',
+ 'limitations':'Segmented hips/knees/ankles plus R15 elbows/wrists/grips, not a fully skinned professional character. Mobile art approval pending',
  'nodes':len(all_assets),
  'meshes':sum(o.type=='MESH' for o in all_assets),
  'files':['hanna-free-r8.glb','hanna-r8-front.png','hanna-r8-threequarter.png']
