@@ -54,3 +54,18 @@ Babylon e loaders UMD 9.29.0 versionados em v2/vendor, sem dependência de CDN d
 - Joystick landscape tem 94×94 CSS px e base do stick não captura eventos.
 - Teste de movimento via **gesto touchscreen Android real emulado CDP**, não clique decorativo: `v2/tests/joystick.browser.cjs` com CI isolado `hanna-v2-joystick.yml` [execução aprovada](https://github.com/lrm-lgtm/jogo-hanna/actions/runs/40070615102). Direita +0,950m X; esquerda -0,950m X; frente -0,293m X/+0,950m Z; trás +0,299m X/-0,971m Z. Dead zone, release e pausa aprovados.
 - Os testes do jogo completo 8 etapas, save, offline nesta rodada são separados e precisam de confirmação própria. Android físico não testado, portanto não afirmar ausência definitiva de bug no dispositivo real.
+
+
+## R12 — orientação e caminhada articulada (24/10/2026)
+
+**Defeito reportado em smartphone real:** Hanna deslocava-se para o lado correto, mas permanecia virada no sentido oposto; as pernas pareciam imóveis.
+
+**Correções:** `v2/blender/build_hanna_r8.py` foi modificado para produzir um novo GLB original com hierarquia **quadril → joelho → tornozelo**, preservando a roupa; o Blender exportou 94 malhas e 165 nós. O export e os nomes dos nove pivôs passaram na CI. O arquivo mantém o nome `v2/assets/hanna-free-r8.glb` apenas para não quebrar o cache/endereços anteriores; o conteúdo é R12.
+
+- `v2/gait.js`: orientação geométrica em eixo Babylon, calculada de forma independente de o modelo ter a frente em +Z, -Z ou outro vetor; ciclo de passos síncrono à distância realmente percorrida, parando gradualmente quando a Hanna para.
+- `v2/cozinha.js`: mede o vetor frontal real entre centro do rosto e pupilas importados do GLB; remove hipótese incorreta sobre "frente". Articula pernas, joelhos, tornozelos, braços e cabeça sobre quaternions **reais** do Babylon, respeitando a rotação original de cada pivô.
+- `v2/tests/gait.test.cjs`: confirma orientação nos quatro sentidos e diagonais, movimento alternado dos quadris e flexão de joelhos, e parada sem passos fantasmas.
+- `v2/tests/joystick.browser.cjs`: simula gestos de toque em Chromium Android paisagem, verifica a direção do rosto em relação ao vetor de movimento e exige ângulos reais nos quaternions dos joelhos/quadris (10°+), além de imagens capturadas **enquanto o dedo está no joystick**.
+- A primeira execução R12 revelou um sinal invertido na fórmula, com alinhamento -0,876; a fórmula corrigida passou com gesto real `40120972173`. Os testes mais rigorosos de rotação de joints da última rodada foram iniciados em `40121266549`.
+
+**Portões de aceite:** teste no Android físico ainda pendente; qualidade artística/animação premium continua reprovada (rig segmentado não equivale a animação esquelética profissional). PR #10 continua em rascunho, v1.9 main preservada.
