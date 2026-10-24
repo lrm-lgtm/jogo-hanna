@@ -774,7 +774,10 @@ async function boot(){
    carryParent:carryRoot.parent?.name||'',
    objectMotion:Object.fromEntries(Object.entries(objectMotion).map(([k,v])=>
     [k,{plays:v.plays,playing:v.playing,value:+v.value.toFixed(3)}])),
-   toasterSlotY:TOAST_SLOT.y,toastSurfaceY:visuals.get('toast')?+(visuals.get('toast').position.y+.15).toFixed(3):null,
+   toasterSlotY:TOAST_SLOT.y,
+   toastTopY:visuals.get('toast')?+(visuals.get('toast').position.y+.15).toFixed(3):null,
+   toastBottomY:visuals.get('toast')?+(visuals.get('toast').position.y-.15).toFixed(3):null,
+   doorRenderedAngle:visuals.get('door')?+visuals.get('door').rotation.y.toFixed(3):null,
    toastReadyVisible:!!visuals.get('toast')?.isEnabled(),
    frontAxis:{x:+avatarFront.x.toFixed(3),z:+avatarFront.z.toFixed(3),confidence:+faceCalibration.toFixed(3)},
    worldFace:(()=>{const v=Gait.rotateFace(avatarFront,character.rotation.y);return {x:+v.x.toFixed(3),z:+v.z.toFixed(3)}})(),
