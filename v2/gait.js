@@ -39,14 +39,14 @@ function leg(phase,speed){
  if(u<stance){
   const v=u/stance;
   // During stance, feet advance relative to the body in the opposite direction.
-  forward=.092*(1-2*v);
-  roll=smoothstep((v-.72)/.28)*.14;
+  forward=.075*(1-2*v);
+  roll=smoothstep((v-.72)/.28)*.075;
   planted=true;
  }else{
   const v=(u-stance)/(1-stance);
-  forward=-.092+.184*smoothstep(v);
-  lift=Math.sin(v*Math.PI)*.055;
-  roll=-(Math.sin(Math.PI*v)*.12);
+  forward=-.075+.15*smoothstep(v);
+  lift=Math.sin(v*Math.PI)*.032;
+  roll=-(Math.sin(Math.PI*v)*.07);
  }
  // Target ankle: leg fully extends on planted steps, flexes only to clear floor.
  const thigh=.300,shin=.253,down=.546-lift;
@@ -68,15 +68,15 @@ function sample(state,travel,dt,t){
  const target=clamp(speed/2.15,0,1);
  const blend=damping(state.blend||0,target,time,target>0?8:12);
  // One FULL left/right cycle per approximately 1.02 meters (two steps).
- const phase=(state.phase||0)+distance*(2*Math.PI/1.02);
+ const phase=(state.phase||0)+distance*(2*Math.PI/1.36);
  const L=leg(phase,speed),R=leg(phase+Math.PI,speed);
  // At rest, settle each articulated leg into its original bind pose.
  const leftHip=L.hip*blend,rightHip=R.hip*blend;
  const leftKnee=L.knee*blend,rightKnee=R.knee*blend;
  const leftAnkle=L.ankle*blend,rightAnkle=R.ankle*blend;
  const shoulder=Math.sin(phase);
- const arms={left:-shoulder*.26*blend,right:shoulder*.26*blend};
- const bob=Math.pow(Math.sin(phase),2)*.014*blend;
+ const arms={left:-shoulder*.18*blend,right:shoulder*.18*blend};
+ const bob=Math.pow(Math.sin(phase),2)*.007*blend;
  const pelvisSway=Math.sin(phase)*.014*blend;
  const chestSway=-pelvisSway*.6;
  const headCounter=-pelvisSway*.8;
@@ -85,7 +85,7 @@ function sample(state,travel,dt,t){
   leftHip,rightHip,leftKnee,rightKnee,leftAnkle,rightAnkle,arms,bob,pelvisSway,chestSway,headCounter,
   foot:{left:{forward:L.forward,lift:L.lift,planted:L.planted},
         right:{forward:R.forward,lift:R.lift,planted:R.planted}},
-  strideLength:1.02
+  strideLength:1.36
  });
 }
 return Object.freeze({normalize,rotateFace,headingForDirection,facingDot,damping,leg,sample});

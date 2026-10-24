@@ -35,7 +35,16 @@ test('grounded gait stance remains planted and swing lifts alternating feet',()=
  const stance=samples.map(s=>s[0]).filter(s=>s.planted);
  assert.ok(stance.length>125);
  assert.ok(stance.every(s=>s.lift===0));
- assert.ok(samples.some(([l,r])=>l.lift>.045&&r.planted));
- assert.ok(samples.some(([l,r])=>r.lift>.045&&l.planted));
+ assert.ok(samples.some(([l,r])=>l.lift>.025&&r.planted));
+ assert.ok(samples.some(([l,r])=>r.lift>.025&&l.planted));
  assert.ok(samples.every(([l,r])=>[l,r].every(v=>Number.isFinite(v.hip)&&Number.isFinite(v.knee)&&Number.isFinite(v.ankle))));
+});
+
+test('R14 natural stride: shorter foot lift, fewer steps per meter, no excessive puppet bounce',()=>{
+ const g=A.leg(2*Math.PI*.8,2.4);
+ assert.ok(g.lift>.01&&g.lift<.034);
+ let state={phase:0,blend:0,totalDistance:0},maxBob=0;
+ for(let i=0;i<180;i++){state=A.sample(state,.027,1/60,i/60);maxBob=Math.max(maxBob,state.bob)}
+ assert.equal(state.strideLength,1.36);
+ assert.ok(maxBob<.008,'vertical bouncing should be subtle: '+maxBob);
 });
