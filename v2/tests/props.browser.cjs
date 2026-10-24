@@ -28,6 +28,7 @@ test('R13 Android: take toast -> carry in right hand -> lower onto plate',{timeo
   assert.equal(held.held,'toast');
   assert.equal(held.carryParent,'ArmRightPivot');
   assert.ok(held.propHandDistance<.23,'Toast still misplaced: '+JSON.stringify(held));
+  assert.ok(held.heldFrontOffset>.035,'Toast must be IN FRONT of Hanna, not on her back: '+JSON.stringify(held));
   await page.screenshot({path:path.join(out,'01-torrada-na-mao.png')});
   await page.locator('#goBtn').tap();
   await page.waitForFunction(()=>window.__hannaKitchenQA?.step===7&&window.__hannaKitchenQA?.distance<.73,null,{timeout:100000});

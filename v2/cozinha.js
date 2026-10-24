@@ -754,6 +754,10 @@ async function boot(){
    held,action:actionState?{id:actionState.id,progress:+Actions.pose(actionState.id,actionState.elapsed).progress.toFixed(2),
      contact:actionState.committed}:null,interactionsCompleted,lastActionId,
    propHandDistance:handMesh?+(B.Vector3.Distance(handMesh.getBoundingInfo().boundingSphere.centerWorld,carryRoot.getAbsolutePosition())).toFixed(3):null,
+   heldFrontOffset:(()=>{
+    const f=Gait.rotateFace(avatarFront,character.rotation.y),w=carryRoot.getAbsolutePosition();
+    return +((w.x-character.position.x)*f.x+(w.z-character.position.z)*f.z).toFixed(3);
+   })(),
    carryParent:carryRoot.parent?.name||'',
    frontAxis:{x:+avatarFront.x.toFixed(3),z:+avatarFront.z.toFixed(3),confidence:+faceCalibration.toFixed(3)},
    worldFace:(()=>{const v=Gait.rotateFace(avatarFront,character.rotation.y);return {x:+v.x.toFixed(3),z:+v.z.toFixed(3)}})(),

@@ -7,6 +7,8 @@ on:
       - 'v2/gait.js'
       - 'v2/interactions.js'
       - 'v2/tests/props.browser.cjs'
+      - 'v2/tests/gait.test.cjs'
+      - 'v2/tests/interactions.test.cjs'
       - '.github/workflows/hanna-v2-props.yml'
   workflow_dispatch:
 jobs:
