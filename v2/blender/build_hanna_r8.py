@@ -286,7 +286,7 @@ bpy.context.scene.camera.data.lens=46
 bpy.context.view_layer.update()
 for label,pos in [('front',(0,-5.7,2.58)),('threequarter',(3.2,-5.5,2.45))]:
     aim_camera(pos)
-    bpy.context.scene.render.filepath=os.path.join(OUT,'hanna-'+label+'.png')
+    bpy.context.scene.render.filepath=os.path.join(OUT,'hanna-r8-'+label+'.png')
     bpy.ops.render.render(write_still=True)
     print('RENDER_OK',label,bpy.context.scene.render.filepath)
 
