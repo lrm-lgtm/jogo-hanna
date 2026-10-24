@@ -16,7 +16,7 @@ scene.imageProcessingConfiguration.toneMappingEnabled=true;
 scene.imageProcessingConfiguration.toneMappingType=B.ImageProcessingConfiguration.TONEMAPPING_ACES;
 scene.imageProcessingConfiguration.exposure=1.07;
 scene.imageProcessingConfiguration.contrast=1.13;
-const camera=new B.ArcRotateCamera('camera',-Math.PI/2.47,1.18,7.7,new B.Vector3(-.75,1.1,-.75),scene);
+const camera=new B.ArcRotateCamera('camera',-Math.PI/2.47,1.17,5.75,new B.Vector3(-.93,1.20,-.95),scene);
 camera.mode=B.Camera.PERSPECTIVE_CAMERA;
 camera.fov=.72;
 camera.minZ=.12;
@@ -166,7 +166,7 @@ const targetHalo=B.MeshBuilder.CreateTorus('targetHalo',{diameter:.93,thickness:
 targetHalo.rotation.x=Math.PI/2;targetHalo.material=M.gold;targetHalo.position.y=.08;
 targetHalo.isPickable=false;
 const haloGem=sphere('targetSparkle',[0,1.9,0],.19,M.gold);haloGem.isPickable=false;
-const cameraTarget=new B.Vector3(-.75,1.1,-.75);
+const cameraTarget=new B.Vector3(-.93,1.20,-.95);
 let modelsLoaded=0,currentStep=0,moving=false,waypoints=[],dest=null,joystick={x:0,y:0},pressed=new Set(),toastTimeout=null,frameCount=0,avgFps=0,held='',ready=false,loadErrors=[];
 const mission=new window.HannaV2Mission.BreakfastMission({storage:window.localStorage});
 const steps=window.HannaV2Mission.STEPS.map(s=>({id:s.target,label:s.text,action:s.verb,nav:s.nav,event:s.feedback,voice:s.voice,icon:s.icon,animation:s.animation}));
@@ -361,9 +361,9 @@ function updateCamera(){
  const ratio=Math.max(.43,Math.min(2.35,engine.getRenderWidth()/Math.max(1,engine.getRenderHeight())));
  const portrait=ratio<.83;
  // Third-person perspective rather than aerial dollhouse. Zoom is adjusted for a short landscape viewport.
- camera.radius=portrait?8.8:ratio>1.95?7.0:7.7;
- camera.fov=portrait?.93:ratio>1.95?.78:.72;
- camera.beta=1.18;
+ camera.radius=portrait?8.0:ratio>1.95?5.22:5.78;
+ camera.fov=portrait?.91:ratio>1.95?.72:.66;
+ camera.beta=1.17;
 }
 window.addEventListener('resize',updateCamera);
 window.addEventListener('orientationchange',()=>setTimeout(updateCamera,240));
@@ -394,11 +394,11 @@ function loop(){
  }else if(moving){moving=false;dest=null}
  updateAvatarAnimation(performance.now()/1000,manual||moving,dt);
  // Keep the character prominent but include a little mission lookahead so the target stays visible.
- const following=new B.Vector3(character.position.x*.59+.39,1.28,character.position.z+.50);
+ const following=new B.Vector3(character.position.x*.76+.04,1.20,character.position.z+.24);
  if(currentStep<8){
   const g=target().proxy.position;
-  following.x=following.x*.90+g.x*.10;
-  following.z=following.z*.78+g.z*.22;
+  following.x=following.x*.87+g.x*.13;
+  following.z=following.z*.91+g.z*.09;
  }
  if(moving&&dest){following.x=following.x*.82+dest.x*.18;following.z=following.z*.82+dest.z*.18}
  cameraTarget.copyFrom(B.Vector3.Lerp(cameraTarget,following,.055));
@@ -572,7 +572,7 @@ async function boot(){
    ready,step:currentStep,missionLength:steps.length,avatar:{x:character.position.x,z:character.position.z},
    currentTarget:target().key,distance:distanceTo(target().nav),walking:moving,pathLength:waypoints.length,
    fps:avgFps,orientation:innerHeight>innerWidth?'portrait':'landscape',modelCount:modelsLoaded,
-   artPass:window.__hannaArt?.artPass||'missing',gltfMeshCount:window.__hannaArt?.gltfMeshCount||0,artBounds:window.__hannaArt?.bbox,cameraMode:camera.mode,cameraBeta:camera.beta,
+   artPass:window.__hannaArt?.artPass||'missing',gltfMeshCount:window.__hannaArt?.gltfMeshCount||0,artBounds:window.__hannaArt?.bbox,cameraMode:camera.mode,cameraBeta:camera.beta,cameraRadius:camera.radius,
    avatarMeshCount,avatarWalkedFrames,blinkMeshCount:blinkParts.length,avatarKind:'hanna-r8-free-glb',hasGameplayRig:!!avatarPivots,
    loadErrors:loadErrors.slice(),saved:mission.restored||currentStep>0,quality:graphics.resolved,saveSchema:2
   })});

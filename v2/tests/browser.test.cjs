@@ -29,6 +29,7 @@ test('v2 desktop: real Hanna model and complete eight-step mission with saved pr
   assert.ok(current.gltfMeshCount>=45,'real imported Blender furniture must be present');
   assert.equal(current.cameraMode,0,'third-person perspective mode');
   assert.ok(current.cameraBeta>1.1,'camera should not be top-down');
+  assert.ok(current.cameraRadius<6,'camera should feature playable Hanna, not aerial dollhouse');
   await page.screenshot({path:path.join(screenshots,'desktop-inicial.png')});
   assert.equal(current.modelCount,23);
   for(let step=0;step<8;step++){
