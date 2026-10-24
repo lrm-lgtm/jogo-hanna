@@ -44,7 +44,8 @@ jobs:
           gltf=json.loads(model[offset:offset+jlen])
           names={o.get('name') for o in gltf.get('nodes',[])}
           for required in ['HannaRig','HeadPivot','ArmLeftPivot','ArmRightPivot',
-                            'LegLeftPivot','LegRightPivot','hoodie-body','denim-bib',
+                            'LegLeftPivot','LegRightPivot','KneeLeftPivot','KneeRightPivot',
+                            'AnkleLeftPivot','AnkleRightPivot','hoodie-body','denim-bib',
                             'signature-pink-hair-bow--1']:
             assert required in names,('missing',required)
           assert len(gltf.get('meshes',[]))>=75

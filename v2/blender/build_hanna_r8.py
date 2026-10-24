@@ -143,20 +143,26 @@ for angle in range(2):
     uv("short-heart-lobe-%s"%angle,(-.206+angle*.067,.203,.775),
       (.051,.015,.046),JACKET_LOVE,root,24,16)
 hearttip=uv("short-heart-point",(-.174,.205,.743),(.039,.011,.038),JACKET_LOVE,root,20,12)
-# Matching pastel high-top shoes and visible calves, all attached to actual gait pivots.
-for side,pivot in [(-1,leftleg),(1,rightleg)]:
-    uv("warm-skin-upper-leg-%s"%side,(0,0,-.152),(.102,.105,.214),SKIN,pivot)
-    uv("natural-knee-%s"%side,(0,0,-.317),(.095,.091,.086),SKIN,pivot)
-    uv("natural-calf-%s"%side,(0,-.002,-.417),(.079,.080,.149),SKIN,pivot)
-    uv("sock-rib-%s"%side,(0,-.010,-.520),(.106,.106,.067),CREAM_FABRIC,pivot)
-    uv("pink-boot-upper-%s"%side,(0,-.025,-.601),(.129,.169,.125),PINKLIGHT,pivot)
-    uv("pink-boot-soft-sole-%s"%side,(0,-.075,-.673),(.146,.192,.032),SOLE,pivot)
-    uv("pink-boot-toe-%s"%side,(0,-.188,-.644),(.128,.063,.054),CREAM_FABRIC,pivot)
+# R12: real HIERARCHICAL articulated legs. Hip (existing) -> knee -> ankle.
+# The old GLB attached every calf/shoe to the hip so the entire leg swung as a rigid
+# piece; an animation could never bend the knee, regardless of Babylon keyframes.
+for side,hip in [(-1,leftleg),(1,rightleg)]:
+    knee=empty("KneeLeftPivot" if side<0 else "KneeRightPivot",(0,0,-.300),hip)
+    ankle=empty("AnkleLeftPivot" if side<0 else "AnkleRightPivot",(0,0,-.253),knee)
+    # Hip owns the thigh, knee owns shin, ankle owns shoe. Coordinates local to pivots.
+    uv("thigh-segment-%s"%side,(0,0,-.143),(.103,.109,.196),SKIN,hip)
+    uv("kneecap-%s"%side,(0,-.017,-.008),(.101,.100,.085),SKIN,knee)
+    uv("shin-segment-%s"%side,(0,-.009,-.113),(.085,.092,.153),SKIN,knee)
+    uv("sock-rib-%s"%side,(0,-.010,-.018),(.107,.106,.054),CREAM_FABRIC,ankle)
+    uv("pink-boot-upper-%s"%side,(0,-.025,-.076),(.132,.169,.123),PINKLIGHT,ankle)
+    uv("pink-boot-soft-sole-%s"%side,(0,-.075,-.147),(.148,.192,.034),SOLE,ankle)
+    uv("pink-boot-toe-%s"%side,(0,-.190,-.114),(.129,.064,.057),CREAM_FABRIC,ankle)
     for k in range(3):
-        z=-.555-k*.022
-        line("shoe-cross-lace-%s-%s"%(side,k),[(-.071,-.183,z),
-             (0,-.212,z-.009),(.071,-.183,z)],.006,CREAM_FABRIC,pivot)
-    uv("shoe-side-heart-%s"%side,(side*.13,-.024,-.588),(.021,.020,.026),PINKDARK,pivot,24,16)
+        z=-.036-k*.023
+        line("shoe-cross-lace-%s-%s"%(side,k),[(-.071,-.182,z),
+             (0,-.213,z-.009),(.071,-.182,z)],.006,CREAM_FABRIC,ankle)
+    uv("shoe-side-heart-%s"%side,(side*.13,-.025,-.067),(.022,.020,.026),PINKDARK,ankle,24,16)
+
 # Hoodie sleeves and human-like palms use compatible arm pivots; fingers remain independent.
 for side,pivot in [(-1,leftarm),(1,rightarm)]:
     uv("hoodie-puff-sleeve-%s"%side,(side*.009,0,-.100),(.137,.127,.160),PINK,pivot)
@@ -299,13 +305,13 @@ bpy.ops.export_scene.gltf(filepath=model_path,export_format='GLB',use_selection=
     export_yup=True,export_apply=False,export_animations=False,export_materials='EXPORT')
 print('MODEL_OK',model_path,os.path.getsize(model_path))
 info={
- 'name':'Hanna R8 — free reference-inspired pink outfit pilot',
+ 'name':'Hanna R12 — free articulated legs and pink denim style',
  'art_contract':'v2/blender/ART_R8.md',
- 'round':'R8-pink-hoodie-blue-denim',
+ 'round':'R12-articulated-hip-knee-ankle',
  'format':'GLB (glTF 2.0)',
  'origin':'Blender-generated original geometry; no purchased/downloaded models',
  'license':'Original project asset for Casa da Hanna',
- 'limitations':'Segmented pivot animations, no facial blendshapes; premium approval and device checks pending',
+ 'limitations':'R12 three-joint articulated legs (hips/knees/ankles), still unskinned facial rig; premium approval pending',
  'nodes':len(all_assets),
  'meshes':sum(o.type=='MESH' for o in all_assets),
  'files':['hanna-free-r8.glb','hanna-r8-front.png','hanna-r8-threequarter.png']
