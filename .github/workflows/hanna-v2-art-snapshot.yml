@@ -19,6 +19,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Static JS validation before downloading Chromium
+        run: node --check v2/cozinha.js && node --check v2/quality.js && node --check v2/premium-corner.js
       - name: Install Chromium software WebGL
         run: |
           npm install --no-save --no-audit --no-fund playwright@1.56.1

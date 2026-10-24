@@ -462,7 +462,7 @@ async function loadRoundedKitchenArt(){
   const bb=m.getBoundingInfo().boundingBox;
   min.minimizeInPlace(bb.minimumWorld);max.maximizeInPlace(bb.maximumWorld);
   m.isPickable=false;m.receiveShadows=true;
-  if(/B2_(table|chair|fridge)/.test(m.name)) // Avoid room-filling cabinet shadow castsshadow.addShadowCaster(m);
+  if(/B2_(table|chair|fridge)/.test(m.name))shadow.addShadowCaster(m); // Exclude cabinets
  }
  // Detect a Blender coordinate conversion mistake instead of delivering mirrored/scaled furniture.
  const fridgeNode=result.transformNodes.find(n=>n.name?.includes('B2_fridge_enclosure'))||
