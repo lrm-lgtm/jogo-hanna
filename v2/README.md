@@ -46,3 +46,11 @@ Babylon e loaders UMD 9.29.0 versionados em v2/vendor, sem dependência de CDN d
 - R9.1 corrige para `hardwareScalingLevel = 1 / min(perfil, DPR, limite de framebuffer)`. Exemplo esperado de perfil médio: 852 × 393 CSS deve gerar cerca de **1576 × 727 pixels** internos. A prova será o log de screenshot CI, não o valor idealizado.
 - Testes de missão usam perfil baixo para evitar confundir sobrecarga do SwiftShader CPU com lógica da missão; screenshots emulados DPR3 testam render real do perfil automático separadamente.
 - Arte e rig premium continuam pendentes, mesmo com imagem limpa.
+
+## Joystick R10 — controle Android de verdade (24/10/2026)
+- Feedback de jogabilidade com imagens reais do usuário: joystick parece incorreto perto da geladeira. A implementação antiga normalizava movimento mínimo para velocidade máxima, sem dead zone e com reset incompleto de pointer capture.
+- Novo `v2/controls.js`: analógico proporcional, zona morta 12%, curva 360°, cálculo no referencial da câmera, interpolação de ângulo e entrada suave; unitários em `v2/tests/controls.test.cjs`.
+- `v2/cozinha.js`: usa velocidade real proporcional ao gesto; rotação segue o deslocamento efetivo, liberando captura em pause, blur, visibilitychange, pointercancel/up/lostpointercapture. QA read-only expõe `joystick` e `manualMeters`.
+- Joystick landscape tem 94×94 CSS px e base do stick não captura eventos.
+- Teste de movimento via **gesto touchscreen Android real emulado CDP**, não clique decorativo: `v2/tests/joystick.browser.cjs` com CI isolado `hanna-v2-joystick.yml` [execução aprovada](https://github.com/lrm-lgtm/jogo-hanna/actions/runs/40070615102). Direita +0,950m X; esquerda -0,950m X; frente -0,293m X/+0,950m Z; trás +0,299m X/-0,971m Z. Dead zone, release e pausa aprovados.
+- Os testes do jogo completo 8 etapas, save, offline nesta rodada são separados e precisam de confirmação própria. Android físico não testado, portanto não afirmar ausência definitiva de bug no dispositivo real.
