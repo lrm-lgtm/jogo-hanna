@@ -43,6 +43,8 @@ test('Android 360° touch: deadzone, right/left, up/down, release and pause',{ti
   }
   let start=await qa();
   a.equal(start.joystick.active,false);
+  a.ok(start.cutawayHidden?.includes('leftWall'),'foreground side wall must not obscure Hanna');
+  a.ok(start.cameraFrame?.visible,'Hanna head must initially be within the camera safe area: '+JSON.stringify(start.cameraFrame));
   await touch(2,2,450);
   let now=await qa();
   a.ok(length(movement(start,now))<.08,'jitter in the dead zone must not run at full speed');
@@ -53,6 +55,7 @@ test('Android 360° touch: deadzone, right/left, up/down, release and pause',{ti
    const prev=await qa();
    const gesture=await touch(dx,dy,770);
    const next=gesture.after;
+   a.ok(next.cameraFrame?.visible,name+' moved Hanna outside frame: '+JSON.stringify(next.cameraFrame));
    const v=movement(prev,next);
    a.ok(length(v)>.11,name+' must move Hanna in the world, not only animate the knob: '+JSON.stringify(v));
    directions.push(v);
