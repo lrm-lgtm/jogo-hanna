@@ -6,8 +6,8 @@ if(!B){el('loadDetail').textContent='Não foi possível carregar Babylon.js. Ver
 const scene=new B.Scene(new B.Engine(canvas,true,{adaptToDeviceRatio:true,stencil:true}));
 const engine=scene.getEngine();
 const quality=window.HannaV2Quality,Controls=window.HannaV2Controls,Cam=window.HannaV2Camera,
- Gait=window.HannaV2Gait,Actions=window.HannaV2Actions;
-if(!Controls||!Cam||!Gait||!Actions)throw new Error('Controles, câmera ou gestos não foram carregados');
+ Gait=window.HannaV2Gait,Actions=window.HannaV2Actions,Motion=window.HannaObjectMotion;
+if(!Controls||!Cam||!Gait||!Actions||!Motion)throw new Error('Controles, câmera ou animações de objetos não foram carregados');
 const graphics=quality.select(quality.load(window.localStorage),{
  mobile:/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent),
  width:innerWidth,memory:navigator.deviceMemory||0,cores:navigator.hardwareConcurrency||4
@@ -106,6 +106,8 @@ box('windowMullion',[1.78,2.48,2.77],[.055,.76,.08],M.trim);
 for(let i=0;i<4;i++)sphere('wallFlower'+i,[-.1+i*.16,2.56,2.77],.095,i%2?M.berry:M.gold);
 const roomRoot=new B.TransformNode('kitchenModelImports',scene);
 const objects=new Map(),visuals=new Map();
+const objectMotion={door:Motion.create('door'),toast:Motion.create('toast'),serve:Motion.create('serve')};
+const TOAST_SLOT={x:1.08,y:1.367,z:1.55};
 const character=new B.TransformNode('HannaCharacter',scene);
 character.position.set(-1.65,0,-2.03);
 character.rotation.y=0; // Neutral yaw for calibrating actual imported GLB frontal direction.
@@ -288,16 +290,19 @@ function updateAction(){
 }
 function updateVisuals(){
  const fridgeOpen=currentStep>=1;
- if(visuals.get('door'))visuals.get('door').rotation.y=fridgeOpen?-1.28:0;
+ if(visuals.get('door')&&!objectMotion.door.playing)
+  visuals.get('door').rotation.y=fridgeOpen?Motion.SETUP.door.to:Motion.SETUP.door.from;
  if(visuals.get('fridgeShelves'))visuals.get('fridgeShelves').setEnabled(fridgeOpen);
  objects.get('milk').proxy.isPickable=currentStep===1;
  objects.get('bread').proxy.isPickable=currentStep===3;
  objects.get('toast').proxy.isPickable=currentStep===6;
  const milk=visuals.get('milk');if(milk)milk.setEnabled(currentStep===1);
  const bread=visuals.get('bread');if(bread)bread.setEnabled(currentStep<=3);
- const toast=visuals.get('toast');if(toast)toast.setEnabled(currentStep===6);
+ const toast=visuals.get('toast');
+ if(toast){toast.setEnabled(currentStep===6);if(!objectMotion.toast.playing)toast.position.y=Motion.SETUP.toast.to;}
  const milkTable=visuals.get('milkTable');if(milkTable)milkTable.setEnabled(currentStep>=3);
- const toastTable=visuals.get('toastTable');if(toastTable)toastTable.setEnabled(currentStep>=8);
+ const toastTable=visuals.get('toastTable');
+ if(toastTable){toastTable.setEnabled(currentStep>=8);if(!objectMotion.serve.playing)toastTable.position.y=Motion.SETUP.serve.to;}
  held=currentStep===2?'milk':currentStep===4?'bread':currentStep===7?'toast':'';
  for(const [kind,group] of Object.entries(carried))group.setEnabled(kind===held);
  const goal=target();
@@ -318,27 +323,25 @@ function commitAction(state){
  updateVisuals();updateHUD();setInfo('✨ '+s.event,2900);
  audio()?.beep(previous===5?880:620,.15);audio()?.speak(s.event);
  if(previous===0&&visuals.get('door')){
-  visuals.get('door').rotation.y=0;
-  B.Animation.CreateAndStartAnimation('openFridge',visuals.get('door'),'rotation.y',60,32,0,-1.28,0);
+  Motion.start(objectMotion.door);
+  visuals.get('door').rotation.y=objectMotion.door.value;
  }
  if(previous===5){
-  // Toast must pop OUT of the toaster after pressing its button, not materialize in mid-air.
   const glow=visuals.get('toasterGlow');if(glow)glow.material=M.gold;
-  const toasted=visuals.get('toast');
-  if(toasted){
-   toasted.position.y=-.18;
-   B.Animation.CreateAndStartAnimation('toastPop',toasted,'position.y',60,27,-.18,0,0);
-  }
+  const toast=visuals.get('toast');
+  if(toast){Motion.start(objectMotion.toast);toast.position.y=objectMotion.toast.value}
  }
  if(previous===7){
-  // Serving happens at hand contact; plate receives the toast with a soft placement.
   const served=visuals.get('toastTable');
-  if(served){
-   served.position.y=.14;
-   B.Animation.CreateAndStartAnimation('placeToastOnTable',served,'position.y',60,24,.14,0,0);
-  }
+  if(served){Motion.start(objectMotion.serve);served.position.y=objectMotion.serve.value}
  }
  if(currentStep===8)setTimeout(()=>{el('finish').hidden=false},420);
+}
+function updateObjectAnimations(dt){
+ const door=visuals.get('door'),toast=visuals.get('toast'),served=visuals.get('toastTable');
+ if(door&&objectMotion.door.playing)door.rotation.y=Motion.tick(objectMotion.door,dt);
+ if(toast&&objectMotion.toast.playing)toast.position.y=Motion.tick(objectMotion.toast,dt);
+ if(served&&objectMotion.serve.playing)served.position.y=Motion.tick(objectMotion.serve,dt);
 }
 function stepAction(){
  if(paused||currentStep>=8||actionState)return;
@@ -549,6 +552,7 @@ function loop(){
   else if(!walk(dx,dz,Math.min(dt,Math.hypot(dx,dz)/2.45))){waypoints=[];moving=false;setInfo('Não consegui chegar. Experimente o joystick.')}
  }else if(moving){moving=false;dest=null}
  updateActionSequence(actualDt);
+ updateObjectAnimations(actualDt);
  updateAvatarAnimation(performance.now()/1000,lastFrameMeters,dt);
  // Child-first framing: real frame-time follow + slight goal lead, never let a wall take the foreground.
  const navTarget=currentStep<8?target().proxy.position:character.position;
@@ -706,10 +710,15 @@ async function assets(){
  const slot=box('toasterSlot',[1.08,1.367,1.55],[.32,.006,.08],M.hair);slot.parent=toaster;
  visuals.set('toasterGlow',top);
  const toast=new B.TransformNode('toastReady',scene);
- cylinder('toastedBread',[1.10,1.50,1.55],.31,.12,M.gold,10).parent=toast;
+ toast.position.set(TOAST_SLOT.x,Motion.SETUP.toast.from,TOAST_SLOT.z);
+ // Vertical bread slice starts inside the toaster's real slot (1.367m).
+ const crust=B.MeshBuilder.CreateBox('toastCrust',{width:.255,height:.30,depth:.055},scene);
+ crust.parent=toast;crust.material=M.wood;crust.isPickable=false;
+ const crumb=B.MeshBuilder.CreateBox('toastGoldenCenter',{width:.219,height:.258,depth:.062},scene);
+ crumb.parent=toast;crumb.material=M.gold;crumb.isPickable=false;
  visuals.set('toast',toast);
  const served=new B.TransformNode('servedToast',scene);
- cylinder('servedBread',[-.03,1.17,-.69],.30,.09,M.gold,10).parent=served;
+ cylinder('servedBread',[-.03,1.10,-.69],.30,.09,M.gold,10).parent=served;
  visuals.set('toastTable',served);
  if(!breadModel)throw new Error('O modelo do pão está ausente');
  window.HannaKitchenArt.rebuild({B,scene,M,box,sphere,cylinder,visuals,shadow,graphics});
@@ -735,7 +744,11 @@ async function boot(){
  try{
   if(!B.SceneLoader)throw new Error('Babylon GLTF Loader não está disponível');
   await assets();
-  ready=true;updateVisuals();updateHUD();loading.hidden=true;
+  // Restored saves must load settled; opening animations never replay on reload.
+ Motion.settle(objectMotion.door,currentStep>=1);
+ Motion.settle(objectMotion.toast,currentStep>=6);
+ Motion.settle(objectMotion.serve,currentStep>=8);
+ ready=true;updateVisuals();updateHUD();loading.hidden=true;
   document.dispatchEvent(new CustomEvent('hanna:v2:ready'));
   // Pilot QA exposes immutable measurements, never an editing/teleport command.
   Object.defineProperty(window,'__hannaKitchenQA',{get:()=>Object.freeze({
@@ -759,6 +772,10 @@ async function boot(){
     return +((w.x-character.position.x)*f.x+(w.z-character.position.z)*f.z).toFixed(3);
    })(),
    carryParent:carryRoot.parent?.name||'',
+   objectMotion:Object.fromEntries(Object.entries(objectMotion).map(([k,v])=>
+    [k,{plays:v.plays,playing:v.playing,value:+v.value.toFixed(3)}])),
+   toasterSlotY:TOAST_SLOT.y,toastSurfaceY:visuals.get('toast')?+(visuals.get('toast').position.y+.15).toFixed(3):null,
+   toastReadyVisible:!!visuals.get('toast')?.isEnabled(),
    frontAxis:{x:+avatarFront.x.toFixed(3),z:+avatarFront.z.toFixed(3),confidence:+faceCalibration.toFixed(3)},
    worldFace:(()=>{const v=Gait.rotateFace(avatarFront,character.rotation.y);return {x:+v.x.toFixed(3),z:+v.z.toFixed(3)}})(),
    faceDot:Math.hypot(lastTravel.x,lastTravel.z)>0?+Gait.facingDot(avatarFront,character.rotation.y,lastTravel.x,lastTravel.z).toFixed(3):null,
