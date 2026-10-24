@@ -1,0 +1,45 @@
+name: Hanna v2 - real toast hand and table interactions
+on:
+  push:
+    branches: [feature/cozinha-3d-v2-20261022]
+    paths:
+      - 'v2/cozinha.js'
+      - 'v2/gait.js'
+      - 'v2/interactions.js'
+      - 'v2/tests/props.browser.cjs'
+      - '.github/workflows/hanna-v2-props.yml'
+  workflow_dispatch:
+jobs:
+  props:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Static JS preflight
+        run: |
+          node --check v2/cozinha.js
+          node --check v2/interactions.js
+          node --test v2/tests/interactions.test.cjs v2/tests/gait.test.cjs
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve local offline-capable PWA
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/hanna-r13-objects.log 2>&1 &
+          for n in {1..30}; do
+            curl -fsS http://127.0.0.1:8765/v2/index.html >/dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Verify real right-hand carry and serving action
+        run: node --test v2/tests/props.browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hanna-r13-real-toast-props
+          path: artifacts/hanna-v2-r13-objects/
+          retention-days: 30
+          if-no-files-found: warn
