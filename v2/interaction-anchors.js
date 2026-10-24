@@ -6,9 +6,9 @@ const byStep=Object.freeze({
 'take-milk':{stand:[-2.95,.92],hand:[-3.00,1.28,1.30],kind:'pick',item:'milk'},
 'serve-milk':{stand:[-.58,-1.57],hand:[-.65,1.23,-1.17],kind:'place',item:'milk'},
 'take-bread':{stand:[1.63,.94],hand:[1.63,1.21,1.45],kind:'pick',item:'bread'},
-'insert-bread':{stand:[1.35,.94],hand:[1.28,1.37,1.44],kind:'place',item:'bread'},
-'turn-on-toaster':{stand:[1.35,.94],hand:[1.30,1.22,1.43],kind:'press',item:null},
-'take-toast':{stand:[1.35,.94],hand:[1.20,1.39,1.46],kind:'pick',item:'toast'},
+'insert-bread':{stand:[1.35,.91],hand:[1.28,1.37,1.44],kind:'place',item:'bread'},
+'turn-on-toaster':{stand:[1.35,.91],hand:[1.30,1.22,1.43],kind:'press',item:null},
+'take-toast':{stand:[1.35,.91],hand:[1.20,1.39,1.46],kind:'pick',item:'toast'},
 'serve-toast':{stand:[-.35,-1.57],hand:[-.12,1.15,-1.18],kind:'place',item:'toast'}
 });
 function distance2(x,z,px,pz){return Math.hypot(x-px,z-pz)}
