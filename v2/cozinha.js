@@ -172,6 +172,45 @@ function jointPose(node,x=0,y=0,z=0){
  if(node.rotationQuaternion)node.rotationQuaternion.copyFrom(result);
  else node.rotationQuaternion=result;
 }
+// Calibrate each gesture against the TRUE exported glTF grip node, not assumed axes.
+ // Bounded coordinate descent runs ONCE when Hanna reaches her stand spot; no per-frame IK search.
+function solveHandIK(contact){
+ const a=avatarPivots,target=new B.Vector3(...contact),lo=[-2.7,-.95,-.85,-2.05,-.85],
+ hi=[.65,.95,.85,1.45,.85];
+ const pose=x=>{
+  jointPose(a.rightArm,x[0],x[1],x[2]);
+  jointPose(a.rightElbow,x[3]);
+  jointPose(a.rightWrist,x[4]);
+  character.computeWorldMatrix(true);
+  avatarRig.computeWorldMatrix(true);
+  a.rightArm.computeWorldMatrix(true);
+  a.rightElbow.computeWorldMatrix(true);
+  a.rightWrist.computeWorldMatrix(true);
+  a.grip.computeWorldMatrix(true);
+  const p=a.grip.getAbsolutePosition();
+  return B.Vector3.DistanceSquared(p,target)+.0003*(x[2]*x[2]+x[4]*x[4]);
+ };
+ let best=null,bestScore=Infinity;
+ for(const seed of [[-1.40,0,0,-.12,-.05],[-1.75,0,0,.55,0]]){
+  const x=seed.slice();let score=pose(x);
+  for(const delta of [.62,.29,.13,.056,.025]){
+   for(const axis of [0,1,2,3,4]){
+    let bv=x[axis],bs=score;
+    for(const sign of [-1,1]){
+     const trial=Math.max(lo[axis],Math.min(hi[axis],bv+sign*delta));
+     x[axis]=trial;
+     const v=pose(x);
+     if(v<bs){bs=v;bv=trial}
+    }
+    x[axis]=bv;score=pose(x);
+   }
+   if(score<.0064)break;
+  }
+  if(score<bestScore){bestScore=score;best=x.slice()}
+  if(bestScore<.0064)break;
+ }
+ return {angles:best,estimatedError:+Math.sqrt(Math.max(0,bestScore)).toFixed(3)};
+}
 function jointActualDegrees(node){
  const rest=avatarRest.get(node),q=node?.rotationQuaternion;
  if(!rest||!q)return 0;
@@ -192,26 +231,15 @@ function updateAvatarAnimation(t,travel,dt){
  const gesture=actionState&&!actionState.approaching?Actions.pose(actionState.id,actionState.elapsed):null;
  const reach=gesture?.reach||0;
  jointPose(a.leftArm,p.arms.left);
- let rightArm=p.arms.right-(held?.76:0);
- let elbow=.11,wrist=-.11;
- if(actionState&&reach>.005){
-  // Constrained two-link reach for the Blender arm: shoulder .232m + forearm .228m.
-  const c=actionState.contact;
-  const shoulder=a.rightArm;shoulder.computeWorldMatrix(true);
-  const pivot=shoulder.getAbsolutePosition();
-  const front=Gait.rotateFace(avatarFront,character.rotation.y);
-  const forward=(c.hand[0]-pivot.x)*front.x+(c.hand[2]-pivot.z)*front.z;
-  const drop=pivot.y-c.hand[1];
-  const d=Math.max(.12,Math.min(.456,Math.hypot(forward,drop)));
-  const bent=Math.acos(Math.max(-1,Math.min(1,(d*d-.232*.232-.228*.228)/(2*.232*.228))));
-  const shoulderPitch=-Math.atan2(Math.max(.04,forward),drop)+
-   Math.acos(Math.max(-1,Math.min(1,(.232*.232+d*d-.228*.228)/(2*.232*d))));
-  rightArm=rightArm*(1-reach)+shoulderPitch*reach;
-  elbow=-bent*reach;
-  wrist=(bent*.40-shoulderPitch*.22)*reach;
-  lastHandTarget=c.hand;
- }
- jointPose(a.rightArm,rightArm,0,gesture?.armZ||0);
+ const naturalArm=p.arms.right-(held?.76:0);
+ const aim=actionState?.ik?.angles;
+ const lerp=(start,end,f)=>start+(end-start)*f;
+ const rightArm=aim?lerp(naturalArm,aim[0],reach):naturalArm;
+ const shoulderYaw=aim?aim[1]*reach:0,shoulderRoll=aim?aim[2]*reach:0;
+ const elbow=aim?lerp(.11,aim[3],reach):.11;
+ const wrist=aim?lerp(-.11,aim[4],reach):-.11;
+ if(actionState&&reach>.005)lastHandTarget=actionState.contact.hand;
+ jointPose(a.rightArm,rightArm,shoulderYaw,shoulderRoll);
  jointPose(a.rightElbow,elbow);
  jointPose(a.rightWrist,wrist);
  jointPose(a.leftElbow,.08);
@@ -398,6 +426,7 @@ function updateActionSequence(dt){
   character.rotation.y=Controls.smoothAngle(character.rotation.y,yaw,Math.min(dt,.055),12);
   const aligned=Gait.facingDot(avatarFront,character.rotation.y,aim.x,aim.z);
   if(aligned<.985)return;
+  state.ik=solveHandIK(state.contact.hand);
   state.approaching=false;state.elapsed=0;
  }
  state.elapsed+=Math.min(.14,dt);
@@ -822,6 +851,7 @@ async function boot(){
    carryParent:carryRoot.parent?.name||'',
    interaction:{id:actionState?.id||lastActionId,approaching:!!actionState?.approaching,
     stageDistance:lastStandDistance,contactError:lastContactError,
+    calibratedReach:actionState?.ik?.estimatedError??null,
     closestError:Number.isFinite(closestInteractionError)?+closestInteractionError.toFixed(3):null,
     target:lastHandTarget},
    objectMotion:Object.fromEntries(Object.entries(objectMotion).map(([k,v])=>
