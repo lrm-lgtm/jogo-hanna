@@ -33,11 +33,17 @@ test('v2 desktop: real Hanna model and complete eight-step mission with saved pr
   assert.equal(current.cameraMode,0,'third-person perspective mode');
   assert.ok(current.cameraBeta>1.1,'camera should not be top-down');
   assert.ok(current.cameraRadius<6,'camera should feature playable Hanna, not aerial dollhouse');
+  assert.ok(current.cutawayHidden.includes('leftWall'),'side wall must not block character/camera');
+  assert.ok(current.cameraFrame?.visible,'character must start visibly framed: '+JSON.stringify(current.cameraFrame));
   await page.screenshot({path:path.join(screenshots,'desktop-inicial.png')});
   assert.equal(current.modelCount,current.quality==='baixo'?19:23); // decorative kit assets are intentionally skipped in low mode
   for(let step=0;step<8;step++){
    await page.locator('#goBtn').click();
    await page.waitForFunction(n=>window.__hannaKitchenQA?.step===n&&window.__hannaKitchenQA.distance<.72,step,{timeout:33000});
+   // One extra render permits the camera to settle on SwiftShader CPU at low FPS.
+   await page.waitForTimeout(500);
+   const approach=await qa(page);
+   assert.ok(approach.cameraFrame?.visible,'Hanna obscured or outside camera frame at step '+step+': '+JSON.stringify(approach.cameraFrame));
    if(step===0)await page.screenshot({path:path.join(screenshots,'fridge-approach.png')});
    if(step===4)await page.screenshot({path:path.join(screenshots,'toaster-approach.png')});
    if(step===7)await page.screenshot({path:path.join(screenshots,'table-approach.png')});
