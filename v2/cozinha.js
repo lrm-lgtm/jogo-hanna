@@ -38,7 +38,7 @@ const pipeline=new B.DefaultRenderingPipeline('premiumCartoon',true,scene,[camer
 pipeline.samples=graphics.samples;
 pipeline.fxaaEnabled=graphics.samples===1;
 pipeline.sharpenEnabled=graphics.sharpen;
-if(pipeline.sharpenEnabled){pipeline.sharpen.edgeAmount=.16;pipeline.sharpen.colorAmount=1.0 // 1.0 preserves original color; .42 was a severe brightness regression}
+if(pipeline.sharpenEnabled){pipeline.sharpen.edgeAmount=.16;pipeline.sharpen.colorAmount=1.0;} // Preserve original luminance while adding subtle edge detail}
 pipeline.bloomEnabled=graphics.bloom;
 if(graphics.bloom){pipeline.bloomWeight=.055;pipeline.bloomThreshold=1.2}
 const shadow=new B.ShadowGenerator(graphics.shadow,sun);
