@@ -1,0 +1,47 @@
+name: Hanna R7 - Blender Rigged Avatar Anatomy Inspection
+on:
+  push:
+    branches: [feature/hanna3-r6-cc0-avatar-base-20261022]
+    paths:
+      - 'r6-cc0-base/inspect_blender.py'
+      - '.github/workflows/hanna3-r7-vrm-adaptation.yml'
+permissions:
+  contents: write
+jobs:
+  anatomy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender and python3-numpy (fully free)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq blender python3-numpy
+      - name: Import actual VRM container and map mesh and rig
+        run: |
+          blender --background --factory-startup --python-exit-code 1 --python r6-cc0-base/inspect_blender.py > /tmp/inspect-blender.log 2>&1 || { tail -100 /tmp/inspect-blender.log; exit 1; }
+          grep R6_VROID_IMPORT_OK /tmp/inspect-blender.log
+          python3 - <<'PY'
+          import json
+          m=json.load(open('r6-cc0-base/inventory.json'))
+          assert m['mesh_count']>=3 # Blender merges imported VRM draw calls into four geometry objects (not 124 Babylon runtime meshes)
+          assert m['bone_count']>50
+          print('RIGGED_MESH_MAPPING_VERIFIED',m['mesh_count'],m['bone_count'])
+          PY
+      - name: Preserve anatomy inventory for iterative, no-image model adaptation
+        if: success() && github.actor != 'github-actions[bot]'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add r6-cc0-base/inventory.json
+          if ! git diff --cached --quiet; then
+            git commit -m "evidence(hanna): map CC0 rig and mesh parts for targeted customization [skip ci]"
+            git push origin "HEAD:$GITHUB_REF_NAME"
+          fi
+      - name: Upload inventory
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hanna-r7-cc0-character-anatomy
+          path: r6-cc0-base/inventory.json
+          if-no-files-found: warn

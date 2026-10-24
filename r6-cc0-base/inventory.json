@@ -1,0 +1,390 @@
+{
+  "source": "madjin/vrm-samples pinned HairSample_Female CC0",
+  "objects": [
+    {
+      "name": "Body",
+      "vertices": 7131,
+      "polygons": 11526,
+      "materials": [
+        "F00_002_02_Body_00_SKIN",
+        "F00_002_01_Tops_01_CLOTH",
+        "F00_002_01_Shoes_01_CLOTH"
+      ],
+      "dimensions": [
+        1.384,
+        0.4704,
+        1.6294
+      ],
+      "has_armature": true,
+      "shapekeys": 0
+    },
+    {
+      "name": "Face",
+      "vertices": 2361,
+      "polygons": 3158,
+      "materials": [
+        "F00_000_00_FaceMouth_00_FACE",
+        "F00_000_00_EyeWhite_00_EYE",
+        "F00_000_00_FaceEyeline_00_FACE",
+        "F00_000_00_FaceEyelash_00_FACE",
+        "F00_000_00_FaceBrow_00_FACE",
+        "F00_000_00_EyeIris_00_EYE",
+        "F00_000_00_EyeHighlight_00_EYE",
+        "F00_000_00_Face_00_SKIN",
+        "F00_000_00_EyeExtra_01_EYE"
+      ],
+      "dimensions": [
+        0.2165,
+        0.1478,
+        0.2321
+      ],
+      "has_armature": true,
+      "shapekeys": 42
+    },
+    {
+      "name": "Hair001",
+      "vertices": 10028,
+      "polygons": 12384,
+      "materials": [
+        "F00_000_Hair_00_HAIR_01",
+        "F00_000_Hair_00_HAIR_02"
+      ],
+      "dimensions": [
+        0.3882,
+        0.2472,
+        0.3523
+      ],
+      "has_armature": true,
+      "shapekeys": 0
+    },
+    {
+      "name": "Icosphere",
+      "vertices": 42,
+      "polygons": 80,
+      "materials": [],
+      "dimensions": [
+        1.9021,
+        2.0,
+        2.0
+      ],
+      "has_armature": false,
+      "shapekeys": 0
+    }
+  ],
+  "mesh_count": 4,
+  "bones": [
+    "Root",
+    "J_Bip_C_Hips",
+    "J_Sec_L_SkirtSide0",
+    "J_Sec_L_SkirtSide1",
+    "J_Sec_L_SkirtSide2",
+    "J_Sec_L_SkirtSide2_end",
+    "J_Sec_R_SkirtSide0",
+    "J_Sec_R_SkirtSide1",
+    "J_Sec_R_SkirtSide2",
+    "J_Sec_R_SkirtSide2_end",
+    "J_Bip_C_Spine",
+    "J_Bip_C_Chest",
+    "J_Bip_C_UpperChest",
+    "J_Sec_L_Bust1",
+    "J_Sec_L_Bust2",
+    "J_Sec_R_Bust1",
+    "J_Sec_R_Bust2",
+    "J_Bip_C_Neck",
+    "J_Bip_C_Head",
+    "J_Adj_L_FaceEye",
+    "J_Adj_R_FaceEye",
+    "HairJoint-e7d28e69-662e-4477-aab0-b5306c3d289e",
+    "HairJoint-bd3d74cd-25c5-4b6f-8ab4-26e33295af50",
+    "HairJoint-072bb29a-1352-4368-9965-3ad8d6adae3a",
+    "HairJoint-497a97b7-0bdc-4267-b035-69f3756b7131",
+    "HairJoint-3b3816bb-29a0-4f71-a43b-955cd9f77fee",
+    "HairJoint-7a62315d-abea-4b4a-8710-52770aea9364",
+    "HairJoint-a9eb6651-9b09-4f52-9181-d468710fdd0b",
+    "HairJoint-a6e7e603-7ea0-4e51-b4ef-7eb38f08503a",
+    "HairJoint-7e3d21ed-7f06-4187-bc0f-54c178df85e8",
+    "HairJoint-075310cc-2c55-4f87-bee0-66afe35050fb",
+    "HairJoint-bb44c057-ba1b-48cf-a828-ee58c3a4328d",
+    "HairJoint-bdda9c05-5e10-4c8a-abe5-be7e2c14be93",
+    "HairJoint-57e03dad-29d9-4b6e-9cbd-9d7abc5241b0",
+    "HairJoint-b38a18db-210c-45be-a86b-f132749b5f7c",
+    "HairJoint-657f1584-c779-4ae9-b57d-5930319d77a4",
+    "HairJoint-48a7d468-0b6e-4433-a606-d6a9d8605c20",
+    "J_Bip_L_Shoulder",
+    "J_Bip_L_UpperArm",
+    "J_Bip_L_LowerArm",
+    "J_Sec_L_LowerSleeve",
+    "J_Sec_L_LowerSleeve_end",
+    "J_Bip_L_Hand",
+    "J_Bip_L_Index1",
+    "J_Bip_L_Index2",
+    "J_Bip_L_Index3",
+    "J_Bip_L_Index3_end",
+    "J_Bip_L_Little1",
+    "J_Bip_L_Little2",
+    "J_Bip_L_Little3",
+    "J_Bip_L_Little3_end",
+    "J_Bip_L_Middle1",
+    "J_Bip_L_Middle2",
+    "J_Bip_L_Middle3",
+    "J_Bip_L_Middle3_end",
+    "J_Bip_L_Ring1",
+    "J_Bip_L_Ring2",
+    "J_Bip_L_Ring3",
+    "J_Bip_L_Ring3_end",
+    "J_Bip_L_Thumb1",
+    "J_Bip_L_Thumb2",
+    "J_Bip_L_Thumb3",
+    "J_Bip_L_Thumb3_end",
+    "J_Sec_L_TipSleeve",
+    "J_Sec_L_TipSleeve_end",
+    "J_Bip_R_Shoulder",
+    "J_Bip_R_UpperArm",
+    "J_Bip_R_LowerArm",
+    "J_Sec_R_LowerSleeve",
+    "J_Sec_R_LowerSleeve_end",
+    "J_Bip_R_Hand",
+    "J_Bip_R_Index1",
+    "J_Bip_R_Index2",
+    "J_Bip_R_Index3",
+    "J_Bip_R_Index3_end",
+    "J_Bip_R_Little1",
+    "J_Bip_R_Little2",
+    "J_Bip_R_Little3",
+    "J_Bip_R_Little3_end",
+    "J_Bip_R_Middle1",
+    "J_Bip_R_Middle2",
+    "J_Bip_R_Middle3",
+    "J_Bip_R_Middle3_end",
+    "J_Bip_R_Ring1",
+    "J_Bip_R_Ring2",
+    "J_Bip_R_Ring3",
+    "J_Bip_R_Ring3_end",
+    "J_Bip_R_Thumb1",
+    "J_Bip_R_Thumb2",
+    "J_Bip_R_Thumb3",
+    "J_Bip_R_Thumb3_end",
+    "J_Sec_R_TipSleeve",
+    "J_Sec_R_TipSleeve_end",
+    "J_Bip_L_UpperLeg",
+    "J_Sec_L_SkirtBack0",
+    "J_Sec_L_SkirtBack1",
+    "J_Sec_L_SkirtBack2",
+    "J_Sec_L_SkirtBack2_end",
+    "J_Sec_L_SkirtFront0",
+    "J_Sec_L_SkirtFront1",
+    "J_Sec_L_SkirtFront2",
+    "J_Sec_L_SkirtFront2_end",
+    "J_Bip_L_LowerLeg",
+    "J_Bip_L_Foot",
+    "J_Bip_L_ToeBase",
+    "J_Bip_L_ToeBase_end",
+    "J_Bip_R_UpperLeg",
+    "J_Sec_R_SkirtBack0",
+    "J_Sec_R_SkirtBack1",
+    "J_Sec_R_SkirtBack2",
+    "J_Sec_R_SkirtBack2_end",
+    "J_Sec_R_SkirtFront0",
+    "J_Sec_R_SkirtFront1",
+    "J_Sec_R_SkirtFront2",
+    "J_Sec_R_SkirtFront2_end",
+    "J_Bip_R_LowerLeg",
+    "J_Bip_R_Foot",
+    "J_Bip_R_ToeBase",
+    "J_Bip_R_ToeBase_end"
+  ],
+  "bone_count": 119,
+  "material_count": 16,
+  "materials": [
+    {
+      "name": "Dots Stroke",
+      "nodes": []
+    },
+    {
+      "name": "F00_000_00_EyeExtra_01_EYE",
+      "nodes": [
+        "Emission",
+        "Light Path",
+        "Transparent BSDF",
+        "Mix Shader",
+        "Transparent BSDF.001",
+        "Mix Shader.001",
+        "Material Output",
+        "Image Texture"
+      ]
+    },
+    {
+      "name": "F00_000_00_EyeHighlight_00_EYE",
+      "nodes": [
+        "Emission",
+        "Light Path",
+        "Transparent BSDF",
+        "Mix Shader",
+        "Transparent BSDF.001",
+        "Mix Shader.001",
+        "Material Output",
+        "Image Texture"
+      ]
+    },
+    {
+      "name": "F00_000_00_EyeIris_00_EYE",
+      "nodes": [
+        "Emission",
+        "Light Path",
+        "Transparent BSDF",
+        "Mix Shader",
+        "Transparent BSDF.001",
+        "Mix Shader.001",
+        "Material Output",
+        "Image Texture"
+      ]
+    },
+    {
+      "name": "F00_000_00_EyeWhite_00_EYE",
+      "nodes": [
+        "Emission",
+        "Light Path",
+        "Transparent BSDF",
+        "Mix Shader",
+        "Material Output",
+        "Image Texture"
+      ]
+    },
+    {
+      "name": "F00_000_00_Face_00_SKIN",
+      "nodes": [
+        "Emission",
+        "Light Path",
+        "Transparent BSDF",
+        "Mix Shader",
+        "Material Output",
+        "Image Texture"
+      ]
+    },
+    {
+      "name": "F00_000_00_FaceBrow_00_FACE",
+      "nodes": [
+        "Emission",
+        "Light Path",
+        "Transparent BSDF",
+        "Mix Shader",
+        "Transparent BSDF.001",
+        "Mix Shader.001",
+        "Material Output",
+        "Mix",
+        "Image Texture"
+      ]
+    },
+    {
+      "name": "F00_000_00_FaceEyelash_00_FACE",
+      "nodes": [
+        "Emission",
+        "Light Path",
+        "Transparent BSDF",
+        "Mix Shader",
+        "Transparent BSDF.001",
+        "Mix Shader.001",
+        "Material Output",
+        "Mix",
+        "Image Texture"
+      ]
+    },
+    {
+      "name": "F00_000_00_FaceEyeline_00_FACE",
+      "nodes": [
+        "Emission",
+        "Light Path",
+        "Transparent BSDF",
+        "Mix Shader",
+        "Transparent BSDF.001",
+        "Mix Shader.001",
+        "Material Output",
+        "Mix",
+        "Image Texture"
+      ]
+    },
+    {
+      "name": "F00_000_00_FaceMouth_00_FACE",
+      "nodes": [
+        "Emission",
+        "Light Path",
+        "Transparent BSDF",
+        "Mix Shader",
+        "Material Output",
+        "Image Texture"
+      ]
+    },
+    {
+      "name": "F00_000_Hair_00_HAIR_01",
+      "nodes": [
+        "Emission",
+        "Light Path",
+        "Transparent BSDF",
+        "Mix Shader",
+        "Transparent BSDF.001",
+        "Mix Shader.001",
+        "Material Output",
+        "Image Texture"
+      ]
+    },
+    {
+      "name": "F00_000_Hair_00_HAIR_02",
+      "nodes": [
+        "Emission",
+        "Light Path",
+        "Transparent BSDF",
+        "Mix Shader",
+        "Transparent BSDF.001",
+        "Mix Shader.001",
+        "Material Output",
+        "Image Texture"
+      ]
+    },
+    {
+      "name": "F00_002_01_Shoes_01_CLOTH",
+      "nodes": [
+        "Emission",
+        "Light Path",
+        "Transparent BSDF",
+        "Mix Shader",
+        "Transparent BSDF.001",
+        "Mix Shader.001",
+        "Material Output",
+        "Image Texture"
+      ]
+    },
+    {
+      "name": "F00_002_01_Tops_01_CLOTH",
+      "nodes": [
+        "Emission",
+        "Light Path",
+        "Transparent BSDF",
+        "Mix Shader",
+        "Transparent BSDF.001",
+        "Mix Shader.001",
+        "Material Output",
+        "Image Texture"
+      ]
+    },
+    {
+      "name": "F00_002_02_Body_00_SKIN",
+      "nodes": [
+        "Emission",
+        "Light Path",
+        "Transparent BSDF",
+        "Mix Shader",
+        "Transparent BSDF.001",
+        "Mix Shader.001",
+        "Material Output",
+        "Image Texture"
+      ]
+    },
+    {
+      "name": "Material",
+      "nodes": [
+        "Material Output",
+        "Principled BSDF"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+name: Hanna R6 - Evaluate licensed CC0 character base
+on:
+  push:
+    branches: [feature/hanna3-r6-cc0-avatar-base-20261022]
+    paths-ignore: ['r6-cc0-base/assets/**', 'r6-cc0-base/evidence/**']
+permissions:
+  contents: write
+concurrency:
+  group: hanna-r6-cc0-base
+  cancel-in-progress: false
+jobs:
+  inspect-base:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download pinned VRoid CC0 Female HairSample (no user photos leave environment)
+        run: |
+          mkdir -p r6-cc0-base/assets
+          curl -fLsS --retry 3 --max-time 140             'https://raw.githubusercontent.com/madjin/vrm-samples/e16eb187100149a315ad92c3c9968f1d5baa6c7d/vroid/beta/HairSample_Female.vrm'             -o r6-cc0-base/assets/HairSample_Female.glb
+          test "$(git hash-object r6-cc0-base/assets/HairSample_Female.glb)" = '0e5235f9a7972fbcbceb74960479b208c27a8707'
+          python3 - <<'PY'
+          from pathlib import Path
+          import struct
+          b=Path('r6-cc0-base/assets/HairSample_Female.glb').read_bytes()
+          assert b[:4]==b'glTF'
+          assert struct.unpack_from('<I',b,4)[0]==2
+          print('CC0_UPSTREAM_VERIFIED',len(b),'bytes')
+          PY
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start local preview
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/hanna-r6-http.log 2>&1 &
+          for n in {1..30}; do curl -fsS http://127.0.0.1:8765/r6-cc0-base/index.html >/dev/null && exit 0; sleep 1; done
+          exit 1
+      - name: Verify CC0 sample actual 3D and collect visual comparison
+        run: node --test r6-cc0-base/test.cjs
+      - name: Upload real renderer screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hanna-r6-cc0-vroid-model-review
+          path: r6-cc0-base/evidence/
+          if-no-files-found: warn
+          retention-days: 21
+      - name: Publish CC0 candidate model and screenshots to isolated branch for inspection
+        if: success() && github.actor != 'github-actions[bot]'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add r6-cc0-base/assets/ r6-cc0-base/evidence/
+          if ! git diff --cached --quiet; then
+            git commit -m "evidence(hanna): test rigged CC0 avatar candidate [skip ci]"
+            git push origin "HEAD:$GITHUB_REF_NAME"
+          fi

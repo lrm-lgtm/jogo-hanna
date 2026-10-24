@@ -1,0 +1,69 @@
+name: Hanna R9 - Customize CC0 Skinned Model and Evaluate
+on:
+  push:
+    branches: [feature/hanna3-r6-cc0-avatar-base-20261022]
+    paths:
+      - 'r6-cc0-base/build_r9.py'
+      - 'r6-cc0-base/r9.test.cjs'
+      - '.github/workflows/hanna3-r9-customize.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: hanna-r9-customize
+  cancel-in-progress: false
+jobs:
+  customize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install free Blender, Python and NumPy
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq blender python3-numpy
+      - name: Recolor CC0 skinned avatar and add hand-authored Blender accessories
+        run: |
+          blender --background --factory-startup --python-exit-code 1 --python r6-cc0-base/build_r9.py >/tmp/r9-blender.log 2>&1 || { tail -140 /tmp/r9-blender.log; exit 1; }
+          grep 'R9_CUSTOMIZED_MODEL_OK' /tmp/r9-blender.log
+          test -s r6-cc0-base/assets/hanna-r9.glb
+          python3 - <<'PY'
+          import json,struct
+          b=open('r6-cc0-base/assets/hanna-r9.glb','rb').read()
+          assert b[:4]==b'glTF' and struct.unpack_from('<I',b,4)[0]==2
+          print('R9_GLTF2_VALID',len(b))
+          PY
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium with WebGL software fallback
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start HTTP server
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/hanna-r9-http.log 2>&1 &
+          for n in {1..30}; do curl -fsS http://127.0.0.1:8765/r6-cc0-base/index.html >/dev/null && exit 0; sleep 1; done
+          exit 1
+      - name: Browser model import and rig verification, desktop + portrait
+        run: node --test r6-cc0-base/r9.test.cjs
+      - name: Upload screenshots for visual review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hanna-r9-styled-rigged-real-render
+          path: |
+            r6-cc0-base/evidence/*-r9-customized.png
+            r6-cc0-base/r9-manifest.json
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Publish model and real browser screenshots only to isolated experimental branch
+        if: success() && github.actor != 'github-actions[bot]'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add r6-cc0-base/assets/hanna-r9.glb r6-cc0-base/r9-manifest.json r6-cc0-base/evidence/*-r9-customized.png
+          if ! git diff --cached --quiet; then
+            git commit -m "evidence(hanna): R9 skinned CC0 model with recolored outfit and Polvo accessories [skip ci]"
+            git push origin "HEAD:$GITHUB_REF_NAME"
+          fi
