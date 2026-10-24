@@ -321,7 +321,23 @@ function commitAction(state){
   visuals.get('door').rotation.y=0;
   B.Animation.CreateAndStartAnimation('openFridge',visuals.get('door'),'rotation.y',60,32,0,-1.28,0);
  }
- if(previous===5&&visuals.get('toasterGlow'))visuals.get('toasterGlow').material=M.gold;
+ if(previous===5){
+  // Toast must pop OUT of the toaster after pressing its button, not materialize in mid-air.
+  const glow=visuals.get('toasterGlow');if(glow)glow.material=M.gold;
+  const toasted=visuals.get('toast');
+  if(toasted){
+   toasted.position.y=-.18;
+   B.Animation.CreateAndStartAnimation('toastPop',toasted,'position.y',60,27,-.18,0,0);
+  }
+ }
+ if(previous===7){
+  // Serving happens at hand contact; plate receives the toast with a soft placement.
+  const served=visuals.get('toastTable');
+  if(served){
+   served.position.y=.14;
+   B.Animation.CreateAndStartAnimation('placeToastOnTable',served,'position.y',60,24,.14,0,0);
+  }
+ }
  if(currentStep===8)setTimeout(()=>{el('finish').hidden=false},420);
 }
 function stepAction(){
