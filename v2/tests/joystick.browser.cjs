@@ -61,6 +61,8 @@ test('Android 360° touch: deadzone, right/left, up/down, release and pause',{ti
    a.ok(held.faceDot>.8,name+' must look where Hanna travels: '+JSON.stringify({front:held.frontAxis,world:held.worldFace,dot:held.faceDot}));
    a.ok(held.gait?.peakHip>.20,name+' actual hip animation must be visible');
    a.ok(held.gait?.peakKnee>.20,name+' knees must flex via GLB joints');
+   a.ok(held.gait?.realKneeDeg>10,name+' Babylon joint quaternion must visibly bend the knees');
+   a.ok(held.gait?.realHipDeg>12,name+' Babylon joint quaternion must visibly swing the hips');
    a.ok(held.gait?.blend>.3,name+' gait must be active while finger is held');
    a.ok(held.gait?.distance>.15,name+' gait phase must follow traveled meters');
    a.ok(next.cameraFrame?.visible,name+' moved Hanna outside frame: '+JSON.stringify(next.cameraFrame));

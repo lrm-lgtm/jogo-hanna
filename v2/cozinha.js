@@ -111,7 +111,7 @@ character.rotation.y=0; // Neutral yaw for calibrating actual imported GLB front
 let avatarMeshCount=0,avatarPivots=null,avatarRig=null,avatarWalkedFrames=0,blinkParts=[];
 const avatarRest=new Map();let avatarRigBaseY=0,avatarFront={x:0,z:1},faceCalibration=0;
 let gaitState={phase:0,blend:0,totalDistance:0},lastGait=null,lastFrameMeters=0,lastTravel={x:0,z:0};
-let topKneeFlex=0,topHipSwing=0;
+let topKneeFlex=0,topHipSwing=0,topActualKneeDegrees=0,topActualHipDegrees=0;
 async function loadPlayableAvatar(){
  const r=await B.SceneLoader.ImportMeshAsync('', './assets/', 'hanna-free-r8.glb',scene);
  const meshes=r.meshes.filter(m=>m.getTotalVertices?.()>0);
@@ -158,6 +158,13 @@ function jointPose(node,x=0,y=0,z=0){
  if(node.rotationQuaternion)node.rotationQuaternion.copyFrom(result);
  else node.rotationQuaternion=result;
 }
+function jointActualDegrees(node){
+ const rest=avatarRest.get(node),q=node?.rotationQuaternion;
+ if(!rest||!q)return 0;
+ const dot=rest.x*q.x+rest.y*q.y+rest.z*q.z+rest.w*q.w;
+ const size=Math.hypot(rest.x,rest.y,rest.z,rest.w)*Math.hypot(q.x,q.y,q.z,q.w);
+ return (2*Math.acos(Math.min(1,Math.abs(dot)/Math.max(size,1e-8))))*180/Math.PI;
+}
 function updateAvatarAnimation(t,travel,dt){
  if(!avatarPivots)return;
  gaitState=Gait.sample(gaitState,travel,dt,t);
@@ -180,6 +187,8 @@ function updateAvatarAnimation(t,travel,dt){
  if(travel>.00005)avatarWalkedFrames++;
  topKneeFlex=Math.max(topKneeFlex,p.leftKnee,p.rightKnee);
  topHipSwing=Math.max(topHipSwing,Math.abs(p.leftHip),Math.abs(p.rightHip));
+ topActualKneeDegrees=Math.max(topActualKneeDegrees,jointActualDegrees(a.leftKnee),jointActualDegrees(a.rightKnee));
+ topActualHipDegrees=Math.max(topActualHipDegrees,jointActualDegrees(a.leftLeg),jointActualDegrees(a.rightLeg));
  lastGait=p;
 }
 // A carried item is a recognizable miniature prop — not the old placeholder sphere.
@@ -691,7 +700,8 @@ async function boot(){
    faceDot:Math.hypot(lastTravel.x,lastTravel.z)>0?+Gait.facingDot(avatarFront,character.rotation.y,lastTravel.x,lastTravel.z).toFixed(3):null,
    gait:{distance:+gaitState.totalDistance.toFixed(3),blend:+gaitState.blend.toFixed(3),phase:+gaitState.phase.toFixed(3),
          hipSwing:+(lastGait?.leftHip||0).toFixed(3),leftKnee:+(lastGait?.leftKnee||0).toFixed(3),rightKnee:+(lastGait?.rightKnee||0).toFixed(3),
-         peakKnee:+topKneeFlex.toFixed(3),peakHip:+topHipSwing.toFixed(3)},
+         peakKnee:+topKneeFlex.toFixed(3),peakHip:+topHipSwing.toFixed(3),
+         realKneeDeg:+topActualKneeDegrees.toFixed(1),realHipDeg:+topActualHipDegrees.toFixed(1)},
    loadErrors:loadErrors.slice(),saved:mission.restored||currentStep>0,quality:graphics.resolved,saveSchema:2
   })});
   setInfo('A cozinha está pronta! Siga o brilho para começar ✨',2800);
