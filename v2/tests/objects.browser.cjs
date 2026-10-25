@@ -17,6 +17,8 @@ test('real WebGL: fridge opens exactly once and stays open after mission transit
   await page.goto(URL,{waitUntil:'domcontentloaded',timeout:90000});
   await page.waitForFunction(()=>window.__hannaKitchenQA?.ready,null,{timeout:120000});
   let start=await q();a.equal(start.step,0);a.equal(start.doorRenderedAngle,0);
+  a.equal(start.fridgeSolidEnabled,false);
+  a.equal(start.fridgeInteriorPresent,true);
   await page.locator('#goBtn').tap();
   await page.waitForFunction(()=>window.__hannaKitchenQA?.distance<.73,null,{timeout:90000});
   await page.locator('#actionBtn').tap();
@@ -24,6 +26,8 @@ test('real WebGL: fridge opens exactly once and stays open after mission transit
   await page.waitForFunction(()=>window.__hannaKitchenQA?.objectMotion.door.playing===false&&window.__hannaKitchenQA?.objectMotion.door.plays===1,null,{timeout:15000});
   const opened=await q();
   a.equal(opened.objectMotion.door.plays,1);
+  a.equal(opened.fridgeShelvesVisible,true);
+  a.equal(opened.fridgeSolidEnabled,false);
   a.ok(Math.abs(opened.doorRenderedAngle+1.28)<.012);
   await page.screenshot({path:path.join(DIR,'geladeira-abriu-uma-vez.png')});
   await page.waitForTimeout(2900);
@@ -68,5 +72,31 @@ test('real WebGL: toast emerges from inside slot and never floats above its anch
   a.equal(stable.objectMotion.toast.playing,false);
   a.equal(stable.toastBottomY,fired.toastBottomY);
   console.log('R14_TOAST_ANCHORED',JSON.stringify({slot:fired.toasterSlotY,top:fired.toastTopY,bottom:fired.toastBottomY,plays:stable.objectMotion.toast.plays}));
+ }finally{await ctx.close();await browser.close()}
+});
+test('R16 real WebGL: door closes after milk pickup and stays closed upon reload',{timeout:280000},async()=>{
+ const browser=await chromium.launch({headless:true,args:['--no-sandbox','--enable-webgl','--ignore-gpu-blocklist','--use-gl=angle','--use-angle=swiftshader-webgl']});
+ const ctx=await browser.newContext({viewport:{width:852,height:393},isMobile:true,hasTouch:true,serviceWorkers:'block'});
+ await ctx.addInitScript(()=>{
+  localStorage.setItem('hanna_kitchen_v2_quality','baixo');
+  localStorage.setItem('hanna_kitchen_v2_progress',JSON.stringify({schema:2,step:1,updated:Date.now()}));
+ });
+ const page=await ctx.newPage(),q=()=>page.evaluate(()=>window.__hannaKitchenQA);
+ try{
+  await page.goto(URL,{waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>window.__hannaKitchenQA?.ready,null,{timeout:120000});
+  a.equal((await q()).doorRenderedAngle,1.44);
+  await page.locator('#goBtn').tap();
+  await page.waitForFunction(()=>window.__hannaKitchenQA?.distance<.73,null,{timeout:90000});
+  await page.locator('#actionBtn').tap();
+  await page.waitForFunction(()=>window.__hannaKitchenQA?.step===2,null,{timeout:40000});
+  await page.waitForFunction(()=>window.__hannaKitchenQA?.objectMotion.doorClose.plays===1&&!window.__hannaKitchenQA?.objectMotion.doorClose.playing,null,{timeout:20000});
+  const end=await q();a.equal(end.doorRenderedAngle,0);a.equal(end.objectMotion.doorClose.plays,1);
+  a.equal(end.fridgeShelvesVisible,false);
+  await page.screenshot({path:path.join(DIR,'porta-fechou-apos-leite.png')});
+  await page.waitForTimeout(1300);a.equal((await q()).doorRenderedAngle,0);
+  await page.reload({waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>window.__hannaKitchenQA?.ready,null,{timeout:120000});
+  a.equal((await q()).doorRenderedAngle,0);
  }finally{await ctx.close();await browser.close()}
 });

@@ -11,7 +11,8 @@
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const smooth=t=>{const x=clamp(t,0,1);return x*x*(3-2*x)};
 const SETUP=Object.freeze({
- door:Object.freeze({from:0,to:-1.28,duration:.82}),
+ door:Object.freeze({from:0,to:1.44,duration:1.02}),
+ doorClose:Object.freeze({from:1.44,to:0,duration:.82}),
  toast:Object.freeze({from:1.195,to:1.39,duration:.40}),
  serve:Object.freeze({from:.18,to:0,duration:.48})
 });

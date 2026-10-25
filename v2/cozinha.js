@@ -106,7 +106,7 @@ box('windowMullion',[1.78,2.48,2.77],[.055,.76,.08],M.trim);
 for(let i=0;i<4;i++)sphere('wallFlower'+i,[-.1+i*.16,2.56,2.77],.095,i%2?M.berry:M.gold);
 const roomRoot=new B.TransformNode('kitchenModelImports',scene);
 const objects=new Map(),visuals=new Map();
-const objectMotion={door:Motion.create('door'),toast:Motion.create('toast'),serve:Motion.create('serve')};
+const objectMotion={door:Motion.create('door'),doorClose:Motion.create('doorClose'),toast:Motion.create('toast'),serve:Motion.create('serve')};
 const TOAST_SLOT={x:1.08,y:1.367,z:1.55};
 const character=new B.TransformNode('HannaCharacter',scene);
 character.position.set(-1.65,0,-2.03);
@@ -342,8 +342,8 @@ function updateAction(){
  el('statusText').textContent=currentStep>=8?'Muito bem!':close?'Agora toque em '+steps[currentStep].action:'Encontre o objeto brilhando ✨';
 }
 function updateVisuals(){
- const fridgeOpen=currentStep>=1;
- if(visuals.get('door')&&!objectMotion.door.playing)
+ const fridgeOpen=currentStep===1||(currentStep===2&&actionState?.previous===1);
+ if(visuals.get('door')&&!objectMotion.door.playing&&!objectMotion.doorClose.playing)
   visuals.get('door').rotation.y=fridgeOpen?Motion.SETUP.door.to:Motion.SETUP.door.from;
  if(visuals.get('fridgeShelves'))visuals.get('fridgeShelves').setEnabled(fridgeOpen);
  objects.get('milk').proxy.isPickable=currentStep===1;
@@ -393,6 +393,9 @@ function commitAction(state){
 function updateObjectAnimations(dt){
  const door=visuals.get('door'),toast=visuals.get('toast'),served=visuals.get('toastTable');
  if(door&&objectMotion.door.playing)door.rotation.y=Motion.tick(objectMotion.door,dt);
+ if(door&&objectMotion.doorClose.playing)door.rotation.y=Motion.tick(objectMotion.doorClose,dt);
+ if(objectMotion.doorClose.playing&&visuals.get('fridgeShelves'))visuals.get('fridgeShelves').setEnabled(true);
+ if(!objectMotion.doorClose.playing&&objectMotion.doorClose.plays&&visuals.get('fridgeShelves'))visuals.get('fridgeShelves').setEnabled(false);
  if(toast&&objectMotion.toast.playing)toast.position.y=Motion.tick(objectMotion.toast,dt);
  if(served&&objectMotion.serve.playing)served.position.y=Motion.tick(objectMotion.serve,dt);
 }
@@ -440,6 +443,7 @@ function updateActionSequence(dt){
  if(pose.done){
   // Let the hand return to natural carry pose; never drop an item behind the character.
   if(!state.committed)commitAction(state);
+  if(state.previous===1&&state.committed)Motion.start(objectMotion.doorClose);
   actionState=null;updateAction();
  }
 }
@@ -768,17 +772,35 @@ async function assets(){
  }
  if(loadErrors.length)throw new Error('Falha em '+loadErrors.join('; '));
  scene.getMeshByName('rugBase').setEnabled(false);scene.getMeshByName('rugInset').setEnabled(false);
- // Independent pivot provides physically visible swing on the imported refrigerator.
- const pivot=new B.TransformNode('fridgeDoorHinge',scene);pivot.position.set(-3.55,1.10,1.52);
- const door=box('fridgeSwingDoor', [.53,0,-.02],[1.08,2.06,.095],M.trim);door.parent=pivot;
- const panel=box('fridgeDoorInset',[.53,.07,-.082],[.91,1.67,.025],M.blue);panel.parent=pivot;
- const handle=box('fridgeDoorHandle',[1.00,.1,-.135],[.065,.44,.075],M.gold);handle.parent=pivot;
+ // R16: a hollow refrigerator. The imported GLB cuboid front is hidden below, not
+ // allowed to obscure the interior when the animated door rotates OUT toward -Z.
+ const fridgeShellMat=mat('fridgeR16Pink','#eda7ad',.40),
+       fridgeLiner=mat('fridgeR16Cream','#fff1e6',.75),
+       fridgeBackMat=mat('fridgeR16Interior','#e9d8cf',.84);
+ const shellRoot=new B.TransformNode('fridgeR16HollowBody',scene);
+ function fridgePanel(name,pos,dims,material){
+  const p=box(name,pos,dims,material);p.parent=shellRoot;p.receiveShadows=true;return p;
+ }
+ fridgePanel('fridgeR16Back',[-2.95,1.17,2.47],[1.13,2.14,.07],fridgeBackMat);
+ fridgePanel('fridgeR16LeftSide',[-3.51,1.15,2.05],[.08,2.22,.89],fridgeShellMat);
+ fridgePanel('fridgeR16RightSide',[-2.39,1.15,2.05],[.08,2.22,.89],fridgeShellMat);
+ fridgePanel('fridgeR16Ceiling',[-2.95,2.25,2.05],[1.19,.06,.91],fridgeLiner);
+ fridgePanel('fridgeR16Floor',[-2.95,.19,2.05],[1.19,.06,.91],fridgeLiner);
+ fridgePanel('fridgeR16FrontLintel',[-2.95,2.21,1.59],[1.14,.08,.09],fridgeShellMat);
+ const pivot=new B.TransformNode('fridgeDoorHinge',scene);
+ pivot.position.set(-3.55,1.10,1.50); // +Y yaw swings door outwards towards player (-Z)
+ const door=box('fridgeSwingDoor',[.54,.03,-.04],[1.10,2.08,.09],M.trim);door.parent=pivot;
+ const panel=box('fridgeDoorInset',[.54,.10,-.105],[.94,1.69,.029],M.blue);panel.parent=pivot;
+ const handle=box('fridgeDoorHandle',[1.00,.08,-.165],[.065,.43,.08],M.gold);handle.parent=pivot;
  shadow.addShadowCaster(door);visuals.set('door',pivot);
  const fridgeShelfGroup=new B.TransformNode('fridgeInnerShelves',scene);
- box('fridgeInnerShelf1',[-2.92,1.10,1.45],[.75,.045,.34],M.trim).parent=fridgeShelfGroup;
- box('fridgeInnerShelf2',[-2.92,1.54,1.45],[.75,.045,.34],M.trim).parent=fridgeShelfGroup;
+ const s1=box('fridgeInnerShelf1',[-2.95,1.10,2.00],[.98,.047,.66],fridgeLiner);s1.parent=fridgeShelfGroup;
+ const s2=box('fridgeInnerShelf2',[-2.95,1.55,2.00],[.98,.047,.66],fridgeLiner);s2.parent=fridgeShelfGroup;
+ sphere('fridgeR16Fruit',[-3.26,.53,2.20],.17,M.berry).parent=fridgeShelfGroup;
+ sphere('fridgeR16Jar',[-2.68,1.31,2.19],.17,M.blue).parent=fridgeShelfGroup;
  visuals.set('fridgeShelves',fridgeShelfGroup);
- const milk=new B.TransformNode('milkInFridge',scene);milkCarton(milk,[-3.00,1.25,1.30]);visuals.set('milk',milk);
+ const milk=new B.TransformNode('milkInFridge',scene);
+ milkCarton(milk,[-3.00,1.24,1.84]);visuals.set('milk',milk);
  const tableMilk=new B.TransformNode('milkOnTable',scene);milkCarton(tableMilk,[-.65,1.22,-1.10]);visuals.set('milkTable',tableMilk);
  const breadModel=visuals.get('bread');
  const toaster=new B.TransformNode('roundedToaster',scene);
@@ -800,6 +822,10 @@ async function assets(){
  if(!breadModel)throw new Error('O modelo do pão está ausente');
  window.HannaKitchenArt.rebuild({B,scene,M,box,sphere,cylinder,visuals,shadow,graphics});
  await loadRoundedKitchenArt();
+ // R16 regression: a solid original GLB enclosure concealed the swinging door.
+ const solidBlocker=scene.getMeshByName('B2_fridge_enclosure');
+ if(!solidBlocker)throw new Error('Original fridge GLB shell unavailable for opening cutout');
+ solidBlocker.setEnabled(false);
  window.HannaFreeCorner.polish({B,scene,shadow,M,graphics});
  // Deliberate dollhouse cutaway: side wall concealed visually but physics/mission rules unchanged.
  cutawayHidden=[];
@@ -823,6 +849,7 @@ async function boot(){
   await assets();
   // Restored saves must load settled; opening animations never replay on reload.
  Motion.settle(objectMotion.door,currentStep>=1);
+ Motion.settle(objectMotion.doorClose,currentStep>=2);
  Motion.settle(objectMotion.toast,currentStep>=6);
  Motion.settle(objectMotion.serve,currentStep>=8);
  ready=true;updateVisuals();updateHUD();loading.hidden=true;
@@ -860,6 +887,9 @@ async function boot(){
    toastTopY:visuals.get('toast')?+(visuals.get('toast').position.y+.15).toFixed(3):null,
    toastBottomY:visuals.get('toast')?+(visuals.get('toast').position.y-.15).toFixed(3):null,
    doorRenderedAngle:visuals.get('door')?+visuals.get('door').rotation.y.toFixed(3):null,
+   fridgeSolidEnabled:!!scene.getMeshByName('B2_fridge_enclosure')?.isEnabled(),
+   fridgeInteriorPresent:!!scene.getMeshByName('fridgeR16Back')?.isEnabled(),
+   fridgeShelvesVisible:!!visuals.get('fridgeShelves')?.isEnabled(),
    toastReadyVisible:!!visuals.get('toast')?.isEnabled(),
    frontAxis:{x:+avatarFront.x.toFixed(3),z:+avatarFront.z.toFixed(3),confidence:+faceCalibration.toFixed(3)},
    worldFace:(()=>{const v=Gait.rotateFace(avatarFront,character.rotation.y);return {x:+v.x.toFixed(3),z:+v.z.toFixed(3)}})(),
