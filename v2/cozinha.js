@@ -800,7 +800,7 @@ async function assets(){
  sphere('fridgeR16Jar',[-2.68,1.31,2.19],.17,M.blue).parent=fridgeShelfGroup;
  visuals.set('fridgeShelves',fridgeShelfGroup);
  const milk=new B.TransformNode('milkInFridge',scene);
- milkCarton(milk,[-3.00,1.24,1.84]);visuals.set('milk',milk);
+ milkCarton(milk,[-3.00,1.24,1.735]);visuals.set('milk',milk);
  const tableMilk=new B.TransformNode('milkOnTable',scene);milkCarton(tableMilk,[-.65,1.22,-1.10]);visuals.set('milkTable',tableMilk);
  const breadModel=visuals.get('bread');
  const toaster=new B.TransformNode('roundedToaster',scene);

@@ -3,7 +3,7 @@
 // World-space targets and collision-safe standing points for the breakfast mission.
 const byStep=Object.freeze({
 'open-fridge':{stand:[-2.94,.93],hand:[-2.55,1.20,1.385],kind:'hinge',item:null},
-'take-milk':{stand:[-2.95,.92],hand:[-3.00,1.26,1.82],kind:'pick',item:'milk'},
+'take-milk':{stand:[-2.95,.98],hand:[-3.00,1.26,1.63],kind:'pick',item:'milk'},
 'serve-milk':{stand:[-.58,-1.57],hand:[-.65,1.23,-1.17],kind:'place',item:'milk'},
 'take-bread':{stand:[1.63,.94],hand:[1.63,1.21,1.45],kind:'pick',item:'bread'},
 'insert-bread':{stand:[1.35,.91],hand:[1.28,1.37,1.44],kind:'place',item:'bread'},
