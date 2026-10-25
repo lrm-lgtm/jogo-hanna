@@ -104,3 +104,16 @@ Vídeo original recebido: 65 s; o usuário mostrou porta da geladeira em looping
 **Limitações:** a cinemática ainda usa pivôs segmentados, sem skinning/deformação profissional e sem clips finais do Blender. Aprovação estética premium e Samsung físico pendentes; testes Chromium não demonstram beleza por si sós.
 
 **Evidências:** [CI R15 das três interações](https://github.com/lrm-lgtm/jogo-hanna/actions/runs/40134150898), [CI regressão v1.9](https://github.com/lrm-lgtm/jogo-hanna/actions/runs/40134154361).
+
+## R16 — porta da geladeira visível (screenshot real do usuário)
+
+A captura mostrava a missão no passo 2/8, mas a geladeira rosa parecia fechada. Causa: o yaw antigo -1,28 rad girava o painel para dentro, atrás do armário GLB maciço. Testar só o ângulo do pivô não comprovava visibilidade.
+
+- R16 altera a porta para abrir para FORA, +1,44 rad em 1,02 s, sem loop. Após pegar o leite, fecha em 0,82 s sem repetir e sem reabrir ao restaurar a missão.
+- O GLB B2_fridge_enclosure é um bloco maciço e fica oculto. Uma cavidade real com fundo, laterais, prateleiras e produtos substitui a parte sólida; a porta rosa, ímãs e maçaneta seguem presos à dobradiça.
+- Leite físico passou para perto da abertura interna, e o contato da mão foi recalibrado para essa posição alcançável.
+- O teste de navegador agora mede também se a cavidade existe, se o sólido foi ocultado, se há prateleiras visíveis quando aberta, o giro final e a porta fechada depois de retirar o leite.
+- Fotos reais no Chromium Android emulado precisam ser conferidas; a interação ainda não tem selo premium.
+
+CI da porta e torrada: https://github.com/lrm-lgtm/jogo-hanna/actions/runs/40148731281
+PR #10 permanece draft, v1.9 main preservada.
