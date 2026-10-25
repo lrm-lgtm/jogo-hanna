@@ -7,6 +7,8 @@ on:
       - 'v2/gait.js'
       - 'v2/object-motion.js'
       - 'v2/tests/objects.browser.cjs'
+      - 'v2/tests/object-motion.test.cjs'
+      - 'v2/sw.js'
       - '.github/workflows/hanna-v2-object-regression.yml'
   workflow_dispatch:
 jobs:
