@@ -79,7 +79,7 @@ test('R16 real WebGL: door closes after milk pickup and stays closed upon reload
  const ctx=await browser.newContext({viewport:{width:852,height:393},isMobile:true,hasTouch:true,serviceWorkers:'block'});
  await ctx.addInitScript(()=>{
   localStorage.setItem('hanna_kitchen_v2_quality','baixo');
-  localStorage.setItem('hanna_kitchen_v2_progress',JSON.stringify({schema:2,step:1,updated:Date.now()}));
+  if(!localStorage.getItem('hanna_kitchen_v2_progress'))localStorage.setItem('hanna_kitchen_v2_progress',JSON.stringify({schema:2,step:1,updated:Date.now()}));
  });
  const page=await ctx.newPage(),q=()=>page.evaluate(()=>window.__hannaKitchenQA);
  try{
