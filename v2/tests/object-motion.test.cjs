@@ -32,7 +32,7 @@ test('toast emerges once from below opening and table receives it once',()=>{
 test('milk pickup closes the refrigerator once and stays closed',()=>{
  const open=M.create('door'),close=M.create('doorClose');M.start(open);
  for(let i=0;i<80;i++)M.tick(open,.02);
- a.equal(open.value,1.44);a.equal(M.start(close),true);
- let prev=1.44;for(let i=0;i<80;i++){const now=M.tick(close,.02);a.ok(now<=prev+1e-8);prev=now}
- a.equal(close.value,0);a.equal(close.plays,1);a.equal(M.start(close),false);
+ assert.equal(open.value,1.44);assert.equal(M.start(close),true);
+ let prev=1.44;for(let i=0;i<80;i++){const now=M.tick(close,.02);assert.ok(now<=prev+1e-8);prev=now}
+ assert.equal(close.value,0);assert.equal(close.plays,1);assert.equal(M.start(close),false);
 });
