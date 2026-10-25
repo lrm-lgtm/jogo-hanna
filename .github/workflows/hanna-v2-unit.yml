@@ -1,0 +1,16 @@
+name: Casa da Hanna v2 unit
+on:
+  push:
+    branches: [feature/cozinha-3d-v2-20261022]
+    paths: ['v2/**', '.github/workflows/hanna-v2-unit.yml']
+  pull_request:
+    paths: ['v2/**', '.github/workflows/hanna-v2-unit.yml']
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test v2/tests/unit.test.cjs

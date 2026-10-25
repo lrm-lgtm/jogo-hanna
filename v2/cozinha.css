@@ -1,0 +1,65 @@
+@import url('../pilot/cozinha.css');
+#settings[hidden],#rotatePrompt{display:none}
+#settings{position:fixed;z-index:75;inset:0;background:#372b37bb;display:grid;place-items:center;padding:24px;touch-action:manipulation}
+.settingsCard{width:min(460px,95vw);border:4px solid white;border-radius:28px;background:#fff8eb;padding:22px;box-shadow:0 15px 55px #281e2d66;display:flex;flex-direction:column;gap:10px}
+.settingsCard h2{font-size:24px;margin:0;color:#77513c}.settingsCard p{margin:0 0 10px}
+.settingsCard label{font-weight:800;font-size:14px}.settingsCard select{height:46px;border:2px solid #e9c6a5;border-radius:13px;background:#fff;font:inherit;padding:5px 10px}
+.soundLabel{display:flex;gap:12px;align-items:center;min-height:44px}.soundLabel input{width:22px;height:22px}
+.settingsButtons{display:flex;gap:8px;flex-wrap:wrap}.settingsButtons button{flex:1;min-width:85px;min-height:46px;background:#f5cf9b;border:2px solid #fff;border-radius:15px;color:#633d23;font-weight:900}
+#pauseBtn{border:2px solid white;border-radius:15px;min-width:52px;min-height:52px;background:#fffbf2ed;font-size:23px;box-shadow:0 4px 13px #604c332a}
+#actionBtn{min-width:124px}
+@media (orientation:portrait) and (max-width:899px){
+ #rotatePrompt{display:flex;position:fixed;z-index:100;inset:0;padding:20px;align-items:center;justify-content:center;background:radial-gradient(circle at 20% 10%,#fff5e4,#f6cfc8);text-align:center;touch-action:none;color:#634635}
+ #rotatePrompt span{font-size:68px}#rotatePrompt h2{font-size:27px;margin:10px 0}#rotatePrompt p{font-size:17px;max-width:260px}
+}
+@media (orientation:landscape) and (max-height:480px){
+ .missionBox{width:min(350px,55vw)}.topActions{gap:4px}#pauseBtn{min-width:43px;min-height:43px;font-size:18px}
+}
+/* Art R1 HUD: environment takes precedence over overlays. */
+.missionBox{width:min(314px,35vw);border-radius:18px;padding:9px 12px;background:#fffcf1eb;box-shadow:0 7px 22px #4b2b211e;border:1px solid #fff7}
+.eyebrow{font-size:9px;letter-spacing:.07em;color:#b8755b}
+.stepTitle{font-size:clamp(16px,2vw,20px);margin:4px 0 7px}
+.progress{height:6px;background:#e9d7ca}
+.stepMeta{font-size:10px}
+.stars{padding:7px 10px}
+.helpBubble{font-size:12px;padding:6px 14px;background:#fffcf2ee;bottom:calc(108px + env(safe-area-inset-bottom))}
+#quality{background:#fffbec96;border-radius:7px;bottom:2px;right:5px}
+#joystick{background:#e5e4d679;border-color:#fff8;box-shadow:inset 0 1px 12px #67533a30,0 5px 18px #624b2b30}
+#actionBtn{background:linear-gradient(#fae2a4,#ecb76e);color:#724523;box-shadow:0 4px 0 #c79864,0 8px 20px #533c2c36}
+@media (orientation:landscape) and (max-height:480px){
+ .missionBox{width:min(294px,44vw);padding:7px 10px}
+ .stepTitle{font-size:16px;margin:3px 0 5px}
+ .helpBubble{bottom:calc(71px + env(safe-area-inset-bottom));font-size:11px;padding:4px 12px}
+ #joystick{width:86px;height:86px}#stick{width:40px;height:40px;left:20px;top:20px}
+ #actionBtn{min-height:49px;font-size:13px;padding:6px}
+ #goBtn{min-height:32px}
+}
+
+/* FREE R8: character-first landscape composition and compact child-sized controls. */
+.missionBox{background:#fff9f1f0;border:1px solid #fff;box-shadow:0 5px 24px #6b413026}
+.eyebrow{color:#b64377;letter-spacing:.045em;font-weight:900}
+.progress{background:#efc8cd}
+#progressFill{background:linear-gradient(90deg,#71b8a2,#44b886)}
+#joystick{background:#fff0e4a3;border:3px solid #fff8;box-shadow:0 6px 17px #6f4a493b,inset 0 0 18px #e3bbbc75}
+#stick{background:linear-gradient(#ffd8c8,#ffb5ba);border:3px solid white}
+#actionBtn{background:linear-gradient(180deg,#f7b7c5,#e994b4);color:#622b50;box-shadow:0 3px 0 #c96f96,0 5px 18px #673c563b}
+#goBtn{background:#fffaf2f2;color:#75434e;border-color:white}
+@media (orientation:landscape) and (max-height:480px){
+ .missionBox{width:min(264px,34vw);padding:7px 9px;border-radius:17px}
+ .eyebrow{font-size:8px}
+ .stepTitle{font-size:15px;margin:2px 0 4px}
+ .progress{height:5px}
+ .stepMeta{font-size:9px}
+ #joystick{width:78px;height:78px}
+ #stick{width:36px;height:36px;left:18px;top:18px}
+ #quality{display:none}
+ .helpBubble{bottom:calc(64px + env(safe-area-inset-bottom));max-width:44vw;font-size:10px;line-height:1.1}
+}
+
+/* Joystick R10: keep the contact target large enough in Android landscape. */
+#joystick{touch-action:none;overscroll-behavior:contain;user-select:none;-webkit-user-select:none}
+#stick{pointer-events:none;will-change:transform}
+@media (orientation:landscape) and (max-height:480px){
+ #joystick{width:94px;height:94px;min-width:94px;min-height:94px}
+ #stick{width:42px;height:42px;left:23px;top:23px}
+}

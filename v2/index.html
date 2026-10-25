@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#f7e8d7">
+<title>Casa da Hanna — Cozinha 3D v2</title>
+<link rel="manifest" href="./manifest.webmanifest"><link rel="stylesheet" href="./cozinha.css">
+</head><body>
+<canvas id="game" aria-label="Cozinha 3D interativa da Casa da Hanna"></canvas>
+<div id="loading"><div class="loadingIcon">🍓</div><strong>Preparando a cozinha da Hanna...</strong><small>Cozinha 3D v2 · Prévia isolada</small><div id="loadDetail" role="status">Carregando...</div></div>
+<div id="hud">
+ <div class="missionBox" aria-live="polite"><div class="eyebrow">🏡 CASA DA HANNA · CAFÉ DA MANHÃ</div><div class="stepTitle" id="instruction">Abra a geladeira</div>
+  <div class="progress"><div id="progressFill"></div></div><div class="stepMeta"><span id="stepLabel">1 de 8</span><span id="statusText">Siga o brilho ✨</span></div>
+ </div>
+ <div class="topActions"><div class="stars" id="stars">⭐ 0</div><button id="pauseBtn" aria-label="Pausar e abrir configurações" aria-pressed="false">⏸</button></div>
+</div>
+<div class="helpBubble" id="helpBubble" role="status" aria-live="polite">Encontre o objeto brilhando ✨</div>
+<div class="bottomControls"><div id="joystick" role="group" aria-label="Controle de movimento"><div id="stick"></div></div>
+ <div class="taskButtons"><button id="goBtn">👣 IR ATÉ</button><button id="actionBtn" disabled>🚪 ABRIR</button></div>
+</div>
+<div id="quality">COZINHA v2 · PRÉVIA</div>
+<div id="settings" hidden role="dialog" aria-modal="true" aria-label="Configurações do jogo">
+ <div class="settingsCard"><h2>Uma pausa? 🍓</h2><p>Vamos continuar a brincadeira?</p>
+  <label for="qualitySelect">Qualidade gráfica</label><select id="qualitySelect"><option value="auto">Automática</option><option value="baixo">Baixa</option><option value="medio">Média</option><option value="alto">Alta — mais detalhes</option><option value="nitido">Máxima nitidez — exige mais do aparelho</option></select>
+  <label class="soundLabel"><input type="checkbox" id="soundToggle" checked> Voz e sons</label>
+  <div class="settingsButtons"><button id="guideBtn">❔ Ajuda</button><button id="resumeBtn">▶ Continuar</button><button id="resetBtn">↻ Recomeçar</button></div>
+ </div>
+</div>
+<div id="rotatePrompt" role="status"><div><span aria-hidden="true">📱 ↻</span><h2>Vire o celular!</h2><p>A cozinha fica melhor com a tela deitada. 🌈</p></div></div>
+<div id="finish" hidden><div class="finishCard"><span class="celebrate">🌈🥣✨</span><h1>Que café da manhã gostoso!</h1><p>A Hanna completou as oito etapas. Parabéns!</p><strong>⭐ +1 estrela</strong><button id="againBtn">Brincar de novo</button></div></div>
+<script src="./vendor/babylon.js"></script>
+<script src="./vendor/babylonjs.loaders.min.js"></script>
+<script src="./controls.js"></script><script src="./camera-follow.js"></script><script src="./gait.js"></script><script src="./interactions.js"></script><script src="./object-motion.js"></script><script src="./interaction-anchors.js"></script><script src="./mission.js"></script><script src="./quality.js"></script><script src="./audio.js"></script><script src="./art-direction.js"></script><script src="./premium-corner.js"></script><script src="./cozinha.js"></script><script src="./ui.js"></script>
+</body></html>

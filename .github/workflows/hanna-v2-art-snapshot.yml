@@ -1,0 +1,48 @@
+name: Hanna v2 - fast art screenshots (no full mission)
+on:
+  push:
+    branches: [feature/cozinha-3d-v2-20261022]
+    paths:
+      - 'v2/art-direction.js'
+      - 'v2/cozinha.js'
+      - 'v2/quality.js'
+      - 'v2/tests/snapshot.cjs'
+      - 'v2/assets/**'
+      - '.github/workflows/hanna-v2-art-snapshot.yml'
+  workflow_dispatch:
+jobs:
+  visuals:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Static JS validation before downloading Chromium
+        run: node --check v2/cozinha.js && node --check v2/quality.js && node --check v2/premium-corner.js
+      - name: Install Chromium software WebGL
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start local server
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/hanna-v2-snap.log 2>&1 &
+          for n in {1..30}; do
+            curl -fsS http://127.0.0.1:8765/v2/index.html >/dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Capture desktop and Android without mission walkthrough
+        run: |
+          node v2/tests/snapshot.cjs
+      - name: Quality gate - scene must not render nearly black
+        if: success()
+        run: python3 v2/tests/check_visual_luminance.py artifacts/hanna-v2-art/desktop.png artifacts/hanna-v2-art/android-paisagem.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hanna-v2-fast-art-shots
+          path: artifacts/hanna-v2-art/
+          if-no-files-found: warn
+          retention-days: 30

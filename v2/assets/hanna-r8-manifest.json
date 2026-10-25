@@ -1,0 +1,16 @@
+{
+  "name": "Hanna R15 — free articulated hands and breakfast interaction rig",
+  "art_contract": "v2/blender/ART_R8.md",
+  "round": "R15-elbow-wrist-grip-anchors",
+  "format": "GLB (glTF 2.0)",
+  "origin": "Blender-generated original geometry; no purchased/downloaded models",
+  "license": "Original project asset for Casa da Hanna",
+  "limitations": "Segmented hips/knees/ankles plus R15 elbows/wrists/grips, not a fully skinned professional character. Mobile art approval pending",
+  "nodes": 171,
+  "meshes": 94,
+  "files": [
+    "hanna-free-r8.glb",
+    "hanna-r8-front.png",
+    "hanna-r8-threequarter.png"
+  ]
+}

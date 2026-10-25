@@ -1,0 +1,44 @@
+name: Hanna v2 - R14 real fridge door and toast placement
+on:
+  push:
+    branches: [feature/cozinha-3d-v2-20261022]
+    paths:
+      - 'v2/cozinha.js'
+      - 'v2/gait.js'
+      - 'v2/object-motion.js'
+      - 'v2/tests/objects.browser.cjs'
+      - 'v2/tests/object-motion.test.cjs'
+      - 'v2/sw.js'
+      - '.github/workflows/hanna-v2-object-regression.yml'
+  workflow_dispatch:
+jobs:
+  object-motion:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Validate source and one-shot finite-state motion
+        run: |
+          node --check v2/cozinha.js
+          node --check v2/object-motion.js
+          node --test v2/tests/object-motion.test.cjs v2/tests/gait.test.cjs
+      - name: Install actual WebGL browser
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve v2
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/hanna-r14.log 2>&1 &
+          for n in {1..30}; do curl -fsS http://127.0.0.1:8765/v2/index.html >/dev/null && exit 0; sleep 1; done
+          exit 1
+      - name: Real Android fridge and toaster checks
+        run: node --test --test-concurrency=1 v2/tests/objects.browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hanna-r14-door-and-toast-evidence
+          path: artifacts/hanna-v2-r14-object-proof/
+          retention-days: 30
+          if-no-files-found: warn

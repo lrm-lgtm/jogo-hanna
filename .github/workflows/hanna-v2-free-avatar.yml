@@ -1,0 +1,79 @@
+name: Casa Hanna FREE art - build Blender R8 character
+on:
+  push:
+    branches: [feature/cozinha-3d-v2-20261022]
+    paths:
+      - 'v2/blender/build_hanna_r8.py'
+      - '.github/workflows/hanna-v2-free-avatar.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: hanna-v2-free-avatar
+  cancel-in-progress: false
+jobs:
+  avatar:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 32
+    steps:
+      - uses: actions/checkout@v4
+        with: 
+          persist-credentials: true
+      - name: Install free/open-source Blender
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq blender python3-numpy
+          blender --version | head -2
+      - name: Build original stylized Hanna R8 and 2 real Blender study renders
+        run: |
+          mkdir -p v2/assets
+          blender --background --factory-startup --python-exit-code 1 --python v2/blender/build_hanna_r8.py >/tmp/hanna-r8-blender.log 2>&1 || { tail -100 /tmp/hanna-r8-blender.log; exit 1; }
+          tail -35 /tmp/hanna-r8-blender.log
+      - name: Validate model format, materials, mesh pivots and original reference outfit
+        run: |
+          python3 - <<'PY'
+          import os,struct,json
+          p='v2/assets/'
+          model=open(p+'hanna-free-r8.glb','rb').read()
+          magic,version,size=struct.unpack_from('<4sII',model)
+          assert magic==b'glTF' and version==2 and size==len(model)
+          assert 100000<len(model)<18000000,len(model)
+          offset=20
+          jlen,jtype=struct.unpack_from('<I4s',model,12)
+          assert jtype==b'JSON'
+          gltf=json.loads(model[offset:offset+jlen])
+          names={o.get('name') for o in gltf.get('nodes',[])}
+          for required in ['HannaRig','HeadPivot','ArmLeftPivot','ArmRightPivot',
+                            'LegLeftPivot','LegRightPivot','KneeLeftPivot','KneeRightPivot',
+                            'AnkleLeftPivot','AnkleRightPivot',
+                            'ElbowLeftPivot','ElbowRightPivot','WristLeftPivot','WristRightPivot',
+                            'HandLeftGrip','HandRightGrip','hoodie-body','denim-bib',
+                            'signature-pink-hair-bow--1']:
+            assert required in names,('missing',required)
+          assert len(gltf.get('meshes',[]))>=75
+          for img in ['front','threequarter']:
+            file=p+'hanna-r8-'+img+'.png'
+            assert open(file,'rb').read(8)==b'\x89PNG\r\n\x1a\n'
+            assert os.path.getsize(file)>10000
+          m=json.load(open(p+'hanna-r8-manifest.json'))
+          print('FREE_HANNA_R8_REAL_GLTF_OK',len(model),len(gltf['meshes']),len(gltf['nodes']))
+          PY
+      - name: Commit only original asset into isolated branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add v2/assets/hanna-free-r8.glb v2/assets/hanna-r8-manifest.json
+          if ! git diff --cached --quiet; then
+            git commit -m "assets(hanna): original free Blender pink denim R8 GLB [skip ci]"
+            git push origin HEAD:$GITHUB_REF_NAME
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hanna-v2-free-r8-avatar-and-renders
+          path: |
+            v2/assets/hanna-free-r8.glb
+            v2/assets/hanna-r8-*.png
+            v2/assets/hanna-r8-manifest.json
+          if-no-files-found: warn
+          retention-days: 30

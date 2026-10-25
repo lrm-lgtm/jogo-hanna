@@ -1,0 +1,47 @@
+name: Hanna v2 - Android joystick real touch gameplay
+on:
+  push:
+    branches: [feature/cozinha-3d-v2-20261022]
+    paths:
+      - 'v2/cozinha.js'
+      - 'v2/controls.js'
+      - 'v2/tests/controls.test.cjs'
+      - 'v2/tests/joystick.browser.cjs'
+      - 'v2/index.html'
+      - 'v2/cozinha.css'
+      - '.github/workflows/hanna-v2-joystick.yml'
+  workflow_dispatch:
+jobs:
+  android-touch:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Check syntax and deterministic analog math
+        run: |
+          node --check v2/cozinha.js
+          node --check v2/controls.js
+          node --test v2/tests/controls.test.cjs
+      - name: Install Chromium with software WebGL
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start local game server
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/hanna-v2-joy-server.log 2>&1 &
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:8765/v2/index.html >/dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Execute real mobile touchscreen gestures + position assertions
+        run: node --test v2/tests/joystick.browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hanna-v2-real-joystick-gestures
+          path: artifacts/hanna-v2-joystick/
+          retention-days: 30
+          if-no-files-found: warn

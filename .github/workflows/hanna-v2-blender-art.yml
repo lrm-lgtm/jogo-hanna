@@ -1,0 +1,66 @@
+name: Hanna v2 Art R2 - Blender rounded kitchen to GLB
+on:
+  push:
+    branches: [feature/cozinha-3d-v2-20261022]
+    paths:
+      - 'v2/blender/build_kitchen.py'
+      - '.github/workflows/hanna-v2-blender-art.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: hanna-v2-art-r2
+  cancel-in-progress: false
+jobs:
+  build-gltf:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Install free Blender via Ubuntu APT
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq blender python3-numpy
+          blender --version | head -n 2
+      - name: Export original rounded kitchen glTF from Blender
+        run: |
+          mkdir -p v2/assets
+          blender --background --factory-startup --python-exit-code 1 --python v2/blender/build_kitchen.py >/tmp/hanna-v2-blender.log 2>&1 || { tail -100 /tmp/hanna-v2-blender.log; exit 1; }
+          tail -45 /tmp/hanna-v2-blender.log
+          test -s v2/assets/kitchen-architecture-r2.glb
+          test -s v2/assets/kitchen-architecture-r2.json
+      - name: Validate binary GLB header, dimensions and source provenance
+        run: |
+          python3 - <<'PY'
+          import json,struct,os,hashlib
+          f='v2/assets/kitchen-architecture-r2.glb'
+          b=open(f,'rb').read()
+          magic,version,length=struct.unpack_from('<4sII',b)
+          meta=json.load(open('v2/assets/kitchen-architecture-r2.json'))
+          assert (magic,version,length)==(b'glTF',2,len(b))
+          assert 30000<len(b)<5000000
+          assert meta['meshes']>=45
+          assert meta['sha256']==hashlib.sha256(b).hexdigest()
+          assert meta['license']=='CC0-1.0'
+          print('ART_R2_REAL_BLENDER_GLTF_OK',meta['meshes'],len(b))
+          PY
+      - name: Commit only generated original commercial-safe GLB to isolated branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add v2/assets/kitchen-architecture-r2.glb v2/assets/kitchen-architecture-r2.json
+          if ! git diff --cached --quiet; then
+            git commit -m "assets(v2): original bevelled Blender kitchen GLB R2 [skip ci]"
+            git push origin HEAD:$GITHUB_REF_NAME
+          fi
+      - name: Keep generated asset and Blender build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hanna-v2-blender-kitchen-r2
+          path: |
+            v2/assets/
+          if-no-files-found: warn
+          retention-days: 30
